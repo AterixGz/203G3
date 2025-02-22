@@ -2,7 +2,9 @@
 .upload-container {
   text-align: center;
   margin-top: 20px;
+  position: relative;
 }
+
 .upload-btn {
   padding: 10px 20px;
   background-color: #fff;
@@ -12,10 +14,28 @@
   border-radius: 5px;
   font-size: 16px;
   transition: background-color 0.3s, color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 3%;
+  left: 91.5%; /* ปรับตำแหน่งปุ่มอัพโหลด */
 }
+
 .upload-btn:hover {
   background-color: #000;
   color: #fff;
+}
+
+/* เพิ่มการหมุน 360 องศาให้ + เมื่อ hover */
+.plus-sign {
+  margin-right: 8px;
+  font-size: 20px;
+  transition: transform 0.6s ease-in-out;
+}
+
+.upload-btn:hover .plus-sign {
+  transform: rotate(360deg); /* หมุน 360 องศา */
 }
 
 /* Overlay (Background Blur) */
@@ -63,6 +83,7 @@
   cursor: pointer;
   transition: color 0.3s;
 }
+
 .close-btn:hover {
   color: #aaa;
 }
@@ -91,6 +112,7 @@ p {
   margin-bottom: 10px;
   transition: background-color 0.3s, color 0.3s;
 }
+
 .choose-btn:hover,
 .upload-action-btn:hover {
   background-color: #333;
@@ -126,6 +148,7 @@ p {
   padding: 0;
   transition: color 0.3s;
 }
+
 .remove-file-btn:hover {
   color: #ff3333;
 }

@@ -75,7 +75,7 @@ export default function FileUploader() {
     <>
       <div className="upload-container">
         <button className="upload-btn" onClick={() => setShowDropZone(true)}>
-          Upload File
+        <span className="plus-sign">+</span> Upload File
         </button>
       </div>
   
