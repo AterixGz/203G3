@@ -65,6 +65,12 @@ export default function FileUploader() {
     }
   };
 
+  const handleCloseDropZone = () => {
+    setShowDropZone(false); // ปิดหน้าต่าง
+    setFiles([]); // ลบไฟล์ที่เลือกทั้งหมดเมื่อปิดหน้าต่าง
+    setIsUploadReady(false); // เปลี่ยนสถานะการอัพโหลดให้เป็น false
+  };
+  
   return (
     <>
       <div className="upload-container">
@@ -72,7 +78,7 @@ export default function FileUploader() {
           Upload File
         </button>
       </div>
-
+  
       {showDropZone && (
         <div className="overlay">
           <div
@@ -83,10 +89,10 @@ export default function FileUploader() {
               handleFileSelect(e.dataTransfer.files);
             }}
           >
-            <button className="close-btn" onClick={() => setShowDropZone(false)}>
+            <button className="close-btn" onClick={handleCloseDropZone}>
               ✕
             </button>
-
+  
             <h2>Drop files here</h2>
             <p>or</p>
             <input
@@ -96,7 +102,7 @@ export default function FileUploader() {
               onChange={(e) => handleFileSelect(e.target.files)}
               hidden
             />
-
+  
             {/* ปุ่ม Choose หรือ Upload */}
             {isUploadReady ? (
               <button className="upload-action-btn" onClick={handleUpload} disabled={isUploading}>
@@ -110,7 +116,7 @@ export default function FileUploader() {
                 Choose from my folder
               </button>
             )}
-
+  
             <ul className="file-list">
               {files.map((file, index) => (
                 <li key={index}>
@@ -121,12 +127,12 @@ export default function FileUploader() {
                 </li>
               ))}
             </ul>
-
+  
             {/* หมายเหตุเกี่ยวกับไฟล์ */}
             <p className="file-format-note">
               Supported file formats: PNG, PDF. Max file size: 10MB.
             </p>
-
+  
             {/* ส่วนที่แสดงข้อผิดพลาด */}
             {uploadError && <p className="upload-error">{uploadError}</p>}
           </div>
@@ -134,4 +140,5 @@ export default function FileUploader() {
       )}
     </>
   );
+  
 }
