@@ -11,7 +11,7 @@ app.use(cors()); // Enable CORS for frontend connection
 // กำหนด Storage สำหรับ Multer
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'storage/'); // โฟลเดอร์ที่ใช้เก็บไฟล์
+        cb(null, './storage'); // โฟลเดอร์ที่ใช้เก็บไฟล์
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + path.extname(file.originalname)); // ตั้งชื่อไฟล์
@@ -20,11 +20,11 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Middleware สำหรับเสิร์ฟไฟล์อัปโหลด (กรณีต้องการให้เข้าถึงได้ผ่าน URL)
+// Middleware สำหรับเสิร์ฟไฟล์อัปโหลด (ทำให้เข้าถึงไฟล์ได้จาก URL)
 app.use('/storage', express.static('storage'));
 
 // Route สำหรับอัปโหลดไฟล์
-app.post('/storage', upload.array('files', 10), (req, res) => {
+app.post('/upload', upload.array('files', 10), (req, res) => {
     if (!req.files || req.files.length === 0) {
         return res.status(400).json({ message: 'กรุณาอัปโหลดไฟล์' });
     }
