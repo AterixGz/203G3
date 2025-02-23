@@ -1,7 +1,7 @@
-const express = require("express");
-const multer = require("multer");
-const cors = require("cors");
-const path = require("path");
+import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import cors from 'cors';
 
 const app = express();
 const PORT = 3000;
@@ -33,3 +33,5 @@ app.post("/upload", upload.single("file"), (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+export default app;
