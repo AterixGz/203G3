@@ -1,24 +1,22 @@
 import { useState, useEffect } from "react";
-import axios from "axios"; // ใช้ axios สำหรับการเชื่อมต่อกับ API
-// css import
+import axios from "axios";
 import "./UploadButton.css";
 
-export default function FileUploader() {
-  const [showDropZone, setShowDropZone] = useState(false);
+export default function FileUploader({ isOpen, onClose }) {
   const [files, setFiles] = useState([]);
   const [isUploadReady, setIsUploadReady] = useState(false);
-  const [isUploading, setIsUploading] = useState(false); // เพิ่ม state สำหรับการแสดงสถานะการอัพโหลด
-  const [uploadError, setUploadError] = useState(null); // เพิ่ม state สำหรับข้อผิดพลาด
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
   useEffect(() => {
     const handlePaste = (event) => {
-      if (showDropZone && event.clipboardData.files.length > 0) {
+      if (isOpen && event.clipboardData.files.length > 0) {
         handleFileSelect(event.clipboardData.files);
       }
     };
     document.addEventListener("paste", handlePaste);
     return () => document.removeEventListener("paste", handlePaste);
-  }, [showDropZone]);
+  }, [isOpen]);
 
   const handleFileSelect = (selectedFiles) => {
     const newFiles = Array.from(selectedFiles);
@@ -28,6 +26,15 @@ export default function FileUploader() {
       return updatedFiles;
     });
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      const cleanup = handleMouseDrag();
+      return () => {
+        if (cleanup) cleanup();
+      };
+    }
+  }, [isOpen, files]);
 
   const handleRemoveFile = (index) => {
     const updatedFiles = files.filter((_, i) => i !== index);
@@ -44,10 +51,9 @@ export default function FileUploader() {
       files.forEach(file => formData.append("files", file));
 
       try {
-        // 🚨 ส่วนที่เกี่ยวข้องกับการเชื่อมต่อกับ API
-        const response = await axios.post("http://localhost:3000/upload", formData, {
+        const response = await axios.post("YOUR_BACKEND_API_URL", formData, {
           headers: {
-            "Content-Type": "multipart/form-data", // ระบุประเภทข้อมูล
+            "Content-Type": "multipart/form-data",
           },
         });
 
@@ -55,7 +61,7 @@ export default function FileUploader() {
         alert("Files uploaded successfully!");
         setFiles([]);
         setIsUploadReady(false);
-        setShowDropZone(false);
+        onClose();
       } catch (error) {
         console.error("Upload failed:", error);
         setUploadError("Error uploading files. Please try again.");
@@ -66,20 +72,60 @@ export default function FileUploader() {
   };
 
   const handleCloseDropZone = () => {
-    setShowDropZone(false); // ปิดหน้าต่าง
-    setFiles([]); // ลบไฟล์ที่เลือกทั้งหมดเมื่อปิดหน้าต่าง
-    setIsUploadReady(false); // เปลี่ยนสถานะการอัพโหลดให้เป็น false
+    setFiles([]);
+    setIsUploadReady(false);
+    onClose();
+  };
+
+  const handleMouseDrag = () => {
+    const slider = document.querySelector('.file-list');
+    if (!slider) return;
+
+    let isDown = false;
+    let startY;
+    let scrollTop;
+
+    const mouseDownHandler = (e) => {
+      isDown = true;
+      slider.style.cursor = 'grabbing';
+      startY = e.pageY - slider.offsetTop;
+      scrollTop = slider.scrollTop;
+    };
+
+    const mouseLeaveHandler = () => {
+      isDown = false;
+      slider.style.cursor = 'grab';
+    };
+
+    const mouseUpHandler = () => {
+      isDown = false;
+      slider.style.cursor = 'grab';
+    };
+
+    const mouseMoveHandler = (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const y = e.pageY - slider.offsetTop;
+      const walk = y - startY;
+      slider.scrollTop = scrollTop - walk;
+    };
+
+    slider.addEventListener('mousedown', mouseDownHandler);
+    slider.addEventListener('mouseleave', mouseLeaveHandler);
+    slider.addEventListener('mouseup', mouseUpHandler);
+    slider.addEventListener('mousemove', mouseMoveHandler);
+
+    return () => {
+      slider.removeEventListener('mousedown', mouseDownHandler);
+      slider.removeEventListener('mouseleave', mouseLeaveHandler);
+      slider.removeEventListener('mouseup', mouseUpHandler);
+      slider.removeEventListener('mousemove', mouseMoveHandler);
+    };
   };
   
   return (
     <>
-      <div className="upload-container">
-        <button className="upload-btn" onClick={() => setShowDropZone(true)}>
-        <span className="plus-sign">+</span> Upload File
-        </button>
-      </div>
-  
-      {showDropZone && (
+      {isOpen && (
         <div className="overlay">
           <div
             className="drop-zone"
@@ -94,7 +140,7 @@ export default function FileUploader() {
             </button>
   
             <h2>Drop files here</h2>
-            <p>or</p>
+            <p>or</p><br />
             <input
               type="file"
               id="fileInput"
@@ -103,7 +149,6 @@ export default function FileUploader() {
               hidden
             />
   
-            {/* ปุ่ม Choose หรือ Upload */}
             {isUploadReady ? (
               <button className="upload-action-btn" onClick={handleUpload} disabled={isUploading}>
                 {isUploading ? "Uploading..." : "Upload"}
@@ -128,17 +173,14 @@ export default function FileUploader() {
               ))}
             </ul>
   
-            {/* หมายเหตุเกี่ยวกับไฟล์ */}
             <p className="file-format-note">
               Supported file formats: PNG, PDF. Max file size: 10MB.
             </p>
   
-            {/* ส่วนที่แสดงข้อผิดพลาด */}
             {uploadError && <p className="upload-error">{uploadError}</p>}
           </div>
         </div>
       )}
     </>
   );
-  
 }
