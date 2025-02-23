@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import cors from "cors";
 import path from "path";
+import moment from "moment"; // ติดตั้ง moment.js สำหรับจัดการวันที่
 
 const app = express();
 const PORT = 3000;
@@ -15,7 +16,11 @@ const storage = multer.diskStorage({
         cb(null, "uploads/"); // ระบุโฟลเดอร์ที่ต้องการเก็บไฟล์
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); // ใช้เวลาเป็นชื่อไฟล์เพื่อไม่ให้ซ้ำ
+        const fileExtension = path.extname(file.originalname); // เอานามสกุลไฟล์
+        const dateTime = moment().format("YYYYMMDD_HHmmss"); // ใช้ moment.js สร้างวันที่และเวลา
+        const fileName = path.basename(file.originalname, fileExtension); // ชื่อไฟล์โดยไม่รวมส่วนขยาย
+        const newFileName = `${fileName}_${dateTime}${fileExtension}`; // สร้างชื่อไฟล์ใหม่
+        cb(null, newFileName);
     },
 });
 
