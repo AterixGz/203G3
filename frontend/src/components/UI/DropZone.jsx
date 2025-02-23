@@ -68,10 +68,10 @@ export default function DropZone() {
             setUploadError(null);
 
             const formData = new FormData();
-            files.forEach(file => formData.append("files", file));
+            files.forEach(file => formData.append("file", file));
 
             try {
-                const response = await axios.post("YOUR_BACKEND_API_URL", formData, {
+                const response = await axios.post("http://localhost:3000/upload", formData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
