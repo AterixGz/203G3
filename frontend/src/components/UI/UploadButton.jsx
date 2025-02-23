@@ -59,7 +59,6 @@ export default function FileUploader({ isOpen, onClose }) {
         });
 
         console.log("Files uploaded successfully", response.data);
-        alert("Files uploaded successfully!");
         setFiles([]);
         setIsUploadReady(false);
         onClose();

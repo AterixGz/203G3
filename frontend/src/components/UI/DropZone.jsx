@@ -78,7 +78,6 @@ export default function DropZone() {
                 });
 
                 console.log("Files uploaded successfully", response.data);
-                alert("Files uploaded successfully!");
                 setFiles([]);
                 setIsUploadReady(false);
                 setFileProgress({});
