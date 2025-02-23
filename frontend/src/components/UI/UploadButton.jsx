@@ -45,7 +45,7 @@ export default function FileUploader() {
 
       try {
         // 🚨 ส่วนที่เกี่ยวข้องกับการเชื่อมต่อกับ API
-        const response = await axios.post("YOUR_BACKEND_API_URL", formData, {
+        const response = await axios.post("http://localhost:3000/upload", formData, {
           headers: {
             "Content-Type": "multipart/form-data", // ระบุประเภทข้อมูล
           },
