@@ -1,37 +1,41 @@
-import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import cors from 'cors';
+import express from "express";
+import multer from "multer";
+import cors from "cors";
+import path from "path";
 
 const app = express();
 const PORT = 3000;
 
-// ตั้งค่า CORS
+// เปิดใช้ CORS สำหรับทุก origin
 app.use(cors());
 
-// กำหนดตำแหน่งจัดเก็บไฟล์ที่อัปโหลด
+// ตั้งค่าการจัดเก็บไฟล์
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "uploads/"); // โฟลเดอร์สำหรับเก็บไฟล์
+        cb(null, "uploads/"); // ระบุโฟลเดอร์ที่ต้องการเก็บไฟล์
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); // ตั้งชื่อไฟล์
-    }
+        cb(null, Date.now() + path.extname(file.originalname)); // ใช้เวลาเป็นชื่อไฟล์เพื่อไม่ให้ซ้ำ
+    },
 });
 
 const upload = multer({ storage: storage });
 
-// API รับไฟล์ที่อัปโหลด
-app.post("/upload", upload.single("file"), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-    }
-    res.json({ message: "File uploaded successfully", file: req.file });
+// API สำหรับรับหลายไฟล์และอัปโหลด
+app.post("/upload", upload.array("file", 10), (req, res) => {
+  if (!req.files) {
+    return res.status(400).json({ message: "No files uploaded" });
+  }
+
+  res.json({
+    message: "Files uploaded successfully",
+    files: req.files,
+  });
 });
 
 // เปิดเซิร์ฟเวอร์
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 export default app;
