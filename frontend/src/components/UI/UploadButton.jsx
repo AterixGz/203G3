@@ -27,6 +27,15 @@ export default function FileUploader({ isOpen, onClose }) {
     });
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      const cleanup = handleMouseDrag();
+      return () => {
+        if (cleanup) cleanup();
+      };
+    }
+  }, [isOpen, files]);
+
   const handleRemoveFile = (index) => {
     const updatedFiles = files.filter((_, i) => i !== index);
     setFiles(updatedFiles);
@@ -66,6 +75,52 @@ export default function FileUploader({ isOpen, onClose }) {
     setFiles([]);
     setIsUploadReady(false);
     onClose();
+  };
+
+  const handleMouseDrag = () => {
+    const slider = document.querySelector('.file-list');
+    if (!slider) return;
+
+    let isDown = false;
+    let startY;
+    let scrollTop;
+
+    const mouseDownHandler = (e) => {
+      isDown = true;
+      slider.style.cursor = 'grabbing';
+      startY = e.pageY - slider.offsetTop;
+      scrollTop = slider.scrollTop;
+    };
+
+    const mouseLeaveHandler = () => {
+      isDown = false;
+      slider.style.cursor = 'grab';
+    };
+
+    const mouseUpHandler = () => {
+      isDown = false;
+      slider.style.cursor = 'grab';
+    };
+
+    const mouseMoveHandler = (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const y = e.pageY - slider.offsetTop;
+      const walk = y - startY;
+      slider.scrollTop = scrollTop - walk;
+    };
+
+    slider.addEventListener('mousedown', mouseDownHandler);
+    slider.addEventListener('mouseleave', mouseLeaveHandler);
+    slider.addEventListener('mouseup', mouseUpHandler);
+    slider.addEventListener('mousemove', mouseMoveHandler);
+
+    return () => {
+      slider.removeEventListener('mousedown', mouseDownHandler);
+      slider.removeEventListener('mouseleave', mouseLeaveHandler);
+      slider.removeEventListener('mouseup', mouseUpHandler);
+      slider.removeEventListener('mousemove', mouseMoveHandler);
+    };
   };
   
   return (
