@@ -9,6 +9,10 @@ import bcrypt from 'bcryptjs';
 
 import dotenv from 'dotenv';
 
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname , join } from 'path';
+
 const app = express();
 const PORT = 3000;
 
@@ -112,6 +116,46 @@ app.post("/upload", upload.array("file", 10), (req, res) => {
   });
 });
 
+
+//แสดงไฟล์
+app.get("/files", async (req, res) => {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+
+    const uploadFolder = join(__dirname, "uploads"); // ✅ ใช้ join อย่างถูกต้อง
+
+    if (!fs.existsSync(uploadFolder)) {
+      return res.status(404).json({ error: "Upload folder not found" });
+    }
+
+    const files = await fs.promises.readdir(uploadFolder);
+    const fileUrls = files.map(file => ({
+      name: file,
+      url: `http://localhost:3000/uploads/${file}`
+    }));
+
+    res.json({ files: fileUrls });
+  } catch (err) {
+    res.status(500).json({ error: "ไม่สามารถอ่านโฟลเดอร์ได้", details: err.message });
+  }
+});
+
+//ลบไฟล์
+app.delete("/files/:filename", async (req, res) => {
+  const filename = req.params.filename;
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const uploadFolder = join(__dirname, "uploads");
+
+  try {
+    await fs.promises.unlink(join(uploadFolder, filename));
+    res.json({ message: "File deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "ไม่สามารถลบไฟล์ได้", details: err.message });
+  }
+  
+})
 // เปิดเซิร์ฟเวอร์
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
