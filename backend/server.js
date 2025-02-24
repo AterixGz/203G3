@@ -16,6 +16,8 @@ import { dirname , join } from 'path';
 const app = express();
 const PORT = 3000;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -140,6 +142,24 @@ app.get("/files", async (req, res) => {
     res.status(500).json({ error: "ไม่สามารถอ่านโฟลเดอร์ได้", details: err.message });
   }
 });
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// API สำหรับดาวน์โหลดไฟล์
+app.get("/download/:filename", (req, res) => {
+  const filePath = path.resolve(__dirname, "uploads", req.params.filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: "File not found" });
+  }
+
+  res.download(filePath, (err) => {
+    if (err) {
+      console.error("❌ Error downloading file:", err);
+      res.status(500).json({ error: "Error downloading file", details: err.message });
+    }
+  });
+});
+
 
 //ลบไฟล์
 app.delete("/files/:filename", async (req, res) => {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { MoreVertical, Download, Trash2, Edit } from "lucide-react";
-
+import axios from "axios";
 export default function DocumentGrid() {
   const [files, setFiles] = useState([]);
 
@@ -46,6 +46,33 @@ export default function DocumentGrid() {
 
     const closeDropdown = () => {
       setDropdownOpen(false);
+    };
+
+    //download
+    const handleDownload = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/download/${file.name}`, {
+          responseType: "blob",
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", file.name);
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // เคลียร์ URL object เพื่อลดการใช้หน่วยความจำ
+        window.URL.revokeObjectURL(url);
+
+        console.log(`✅ ดาวน์โหลดไฟล์ "${file.name}" สำเร็จ`);
+      } catch (error) {
+        console.error("❌ ดาวน์โหลดไฟล์ไม่สำเร็จ:", error);
+      } finally {
+        closeDropdown();
+      }
     };
 
     // 🛠️ ฟังก์ชันลบไฟล์
@@ -110,10 +137,14 @@ export default function DocumentGrid() {
                   download
                   className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50"
                   onClick={closeDropdown}
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </a>
+                ></a>
+                <button
+                    className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50"
+                    onClick={handleDownload} // ✅ เรียกฟังก์ชัน download โดยตรง
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
                 <button
                   className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50"
                   onClick={closeDropdown}
