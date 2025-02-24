@@ -10,6 +10,7 @@ export default function DropZone() {
     const [isUploadReady, setIsUploadReady] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
+    const [previewFile, setPreviewFile] = useState(null);
 
     useEffect(() => {
         const handlePaste = (event) => {
@@ -150,6 +151,13 @@ export default function DropZone() {
         };
     };
 
+    const handleFilePreview = (file) => {
+        const fileType = file.type;
+        if (fileType === 'application/pdf' || fileType.startsWith('image/png')) {
+            setPreviewFile(file);
+        }
+    };
+
     return (
         <div className="drop-zone-container">
             <div
@@ -199,12 +207,20 @@ export default function DropZone() {
                     <div className="preview-container">
                         {files.map((file, index) => (
                             <div key={index} className="file-preview">
-                                <div className="file-icon">
+                                <div
+                                    className="file-icon"
+                                    onClick={() => handleFilePreview(file)}
+                                    style={{ cursor: file.type === 'application/pdf' || file.type.startsWith('image/png') ? 'pointer' : 'default' }}
+                                >
                                     <span className="file-extension">
                                         {file.name.split('.').pop().toUpperCase()}
                                     </span>
                                 </div>
-                                <div className="file-info">
+                                <div
+                                    className="file-info"
+                                    onClick={() => handleFilePreview(file)}
+                                    style={{ cursor: file.type === 'application/pdf' || file.type.startsWith('image/png') ? 'pointer' : 'default' }}
+                                >
                                     <h4 className="file-name">{file.name}</h4>
                                     <div className="progress-bar">
                                         <div
@@ -242,6 +258,34 @@ export default function DropZone() {
             )}
 
             {uploadError && <p className="upload-error">{uploadError}</p>}
+
+            {/* Preview Modal */}
+            {previewFile && (
+                <div className="preview-modal-overlay" onClick={() => setPreviewFile(null)}>
+                    <div className="preview-modal" onClick={e => e.stopPropagation()}>
+                        <button
+                            className="modal-close-button"
+                            onClick={() => setPreviewFile(null)}
+                        >
+                            <X />
+                        </button>
+                        {previewFile.type.startsWith('image/png') ? (
+                            <img
+                                src={URL.createObjectURL(previewFile)}
+                                alt={previewFile.name}
+                                className="preview-image"
+                            />
+                        ) : (
+                            <embed
+                                src={URL.createObjectURL(previewFile)}
+                                type="application/pdf"
+                                width="100%"
+                                height="100%"
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
