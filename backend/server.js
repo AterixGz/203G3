@@ -38,6 +38,24 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+
+  // ตรวจสอบว่ามี username ซ้ำหรือไม่
+  const existingUser = users.find((u) => u.username === username);
+  if (existingUser) {
+    return res.status(400).json({ message: 'Username already exists.' });
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // เพิ่ม user ใหม่
+  users.push({ username, password: hashedPassword });
+
+  res.status(201).json({ message: 'User registered successfully!' });
+});
+
 // Login route
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;

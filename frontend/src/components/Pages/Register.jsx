@@ -15,7 +15,7 @@ const Register = () => {
     setMessage("");
 
     try {
-      const response = await fetch("http://your-backend-url/register", {
+      const response = await fetch("http://localhost:3000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -25,7 +25,7 @@ const Register = () => {
 
       if (response.ok) {
         setMessage("Registration successful!");
-        navigate("/"); // ✅ เปลี่ยนไปหน้า Login
+        navigate("/login"); // ✅ เปลี่ยนไปหน้า Login
       } else {
         setMessage(data.message || "Registration failed. Please try again.");
       }
@@ -43,6 +43,8 @@ const Register = () => {
             <FaUser className="absolute top-3 left-3 text-gray-400" />
             <input
               type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               placeholder="Username"
               className="pl-10 pr-4 py-2 w-full border-b-2 border-gray-300 focus:border-black outline-none"
               required
@@ -52,6 +54,8 @@ const Register = () => {
             <FaLock className="absolute top-3 left-3 text-gray-400" />
             <input
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               className="pl-10 pr-4 py-2 w-full border-b-2 border-gray-300 focus:border-black outline-none"
               required
