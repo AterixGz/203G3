@@ -124,10 +124,6 @@ function DocumentCard({ file, setFiles }) {
                 <Download className="w-4 h-4" />
                 Download
               </button>
-              <button className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50" onClick={closeDropdown}>
-                <Edit className="w-4 h-4" />
-                Rename
-              </button>
               <button className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600 hover:bg-gray-50" onClick={confirmDelete}>
                 <Trash2 className="w-4 h-4" />
                 Delete

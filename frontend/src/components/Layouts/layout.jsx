@@ -2,9 +2,13 @@
 
 import { Menu, Search, Bell, User, Upload, X, Home, FolderOpen, Star, Clock, Settings } from "lucide-react"
 import { useState } from "react"
+import { Link } from "react-router-dom"
+
+
 
 export default function Layout({ children }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false)
+  
 
   const navItems = [
     { icon: Home, label: "Home", active: true },
@@ -160,10 +164,13 @@ function Header() {
           <Bell className="w-5 h-5 text-gray-600" />
           <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-gray-900"></span>
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 transition-colors">
+        <Link 
+          to="/login"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 transition-colors"
+        >
           <User className="w-5 h-5 text-gray-600" />
-          <span className="text-sm font-medium">Profile</span>
-        </button>
+          <span className="text-sm font-medium">Login</span>
+        </Link>
       </div>
     </header>
   )
