@@ -192,11 +192,11 @@
   }
 
   .select-button.upload-ready {
-    background-color: #1781be;
+    background-color: #3fb352;
 }
 
 .select-button.upload-ready:hover {
-    background-color: #11557c;
+    background-color: #328a41;
 }
 
 .select-button:disabled {
