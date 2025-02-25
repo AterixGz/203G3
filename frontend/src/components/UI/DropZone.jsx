@@ -10,7 +10,10 @@ export default function DropZone() {
     const [isUploadReady, setIsUploadReady] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
+    const [uploadSuccess, setUploadSuccess] = useState(false);
     const [previewFile, setPreviewFile] = useState(null);
+
+
 
     useEffect(() => {
         const handlePaste = (event) => {
@@ -67,21 +70,27 @@ export default function DropZone() {
         if (files.length > 0) {
             setIsUploading(true);
             setUploadError(null);
-
+    
             const formData = new FormData();
             files.forEach(file => formData.append("file", file));
-
+    
             try {
                 const response = await axios.post("http://localhost:3000/upload", formData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
                 });
-
+    
                 console.log("Files uploaded successfully", response.data);
                 setFiles([]);
                 setIsUploadReady(false);
                 setFileProgress({});
+                setUploadSuccess(true); // ✅ แสดงแจ้งเตือนเมื่ออัปโหลดสำเร็จ
+    
+                // ซ่อนแจ้งเตือนหลังจาก 3 วินาที
+                setTimeout(() => {
+                    setUploadSuccess(false);
+                }, 3000);
             } catch (error) {
                 console.error("Upload failed:", error);
                 setUploadError("Error uploading files. Please try again.");
@@ -90,6 +99,8 @@ export default function DropZone() {
             }
         }
     };
+    
+
 
     const handleRemoveFile = (index) => {
         const fileToRemove = files[index];
@@ -202,6 +213,8 @@ export default function DropZone() {
                 </div>
             </div>
 
+            
+
             {files.length > 0 && (
                 <>
                     <div className="preview-container">
@@ -286,6 +299,12 @@ export default function DropZone() {
                     </div>
                 </div>
             )}
+            {uploadSuccess && (
+            <div className="toast-notification">
+             ✅ Upload successful!
+            </div>
+            )}
+
         </div>
     );
 }

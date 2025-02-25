@@ -7,6 +7,7 @@ export default function FileUploader({ isOpen, onClose }) {
   const [isUploadReady, setIsUploadReady] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false); // <-- State สำหรับแจ้งเตือน
 
   useEffect(() => {
     const handlePaste = (event) => {
@@ -27,15 +28,6 @@ export default function FileUploader({ isOpen, onClose }) {
     });
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      const cleanup = handleMouseDrag();
-      return () => {
-        if (cleanup) cleanup();
-      };
-    }
-  }, [isOpen, files]);
-
   const handleRemoveFile = (index) => {
     const updatedFiles = files.filter((_, i) => i !== index);
     setFiles(updatedFiles);
@@ -49,7 +41,6 @@ export default function FileUploader({ isOpen, onClose }) {
 
       const formData = new FormData();
       files.forEach(file => formData.append("file", file));
-      
 
       try {
         const response = await axios.post("http://localhost:3000/upload", formData, {
@@ -61,7 +52,13 @@ export default function FileUploader({ isOpen, onClose }) {
         console.log("Files uploaded successfully", response.data);
         setFiles([]);
         setIsUploadReady(false);
+        setUploadSuccess(true); // <-- แสดงแจ้งเตือนสำเร็จ
         onClose();
+
+        // ซ่อนแจ้งเตือนหลังจาก 3 วินาที
+        setTimeout(() => {
+          setUploadSuccess(false);
+        }, 3000);
       } catch (error) {
         console.error("Upload failed:", error);
         setUploadError("Error uploading files. Please try again.");
@@ -71,58 +68,6 @@ export default function FileUploader({ isOpen, onClose }) {
     }
   };
 
-  const handleCloseDropZone = () => {
-    setFiles([]);
-    setIsUploadReady(false);
-    onClose();
-  };
-
-  const handleMouseDrag = () => {
-    const slider = document.querySelector('.file-list');
-    if (!slider) return;
-
-    let isDown = false;
-    let startY;
-    let scrollTop;
-
-    const mouseDownHandler = (e) => {
-      isDown = true;
-      slider.style.cursor = 'grabbing';
-      startY = e.pageY - slider.offsetTop;
-      scrollTop = slider.scrollTop;
-    };
-
-    const mouseLeaveHandler = () => {
-      isDown = false;
-      slider.style.cursor = 'grab';
-    };
-
-    const mouseUpHandler = () => {
-      isDown = false;
-      slider.style.cursor = 'grab';
-    };
-
-    const mouseMoveHandler = (e) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const y = e.pageY - slider.offsetTop;
-      const walk = y - startY;
-      slider.scrollTop = scrollTop - walk;
-    };
-
-    slider.addEventListener('mousedown', mouseDownHandler);
-    slider.addEventListener('mouseleave', mouseLeaveHandler);
-    slider.addEventListener('mouseup', mouseUpHandler);
-    slider.addEventListener('mousemove', mouseMoveHandler);
-
-    return () => {
-      slider.removeEventListener('mousedown', mouseDownHandler);
-      slider.removeEventListener('mouseleave', mouseLeaveHandler);
-      slider.removeEventListener('mouseup', mouseUpHandler);
-      slider.removeEventListener('mousemove', mouseMoveHandler);
-    };
-  };
-  
   return (
     <>
       {isOpen && (
@@ -135,10 +80,7 @@ export default function FileUploader({ isOpen, onClose }) {
               handleFileSelect(e.dataTransfer.files);
             }}
           >
-            <button className="close-btn" onClick={handleCloseDropZone}>
-              ✕
-            </button>
-  
+            <button className="close-btn" onClick={onClose}>✕</button>
             <h2>Drop files here</h2>
             <p>or</p><br />
             <input
@@ -154,10 +96,7 @@ export default function FileUploader({ isOpen, onClose }) {
                 {isUploading ? "Uploading..." : "Upload"}
               </button>
             ) : (
-              <button
-                className="choose-btn"
-                onClick={() => document.getElementById("fileInput").click()}
-              >
+              <button className="choose-btn" onClick={() => document.getElementById("fileInput").click()}>
                 Choose from my folder
               </button>
             )}
@@ -166,19 +105,20 @@ export default function FileUploader({ isOpen, onClose }) {
               {files.map((file, index) => (
                 <li key={index}>
                   {file.name}
-                  <button className="remove-file-btn" onClick={() => handleRemoveFile(index)}>
-                    ✕
-                  </button>
+                  <button className="remove-file-btn" onClick={() => handleRemoveFile(index)}>✕</button>
                 </li>
               ))}
             </ul>
-  
-            <p className="file-format-note">
-              Supported file formats: PNG, PDF. Max file size: 10MB.
-            </p>
-  
+
             {uploadError && <p className="upload-error">{uploadError}</p>}
           </div>
+        </div>
+      )}
+
+      {/* กล่องแจ้งเตือนเมื่ออัปโหลดสำเร็จ */}
+      {uploadSuccess && (
+        <div className="toast-notification">
+          ✅ Upload successful!
         </div>
       )}
     </>
