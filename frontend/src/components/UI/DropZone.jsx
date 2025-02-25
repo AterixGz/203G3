@@ -1,4 +1,4 @@
-import { Upload, X, Trash2 } from "lucide-react" // เพิ่ม Trash2
+import { Upload, X, Trash2, Eye } from "lucide-react"
 import { useState, useEffect } from "react"
 import axios from "axios"
 import "./DropZone.css"
@@ -207,21 +207,22 @@ export default function DropZone() {
                     <div className="preview-container">
                         {files.map((file, index) => (
                             <div key={index} className="file-preview">
-                                <div
-                                    className="file-icon"
-                                    onClick={() => handleFilePreview(file)}
-                                    style={{ cursor: file.type === 'application/pdf' || file.type.startsWith('image/png') ? 'pointer' : 'default' }}
-                                >
+                                <div className="file-icon">
                                     <span className="file-extension">
                                         {file.name.split('.').pop().toUpperCase()}
                                     </span>
                                 </div>
-                                <div
-                                    className="file-info"
-                                    onClick={() => handleFilePreview(file)}
-                                    style={{ cursor: file.type === 'application/pdf' || file.type.startsWith('image/png') ? 'pointer' : 'default' }}
-                                >
-                                    <h4 className="file-name">{file.name}</h4>
+                                <div className="file-info">
+                                    <div className="file-name-container">
+                                        <h4 className="file-name">{file.name}</h4>
+                                        {(file.type === 'application/pdf' || file.type.startsWith('image/png')) && (
+                                            <Eye
+                                                className="preview-icon"
+                                                size={18}
+                                                onClick={() => handleFilePreview(file)}
+                                            />
+                                        )}
+                                    </div>
                                     <div className="progress-bar">
                                         <div
                                             className="progress-fill"
@@ -259,7 +260,6 @@ export default function DropZone() {
 
             {uploadError && <p className="upload-error">{uploadError}</p>}
 
-            {/* Preview Modal */}
             {previewFile && (
                 <div className="preview-modal-overlay" onClick={() => setPreviewFile(null)}>
                     <div className="preview-modal" onClick={e => e.stopPropagation()}>
