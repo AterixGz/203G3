@@ -12,6 +12,20 @@ const Login = () => {
   const [token, setToken] = useState(null);
   const navigate = useNavigate();
 
+/*************  ✨ Codeium Command ⭐  *************/
+/**
+ * Handles the form submission for user login.
+ * Prevents the default form action, and attempts to log the user in by sending
+ * a POST request to the server with the provided username and password.
+ * If the login is successful, stores the JWT token, updates the message state,
+ * navigates to the dashboard, and saves the token in localStorage.
+ * If the login fails, sets an appropriate error message.
+ * Catches any errors that occur during the fetch operation and sets an error message.
+ *
+ * @param {Event} e - The form submission event.
+ */
+
+/******  4cfaac5f-3ac3-4d1f-b8bc-37b394c836fb  *******/
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
@@ -78,9 +92,8 @@ const Login = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-50 transition-all duration-300"
-            >
-              Login
+              className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-white hover:text-black hover:shadow-[5px_5px_15px_rgba(0,0,0,0.2)] focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-50 transition-all duration-300">              
+              <b>Login</b>
             </button>
           </form>
         ) : (
@@ -95,10 +108,10 @@ const Login = () => {
           </div>
         )}
         {/* ✅ เพิ่มลิงก์ไปหน้า Register */}
-        <p className="mt-4 text-center">
+        <p className="mt-4 text-center !text-[15px] !text-gray-400">
           Don't have an account?{" "}
           <Link to="/register" className="text-black font-semibold hover:underline">
-            Register here
+            Sign up
           </Link>
         </p>
         {message && !token && <p className="mt-4 text-center text-sm text-red-600">{message}</p>}
@@ -107,4 +120,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Login; 

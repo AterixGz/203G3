@@ -36,8 +36,8 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-96">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Register</h2>
+      <div className="bg-white p-8 rounded-lg shadow-xl w-96 transition-all duration-300 hover:shadow-2xl">
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Sign up</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4 relative">
             <FaUser className="absolute top-3 left-3 text-gray-400" />
@@ -61,13 +61,13 @@ const Register = () => {
               required
             />
           </div>
-          <button type="submit" className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800">
-            Register
+          <button type="submit" className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-white hover:text-black hover:shadow-[5px_5px_15px_rgba(0,0,0,0.2)] focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-50 transition-all duration-300">
+            <b>Sign up</b>
           </button>
         </form>
 
         {/* ✅ เพิ่มลิงก์ไปหน้า Login */}
-        <p className="mt-4 text-center">
+        <p className="mt-4 text-center !text-[15px] !text-gray-400">
           Already have an account?{" "}
           <Link to="/login" className="text-black font-semibold hover:underline">
             Login here
