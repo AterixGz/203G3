@@ -35,7 +35,7 @@ export default function Layout({ children }) {
             <Menu className="w-6 h-6 text-gray-700" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gray-900"></div>
+            <div className="w-8 h-8 rounded-xl bg-gray-900" ></div>
             <span className="font-semibold text-gray-900">DocManager</span>
           </div>
         </div>
@@ -54,7 +54,7 @@ export default function Layout({ children }) {
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gray-900"></div>
+                <img className="w-8 h-8 rounded-l " src="openedbook.svg"></img>
                 <h1 className="font-semibold text-xl text-gray-900">DocManager</h1>
               </div>
               <button
