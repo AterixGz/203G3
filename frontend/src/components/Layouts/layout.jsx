@@ -1,8 +1,7 @@
 "use client"
 
 import { Menu, Search, Bell, User, Upload, X, Home, FolderOpen, Star, Clock, Settings } from "lucide-react"
-import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom";
 
 
@@ -123,7 +122,7 @@ export default function Layout({ children }) {
               <div className="w-8 h-8 rounded-full bg-gray-200"></div>
               <div className="flex-1">
                 <h4 className="font-medium text-sm">John Doe</h4>
-                <p className="text-xs text-gray-500">john@example.com</p>
+                <p className="text-xs text-gray-500">john@spumail.com</p>
               </div>
               <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
                 <Settings className="w-5 h-5 text-gray-500" />
@@ -148,7 +147,7 @@ export default function Layout({ children }) {
 function HeaderComponent() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  
 
   const handleAuthAction = () => {
     if (token) {

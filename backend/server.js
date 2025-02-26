@@ -26,7 +26,7 @@ app.use(cors());
 app.use(express.json());
 
 const users = [
-  { username: 'testuser', password: '$2b$12$q2EKI.3z4ViaaVO0e3MPuerhbqvKlKVRJ0myGlO62vq/KZAMEqRkG' } // hashed password for "password123"
+  { username: 'admin', password: '$2b$12$q2EKI.3z4ViaaVO0e3MPuerhbqvKlKVRJ0myGlO62vq/KZAMEqRkG' } // hashed password for "password123"
 ];
 
 const SECRET_KEY = process.env.JWT_SECRET || 'your-secret-key';
