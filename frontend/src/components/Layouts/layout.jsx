@@ -1,14 +1,14 @@
 "use client"
 
 import { Menu, Search, Bell, User, Upload, X, Home, FolderOpen, Star, Clock, Settings } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 
 
 
 export default function Layout({ children }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false)
-  
 
   const navItems = [
     { icon: Home, label: "Home", active: true },
@@ -137,7 +137,7 @@ export default function Layout({ children }) {
       <main className="lg:ml-64 pt-0 lg:pt-4 px-4 pb-4">
         {/* Desktop Header */}
         <div className="hidden lg:block">
-          <Header />
+          <HeaderComponent />
         </div>
         <div className="mt-6">{children}</div>
       </main>
@@ -145,7 +145,21 @@ export default function Layout({ children }) {
   )
 }
 
-function Header() {
+function HeaderComponent() {
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+
+  const handleAuthAction = () => {
+    if (token) {
+      localStorage.removeItem("token"); // ลบ Token ออก 
+      setToken(null);
+      navigate("/login");
+    } else {
+      navigate("/login");
+    }
+  };
+
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-4 w-full max-w-xl">
@@ -164,13 +178,14 @@ function Header() {
           <Bell className="w-5 h-5 text-gray-600" />
           <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-gray-900"></span>
         </button>
-        <Link 
-          to="/login"
+        <button 
+          onClick={handleAuthAction}
           className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 transition-colors"
         >
-          <User className="w-5 h-5 text-gray-600" />
-          <span className="text-sm font-medium">Login</span>
-        </Link>
+          <User className="w-5 h-5" />
+          
+          <span className="text-sm font-medium">{token ? "Logout" : "Login"}</span>
+        </button>
       </div>
     </header>
   )
