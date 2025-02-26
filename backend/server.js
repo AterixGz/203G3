@@ -144,6 +144,7 @@ app.get("/files", async (req, res) => {
 });
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+
 // API สำหรับดาวน์โหลดไฟล์
 app.get("/download/:filename", (req, res) => {
   const filePath = path.resolve(__dirname, "uploads", req.params.filename);
@@ -154,7 +155,7 @@ app.get("/download/:filename", (req, res) => {
 
   res.download(filePath, (err) => {
     if (err) {
-      console.error("❌ Error downloading file:", err);
+      console.error("Error downloading file:", err);
       res.status(500).json({ error: "Error downloading file", details: err.message });
     }
   });

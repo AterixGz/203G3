@@ -59,9 +59,9 @@ function DocumentCard({ file, setFiles }) {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      console.log(`✅ ดาวน์โหลดไฟล์ "${file.name}" สำเร็จ`);
+      console.log(`ดาวน์โหลดไฟล์ "${file.name}" สำเร็จ`);
     } catch (error) {
-      console.error("❌ ดาวน์โหลดไฟล์ไม่สำเร็จ:", error);
+      console.error(" ดาวน์โหลดไฟล์ไม่สำเร็จ:", error);
     } finally {
       closeDropdown();
     }
