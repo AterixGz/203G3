@@ -28,7 +28,7 @@ app.use(cors());
 app.use(express.json());
 
 const users = [
-  { username: 'admin', password: '$2b$12$q2EKI.3z4ViaaVO0e3MPuerhbqvKlKVRJ0myGlO62vq/KZAMEqRkG' } // hashed password for "password123"
+  { username: 'testuser', password: '$2b$12$q2EKI.3z4ViaaVO0e3MPuerhbqvKlKVRJ0myGlO62vq/KZAMEqRkG' } // hashed password for "password123"
 ];
 
 const SECRET_KEY = process.env.JWT_SECRET || 'your-secret-key';
@@ -171,7 +171,7 @@ app.get("/download/:filename", authenticateToken, (req, res) => {
 
   res.download(filePath, (err) => {
     if (err) {
-      console.error("Error downloading file:", err);
+      console.error("❌ Error downloading file:", err);
       res.status(500).json({ error: "Error downloading file", details: err.message });
     }
   });

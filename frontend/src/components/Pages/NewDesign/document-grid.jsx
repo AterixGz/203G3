@@ -91,9 +91,9 @@ function DocumentCard({ file, setFiles, token }) {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      console.log(`ดาวน์โหลดไฟล์ "${file.name}" สำเร็จ`);
+      console.log(`✅ ดาวน์โหลดไฟล์ "${file.name}" สำเร็จ`);
     } catch (error) {
-      console.error(" ดาวน์โหลดไฟล์ไม่สำเร็จ:", error);
+      console.error("❌ ดาวน์โหลดไฟล์ไม่สำเร็จ:", error);
     } finally {
       closeDropdown();
     }
@@ -152,6 +152,10 @@ function DocumentCard({ file, setFiles, token }) {
               <button className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50" onClick={handleDownload}>
                 <Download className="w-4 h-4" />
                 Download
+              </button>
+              <button className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50" onClick={closeDropdown}>
+                <Edit className="w-4 h-4" />
+                Rename
               </button>
               <button className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600 hover:bg-gray-50" onClick={confirmDelete}>
                 <Trash2 className="w-4 h-4" />

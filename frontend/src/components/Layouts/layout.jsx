@@ -2,9 +2,6 @@
 
 import { Menu, Search, Bell, User, Upload, X, Home, FolderOpen, Star, Clock, Settings } from "lucide-react"
 import { useState } from "react"
-import { useNavigate } from "react-router-dom";
-
-
 
 export default function Layout({ children }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false)
@@ -34,7 +31,7 @@ export default function Layout({ children }) {
             <Menu className="w-6 h-6 text-gray-700" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gray-900" ></div>
+            <div className="w-8 h-8 rounded-xl bg-gray-900"></div>
             <span className="font-semibold text-gray-900">DocManager</span>
           </div>
         </div>
@@ -53,7 +50,7 @@ export default function Layout({ children }) {
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <img className="w-8 h-8 rounded-l " src="openedbook.svg"></img>
+                <div className="w-8 h-8 rounded-xl bg-gray-900"></div>
                 <h1 className="font-semibold text-xl text-gray-900">DocManager</h1>
               </div>
               <button
@@ -122,7 +119,7 @@ export default function Layout({ children }) {
               <div className="w-8 h-8 rounded-full bg-gray-200"></div>
               <div className="flex-1">
                 <h4 className="font-medium text-sm">John Doe</h4>
-                <p className="text-xs text-gray-500">john@spumail.com</p>
+                <p className="text-xs text-gray-500">john@example.com</p>
               </div>
               <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
                 <Settings className="w-5 h-5 text-gray-500" />
@@ -136,7 +133,7 @@ export default function Layout({ children }) {
       <main className="lg:ml-64 pt-0 lg:pt-4 px-4 pb-4">
         {/* Desktop Header */}
         <div className="hidden lg:block">
-          <HeaderComponent />
+          <Header />
         </div>
         <div className="mt-6">{children}</div>
       </main>
@@ -144,21 +141,7 @@ export default function Layout({ children }) {
   )
 }
 
-function HeaderComponent() {
-  const [token, setToken] = useState(localStorage.getItem("token"));
-  const navigate = useNavigate();
-  
-
-  const handleAuthAction = () => {
-    if (token) {
-      localStorage.removeItem("token"); // ลบ Token ออก 
-      setToken(null);
-      navigate("/login");
-    } else {
-      navigate("/login");
-    }
-  };
-
+function Header() {
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-4 w-full max-w-xl">
@@ -177,13 +160,9 @@ function HeaderComponent() {
           <Bell className="w-5 h-5 text-gray-600" />
           <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-gray-900"></span>
         </button>
-        <button 
-          onClick={handleAuthAction}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 transition-colors"
-        >
-          <User className="w-5 h-5" />
-          
-          <span className="text-sm font-medium">{token ? "Logout" : "Login"}</span>
+        <button className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 transition-colors">
+          <User className="w-5 h-5 text-gray-600" />
+          <span className="text-sm font-medium">Profile</span>
         </button>
       </div>
     </header>
