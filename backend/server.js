@@ -13,6 +13,8 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname , join } from 'path';
 
+import { addUser, verifyUser, getUser, updateUserFiles } from './user.js';
+
 const app = express();
 const PORT = 3000;
 
@@ -45,38 +47,25 @@ const authenticateToken = (req, res, next) => {
 };
 
 app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
-
-  // ตรวจสอบว่ามี username ซ้ำหรือไม่
-  const existingUser = users.find((u) => u.username === username);
-  if (existingUser) {
-    return res.status(400).json({ message: 'Username already exists.' });
-  }
-
-  // Hash password
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // เพิ่ม user ใหม่
-  users.push({ username, password: hashedPassword });
-
-  res.status(201).json({ message: 'User registered successfully!' });
+    try {
+        const { username, password } = req.body;
+        await addUser(username, password);
+        res.status(201).json({ message: 'User registered successfully!' });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 });
 
 // Login route
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  
-
-  const user = users.find((u) => u.username === username);
-  if (!user) return res.status(400).json({ message: 'Invalid username' });
-
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    return res.status(400).json({ message: 'Invalid password.' });
-  }
-
-  const token = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '1h' });
-  res.json({ token });
+    try {
+        const { username, password } = req.body;
+        const user = await verifyUser(username, password);
+        const token = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '1h' });
+        res.json({ token });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 });
 
 // Protected route example
@@ -107,47 +96,74 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // API สำหรับรับหลายไฟล์และอัปโหลด
-app.post("/upload", upload.array("file", 10), (req, res) => {
-  if (!req.files) {
-    return res.status(400).json({ message: "No files uploaded" });
-  }
-
-  res.json({
-    message: "Files uploaded successfully",
-    files: req.files,
-  });
-});
-
-
-//แสดงไฟล์
-app.get("/files", async (req, res) => {
-  try {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-
-    const uploadFolder = join(__dirname, "uploads"); // ✅ ใช้ join อย่างถูกต้อง
-
-    if (!fs.existsSync(uploadFolder)) {
-      return res.status(404).json({ error: "Upload folder not found" });
+app.post("/upload", authenticateToken, upload.array("file", 10), (req, res) => {
+    if (!req.files) {
+        return res.status(400).json({ message: "No files uploaded" });
     }
 
-    const files = await fs.promises.readdir(uploadFolder);
-    const fileUrls = files.map(file => ({
-      name: file,
-      url: `http://localhost:3000/uploads/${file}`
+    const user = getUser(req.user.username);
+    const newFiles = req.files.map(file => ({
+        name: file.filename,
+        originalName: file.originalname,
+        uploadDate: moment().format(),
+        size: file.size,
+        type: file.mimetype
+    }));
+
+    user.files.push(...newFiles);
+    updateUserFiles(req.user.username, user.files);
+
+    res.json({
+        message: "Files uploaded successfully",
+        files: newFiles
+    });
+});
+
+// แก้ไข files endpoint ให้แสดงเฉพาะไฟล์ของ user ที่ login
+app.get("/files", authenticateToken, async (req, res) => {
+  try {
+    // ดึงข้อมูล user จาก token
+    const username = req.user.username;
+    const user = getUser(username);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // ดึงข้อมูลไฟล์จาก user
+    const userFiles = user.files;
+
+    // สร้าง URL สำหรับแต่ละไฟล์
+    const fileUrls = userFiles.map(file => ({
+      name: file.name,
+      originalName: file.originalName,
+      uploadDate: file.uploadDate,
+      size: file.size,
+      type: file.type,
+      url: `http://localhost:3000/uploads/${file.name}`
     }));
 
     res.json({ files: fileUrls });
   } catch (err) {
-    res.status(500).json({ error: "ไม่สามารถอ่านโฟลเดอร์ได้", details: err.message });
+    res.status(500).json({ error: "Error fetching files", details: err.message });
   }
 });
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// แก้ไข download endpoint ให้ตรวจสอบสิทธิ์
+app.get("/download/:filename", authenticateToken, (req, res) => {
+  const username = req.user.username;
+  const user = getUser(username);
+  const filename = req.params.filename;
 
-// API สำหรับดาวน์โหลดไฟล์
-app.get("/download/:filename", (req, res) => {
-  const filePath = path.resolve(__dirname, "uploads", req.params.filename);
+  // ตรวจสอบว่าไฟล์เป็นของ user นี้หรือไม่
+  const fileExists = user.files.some(file => file.name === filename);
+  if (!fileExists) {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
+  const filePath = path.resolve(__dirname, "uploads", filename);
 
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ error: "File not found" });
@@ -161,22 +177,31 @@ app.get("/download/:filename", (req, res) => {
   });
 });
 
-
-//ลบไฟล์
-app.delete("/files/:filename", async (req, res) => {
+// แก้ไข delete endpoint ให้ลบได้เฉพาะไฟล์ของตัวเอง
+app.delete("/files/:filename", authenticateToken, async (req, res) => {
+  const username = req.user.username;
+  const user = getUser(username);
   const filename = req.params.filename;
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  const uploadFolder = join(__dirname, "uploads");
+
+  // ตรวจสอบว่าไฟล์เป็นของ user นี้หรือไม่
+  const fileIndex = user.files.findIndex(file => file.name === filename);
+  if (fileIndex === -1) {
+    return res.status(403).json({ error: "Access denied" });
+  }
 
   try {
-    await fs.promises.unlink(join(uploadFolder, filename));
+    // ลบข้อมูลไฟล์จาก user's files array
+    user.files.splice(fileIndex, 1);
+    updateUserFiles(username, user.files);
+
+    // ลบไฟล์จริงจาก disk
+    await fs.promises.unlink(join(__dirname, "uploads", filename));
     res.json({ message: "File deleted successfully" });
   } catch (err) {
-    res.status(500).json({ error: "ไม่สามารถลบไฟล์ได้", details: err.message });
+    res.status(500).json({ error: "Cannot delete file", details: err.message });
   }
-  
-})
+});
+
 // เปิดเซิร์ฟเวอร์
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

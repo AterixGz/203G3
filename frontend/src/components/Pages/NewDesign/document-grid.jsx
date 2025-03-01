@@ -3,29 +3,57 @@ import { MoreVertical, Download, Trash2, Edit, X } from "lucide-react";
 import axios from "axios";
 import { createPortal } from "react-dom";
 
+// Parent component
 export default function DocumentGrid() {
   const [files, setFiles] = useState([]);
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // ดึงข้อมูลไฟล์ทุกๆ 2 วินาที
+  // แก้ไขฟังก์ชัน fetchFiles
   useEffect(() => {
-    const fetchFiles = () => {
-      fetch("http://localhost:3000/files")
-        .then((res) => res.json())
-        .then((data) => setFiles(data.files || []))
-        .catch((error) => console.error("❌ Error fetching files:", error));
+    const fetchFiles = async () => {
+      // ถ้าไม่มี token ให้ return ออกไป
+      if (!token) {
+        console.log("No token found");
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://localhost:3000/files", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setFiles(response.data.files || []);
+      } catch (error) {
+        console.error("❌ Error fetching files:", error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token'); // ลบ token ที่หมดอายุ
+          setToken(null);
+        }
+      }
     };
 
     fetchFiles();
     const interval = setInterval(fetchFiles, 2000);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [token]);
 
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-        {Array.isArray(files) && files.length > 0 ? (
-          files.map((file) => <DocumentCard key={file.name} file={file} setFiles={setFiles} />)
+        {!token ? (
+          <p className="col-span-full text-center text-gray-500">
+            Please login to view files
+          </p>
+        ) : Array.isArray(files) && files.length > 0 ? (
+          files.map((file) => (
+            <DocumentCard
+              key={file.name}
+              file={file}
+              setFiles={setFiles}
+              token={token}
+            />
+          ))
         ) : (
           <p className="col-span-full text-center text-gray-500">
             No files found
@@ -36,7 +64,8 @@ export default function DocumentGrid() {
   );
 }
 
-function DocumentCard({ file, setFiles }) {
+// Child component ที่มี handleDelete
+function DocumentCard({ file, setFiles, token }) {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const dropdownRef = useRef(null);
@@ -49,6 +78,9 @@ function DocumentCard({ file, setFiles }) {
     try {
       const response = await axios.get(`http://localhost:3000/download/${file.name}`, {
         responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -76,18 +108,15 @@ function DocumentCard({ file, setFiles }) {
   // ฟังก์ชันลบไฟล์
   const handleDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/files/${file.name}`, {
-        method: "DELETE",
+      await axios.delete(`http://localhost:3000/files/${file.name}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-
-      if (!response.ok) {
-        throw new Error("❌ ลบไฟล์ไม่สำเร็จ");
-      }
-
       setFiles((prevFiles) => prevFiles.filter((f) => f.name !== file.name));
       console.log(`🗑️ ลบไฟล์ "${file.name}" สำเร็จ`);
     } catch (error) {
-      console.error(error.message);
+      console.error("ลบไฟล์ไม่สำเร็จ:", error);
     } finally {
       setShowConfirmModal(false);
     }

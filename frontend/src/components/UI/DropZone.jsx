@@ -12,8 +12,15 @@ export default function DropZone() {
     const [uploadError, setUploadError] = useState(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [previewFile, setPreviewFile] = useState(null);
+    const [token, setToken] = useState(localStorage.getItem('token'));
 
-
+    // เพิ่ม useEffect เพื่อตรวจสอบ token
+    useEffect(() => {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+            setToken(storedToken);
+        }
+    }, []);
 
     useEffect(() => {
         const handlePaste = (event) => {
@@ -66,7 +73,13 @@ export default function DropZone() {
         });
     };
 
+    // แก้ไข handleUpload function
     const handleUpload = async () => {
+        if (!token) {
+            setUploadError("Please login first to upload files.");
+            return;
+        }
+
         if (files.length > 0) {
             setIsUploading(true);
             setUploadError(null);
@@ -75,32 +88,40 @@ export default function DropZone() {
             files.forEach(file => formData.append("file", file));
     
             try {
-                const response = await axios.post("http://localhost:3000/upload", formData, {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                });
+                const response = await axios.post(
+                    "http://localhost:3000/upload", 
+                    formData,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                            "Authorization": `Bearer ${token}`
+                        },
+                    }
+                );
     
                 console.log("Files uploaded successfully", response.data);
                 setFiles([]);
                 setIsUploadReady(false);
                 setFileProgress({});
-                setUploadSuccess(true); // ✅ แสดงแจ้งเตือนเมื่ออัปโหลดสำเร็จ
+                setUploadSuccess(true);
     
-                // ซ่อนแจ้งเตือนหลังจาก 3 วินาที
                 setTimeout(() => {
                     setUploadSuccess(false);
                 }, 3000);
             } catch (error) {
                 console.error("Upload failed:", error);
-                setUploadError("Error uploading files. Please try again.");
+                if (error.response?.status === 401) {
+                    setUploadError("Your session has expired. Please login again.");
+                    localStorage.removeItem('token'); // Clear invalid token
+                    setToken(null);
+                } else {
+                    setUploadError("Error uploading files. Please try again.");
+                }
             } finally {
                 setIsUploading(false);
             }
         }
     };
-    
-
 
     const handleRemoveFile = (index) => {
         const fileToRemove = files[index];
