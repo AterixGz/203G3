@@ -185,7 +185,7 @@ export default function DropZone() {
 
     const handleFilePreview = (file) => {
         const fileType = file.type;
-        if (fileType === 'application/pdf' || fileType.startsWith('image/png')) {
+        if (fileType === 'application/pdf' || fileType.startsWith('image/')) {
             setPreviewFile(file);
         }
     };
@@ -249,7 +249,7 @@ export default function DropZone() {
                                 <div className="file-info">
                                     <div className="file-name-container">
                                         <h4 className="file-name">{file.name}</h4>
-                                        {(file.type === 'application/pdf' || file.type.startsWith('image/png')) && (
+                                        {(file.type === 'application/pdf' || file.type.startsWith('image/')) && (
                                             <Eye
                                                 className="preview-icon"
                                                 size={18}
@@ -303,7 +303,7 @@ export default function DropZone() {
                         >
                             <X />
                         </button>
-                        {previewFile.type.startsWith('image/png') ? (
+                        {previewFile.type.startsWith('image/') ? (
                             <img
                                 src={URL.createObjectURL(previewFile)}
                                 alt={previewFile.name}
