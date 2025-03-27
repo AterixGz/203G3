@@ -1,35 +1,29 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// App.jsx
+import React, { useState } from 'react';
+import './App.css';
+import Sidebar from './components/Sidebar';
+import PurchaseOrder from './components/PurchaseOrder';
+import InventoryReceiving from './components/InventoryReceiving';
+import UnitCostViewer from './components/UnitCostViewer';
+import InventoryDisbursement from './components/InventoryDisbursement';
+import AutoRequisition from './components/AutoRequisition';
+
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeTab, setActiveTab] = useState('purchase-order');
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app-container">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <main className="content">
+        {activeTab === 'purchase-order' && <PurchaseOrder />}
+        {activeTab === 'receiving' && <InventoryReceiving />}
+        {activeTab === 'unit-cost' && <UnitCostViewer />}
+        {activeTab === 'disbursement' && <InventoryDisbursement />}
+        {activeTab === 'auto-requisition' && <AutoRequisition />}
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
