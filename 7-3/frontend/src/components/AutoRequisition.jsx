@@ -76,7 +76,7 @@ function AutoRequisition() {
   }
 
   return (
-    <div className="card"> {/* Remove mt-16 class */}
+    <>
       <div className="card-header">
         <div className="header-content">
           <div>
@@ -93,127 +93,129 @@ function AutoRequisition() {
           </div>
         </div>
       </div>
-      <div className="card-content">
-        {showSettings ? (
-          <div>
-            <h3 className="section-title">ตั้งค่าพิกัดขั้นต่ำและการสั่งซื้ออัตโนมัติ</h3>
+      <div className="content-section">
+        <div className="card-content">
+          {showSettings ? (
+            <div>
+              <h3 className="section-title">ตั้งค่าพิกัดขั้นต่ำและการสั่งซื้ออัตโนมัติ</h3>
 
-            <table>
-              <thead>
-                <tr>
-                  <th>รหัสพัสดุ</th>
-                  <th>รายการ</th>
-                  <th>คงเหลือ</th>
-                  <th>พิกัดขั้นต่ำ</th>
-                  <th>สั่งซื้ออัตโนมัติ</th>
-                  <th>สถานะ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {itemSettings.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.code}</td>
-                    <td>{item.name}</td>
-                    <td>{item.available}</td>
-                    <td>
-                      <input
-                        type="number"
-                        value={item.minThreshold}
-                        onChange={(e) => updateMinThreshold(item.id, Number(e.target.value))}
-                        min={1}
-                        className="input-small"
-                      />
-                    </td>
-                    <td>
-                      <label className="switch">
-                        <input type="checkbox" checked={item.autoReorder} onChange={() => toggleAutoReorder(item.id)} />
-                        <span className="slider"></span>
-                      </label>
-                    </td>
-                    <td>
-                      {item.available < item.minThreshold ? (
-                        <span className="status-error">
-                          <span className="icon">⚠</span> ต่ำกว่าพิกัด
-                        </span>
-                      ) : (
-                        <span className="status-ok">
-                          <span className="icon">✓</span> ปกติ
-                        </span>
-                      )}
-                    </td>
+              <table>
+                <thead>
+                  <tr>
+                    <th>รหัสพัสดุ</th>
+                    <th>รายการ</th>
+                    <th>คงเหลือ</th>
+                    <th>พิกัดขั้นต่ำ</th>
+                    <th>สั่งซื้ออัตโนมัติ</th>
+                    <th>สถานะ</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div>
-            <h3 className="section-title">ใบขอซื้ออัตโนมัติ</h3>
+                </thead>
+                <tbody>
+                  {itemSettings.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.code}</td>
+                      <td>{item.name}</td>
+                      <td>{item.available}</td>
+                      <td>
+                        <input
+                          type="number"
+                          value={item.minThreshold}
+                          onChange={(e) => updateMinThreshold(item.id, Number(e.target.value))}
+                          min={1}
+                          className="input-small"
+                        />
+                      </td>
+                      <td>
+                        <label className="switch">
+                          <input type="checkbox" checked={item.autoReorder} onChange={() => toggleAutoReorder(item.id)} />
+                          <span className="slider"></span>
+                        </label>
+                      </td>
+                      <td>
+                        {item.available < item.minThreshold ? (
+                          <span className="status-error">
+                            <span className="icon">⚠</span> ต่ำกว่าพิกัด
+                          </span>
+                        ) : (
+                          <span className="status-ok">
+                            <span className="icon">✓</span> ปกติ
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div>
+              <h3 className="section-title">ใบขอซื้ออัตโนมัติ</h3>
 
-            {requisitions.length > 0 ? (
-              <div className="requisition-list">
-                {requisitions.map((req) => (
-                  <div key={req.id} className="requisition-card">
-                    <div className="requisition-header">
-                      <div>
-                        <h4 className="requisition-title">ใบขอซื้อเลขที่: {req.id}</h4>
-                        <p className="requisition-date">วันที่: {req.date}</p>
+              {requisitions.length > 0 ? (
+                <div className="requisition-list">
+                  {requisitions.map((req) => (
+                    <div key={req.id} className="requisition-card">
+                      <div className="requisition-header">
+                        <div>
+                          <h4 className="requisition-title">ใบขอซื้อเลขที่: {req.id}</h4>
+                          <p className="requisition-date">วันที่: {req.date}</p>
+                        </div>
+                        <span
+                          className={`status-badge ${req.status === "อนุมัติแล้ว" ? "status-approved" : "status-pending"}`}
+                        >
+                          {req.status}
+                        </span>
                       </div>
-                      <span
-                        className={`status-badge ${req.status === "อนุมัติแล้ว" ? "status-approved" : "status-pending"}`}
-                      >
-                        {req.status}
-                      </span>
-                    </div>
-                    <div className="requisition-content">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>รหัสพัสดุ</th>
-                            <th>รายการ</th>
-                            <th>จำนวน</th>
-                            <th>ราคาต่อหน่วย</th>
-                            <th>รวม</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {req.items.map((item) => (
-                            <tr key={item.itemId}>
-                              <td>{item.code}</td>
-                              <td>{item.name}</td>
-                              <td>{item.quantity}</td>
-                              <td>{item.unitCost.toLocaleString()} บาท</td>
-                              <td>{(item.quantity * item.unitCost).toLocaleString()} บาท</td>
+                      <div className="requisition-content">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>รหัสพัสดุ</th>
+                              <th>รายการ</th>
+                              <th>จำนวน</th>
+                              <th>ราคาต่อหน่วย</th>
+                              <th>รวม</th>
                             </tr>
-                          ))}
-                          <tr className="total-row">
-                            <td colSpan={4} className="text-right">
-                              รวมทั้งสิ้น
-                            </td>
-                            <td>{calculateTotal(req.items).toLocaleString()} บาท</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {req.items.map((item) => (
+                              <tr key={item.itemId}>
+                                <td>{item.code}</td>
+                                <td>{item.name}</td>
+                                <td>{item.quantity}</td>
+                                <td>{item.unitCost.toLocaleString()} บาท</td>
+                                <td>{(item.quantity * item.unitCost).toLocaleString()} บาท</td>
+                              </tr>
+                            ))}
+                            <tr className="total-row">
+                              <td colSpan={4} className="text-right">
+                                รวมทั้งสิ้น
+                              </td>
+                              <td>{calculateTotal(req.items).toLocaleString()} บาท</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="requisition-footer">
+                        {req.status === "รออนุมัติ" && (
+                          <>
+                            <button className="btn-outline btn-sm">แก้ไข</button>
+                            <button className="btn-primary btn-sm">อนุมัติ</button>
+                          </>
+                        )}
+                        {req.status === "อนุมัติแล้ว" && <button className="btn-outline btn-sm">สร้างใบสั่งซื้อ</button>}
+                      </div>
                     </div>
-                    <div className="requisition-footer">
-                      {req.status === "รออนุมัติ" && (
-                        <>
-                          <button className="btn-outline btn-sm">แก้ไข</button>
-                          <button className="btn-primary btn-sm">อนุมัติ</button>
-                        </>
-                      )}
-                      {req.status === "อนุมัติแล้ว" && <button className="btn-outline btn-sm">สร้างใบสั่งซื้อ</button>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state">ไม่มีใบขอซื้ออัตโนมัติ</div>
-            )}
-          </div>
-        )}
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">ไม่มีใบขอซื้ออัตโนมัติ</div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 

@@ -3,11 +3,11 @@ import { ShoppingCart, Package, DollarSign, LogOut, RefreshCw, User } from "reac
 
 function Sidebar({ activeTab, setActiveTab }) {
   const menuItems = [
-    { id: "purchase-order", label: "ใบสั่งซื้อ", icon: <ShoppingCart /> },
-    { id: "receiving", label: "รับพัสดุเข้าคลัง", icon: <Package /> },
-    { id: "unit-cost", label: "ต้นทุนต่อหน่วย", icon: <DollarSign /> },
-    { id: "disbursement", label: "เบิกจ่ายพัสดุ", icon: <LogOut /> },
-    { id: "auto-requisition", label: "ขอซื้ออัตโนมัติ", icon: <RefreshCw /> },
+    { id: "purchase-order", label: "ใบสั่งซื้อ", icon: <ShoppingCart size={18} /> },
+    { id: "receiving", label: "รับพัสดุเข้าคลัง", icon: <Package size={18} /> },
+    { id: "unit-cost", label: "ต้นทุนต่อหน่วย", icon: <DollarSign size={18} /> },
+    { id: "disbursement", label: "เบิกจ่ายพัสดุ", icon: <LogOut size={18} /> },
+    { id: "auto-requisition", label: "ขอซื้ออัตโนมัติ", icon: <RefreshCw size={18} /> },
   ]
 
   return (
@@ -28,7 +28,7 @@ function Sidebar({ activeTab, setActiveTab }) {
       <div className="user-section">
         <div className="user-container">
           <div className="user-avatar">
-            <User size={18} />
+            <User size={16} />
           </div>
           <div className="user-info">
             <div className="user-name">Admin User</div>

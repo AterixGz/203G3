@@ -42,7 +42,7 @@ function UnitCostViewer() {
             onKeyDown={handleKeyDown}
           />
           <button className="btn-primary" onClick={handleSearch}>
-            <span className="icon">🔍</span> ค้นหา
+            <span className="icon">🔍︎</span> ค้นหา
           </button>
         </div>
 

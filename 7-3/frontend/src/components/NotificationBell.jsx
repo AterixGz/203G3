@@ -33,17 +33,17 @@ const NotificationBell = () => {
 
   return (
     <div className="notification-bell">
-      <button 
-        className="notification-button"
+      <div 
         onClick={toggleNotifications}
+        className="bell-icon cursor-pointer"
       >
-        <Bell size={22} />  {/* Increased from 18 */}
+        <Bell size={22} className="text-gray-600 hover:text-gray-900 transition-colors" />
         {notifications.filter(n => n.unread).length > 0 && (
           <span className="notification-badge">
             {notifications.filter(n => n.unread).length}
           </span>
         )}
-      </button>
+      </div>
 
       {isOpen && (
         <div className={`notification-dropdown ${isAnimating ? 'show' : ''}`}>
