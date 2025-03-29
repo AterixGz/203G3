@@ -1,5 +1,5 @@
 "use client"
-import { ShoppingCart, Package, DollarSign, LogOut, RefreshCw } from "react-feather"
+import { ShoppingCart, Package, DollarSign, LogOut, RefreshCw, User } from "react-feather"
 
 function Sidebar({ activeTab, setActiveTab }) {
   const menuItems = [
@@ -25,6 +25,17 @@ function Sidebar({ activeTab, setActiveTab }) {
           ))}
         </ul>
       </nav>
+      <div className="user-section">
+        <div className="user-container">
+          <div className="user-avatar">
+            <User size={18} />
+          </div>
+          <div className="user-info">
+            <div className="user-name">Admin User</div>
+            <div className="user-role">Administrator</div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -8,12 +8,14 @@ import InventoryReceiving from "./components/InventoryReceiving"
 import UnitCostViewer from "./components/UnitCostViewer"
 import InventoryDisbursement from "./components/InventoryDisbursement"
 import AutoRequisition from "./components/AutoRequisition"
+import NotificationBell from './components/NotificationBell'
 
 function App() {
   const [activeTab, setActiveTab] = useState("purchase-order")
 
   return (
     <div className="app-container">
+      <NotificationBell />
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="content">
         {activeTab === "purchase-order" && <PurchaseOrder />}

@@ -76,7 +76,7 @@ function AutoRequisition() {
   }
 
   return (
-    <div className="card">
+    <div className="card"> {/* Remove mt-16 class */}
       <div className="card-header">
         <div className="header-content">
           <div>
