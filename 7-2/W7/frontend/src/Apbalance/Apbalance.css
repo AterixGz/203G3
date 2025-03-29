@@ -1,0 +1,52 @@
+.ap-balance {
+    width: 90%;
+    margin: 20px auto;
+  }
+  
+  .ap-balance h2 {
+    margin-bottom: 10px;
+  }
+  
+  .ap-balance .filter-section {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+  
+  .ap-balance .filter-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .ap-balance label,
+  .ap-balance input,
+  .ap-balance select {
+    margin-right: 10px;
+  }
+  
+  .ap-balance .filter-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .ap-balance .filter-actions button {
+    padding: 8px 15px;
+    margin-left: 10px;
+  }
+  
+  .ap-balance table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .ap-balance th,
+  .ap-balance td {
+    border: 1px solid #4CAF50;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .ap-balance th {
+    background-color: #4CAF50;
+  }
