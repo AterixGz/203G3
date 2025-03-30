@@ -1,22 +1,3 @@
 [
-  {
-    "receiptNumber": "RCV-626991",
-    "date": "2025-03-30",
-    "deliveryNote": "1",
-    "selectedPO": "PO002",
-    "items": [
-      {
-        "id": 1,
-        "name": "โต๊ะทำงาน",
-        "quantity": 3,
-        "received": 3
-      },
-      {
-        "id": 2,
-        "name": "เก้าอี้สำนักงาน",
-        "quantity": 6,
-        "received": 6
-      }
-    ]
-  }
+  
 ]
