@@ -63,10 +63,35 @@ function InventoryDisbursement() {
     setItems(updatedItems)
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    alert("บันทึกการเบิกจ่ายพัสดุเรียบร้อยแล้ว")
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    const disbursementData = {
+      disbursementNumber,
+      date: document.getElementById("disbursement-date").value,
+      department,
+      requester: document.getElementById("requester").value,
+      items,
+    };
+  
+    try {
+      const response = await fetch("http://localhost:3000/inventory-disbursement", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(disbursementData),
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message); // แจ้งเตือนว่าบันทึกสำเร็จ
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    }
+  };
 
   return (
     <div className="card">

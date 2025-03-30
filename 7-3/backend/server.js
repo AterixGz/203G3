@@ -12,32 +12,34 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DATA_FILE = path.join(__dirname, "purchase_orders.json");
+const INVENTORY_FILE = path.join(__dirname, "data", "InventoryReceiving.json");
+const DISBURSEMENT_FILE = path.join(__dirname, "data", "InventoryDisbursement.json");
 
 app.use(cors());
 app.use(express.json());
 
-// อ่านข้อมูลใบสั่งซื้อ
-app.get("/purchase-orders", (req, res) => {
-  if (!fs.existsSync(DATA_FILE)) {
+// อ่านข้อมูลการเบิกจ่ายพัสดุ
+app.get("/inventory-disbursement", (req, res) => {
+  if (!fs.existsSync(DISBURSEMENT_FILE)) {
     return res.json([]);
   }
-  const data = fs.readFileSync(DATA_FILE, "utf-8");
+  const data = fs.readFileSync(DISBURSEMENT_FILE, "utf-8");
   res.json(JSON.parse(data));
 });
 
-// บันทึกใบสั่งซื้อใหม่
-app.post("/purchase-orders", (req, res) => {
-  const newOrder = req.body;
-  let orders = [];
+// บันทึกข้อมูลการเบิกจ่ายพัสดุใหม่
+app.post("/inventory-disbursement", (req, res) => {
+  const newDisbursement = req.body;
+  let disbursements = [];
 
-  if (fs.existsSync(DATA_FILE)) {
-    const data = fs.readFileSync(DATA_FILE, "utf-8");
-    orders = JSON.parse(data);
+  if (fs.existsSync(DISBURSEMENT_FILE)) {
+    const data = fs.readFileSync(DISBURSEMENT_FILE, "utf-8");
+    disbursements = JSON.parse(data);
   }
 
-  orders.push(newOrder);
-  fs.writeFileSync(DATA_FILE, JSON.stringify(orders, null, 2));
-  res.json({ message: "บันทึกใบสั่งซื้อเรียบร้อยแล้ว" });
+  disbursements.push(newDisbursement);
+  fs.writeFileSync(DISBURSEMENT_FILE, JSON.stringify(disbursements, null, 2));
+  res.json({ message: "บันทึกการเบิกจ่ายพัสดุเรียบร้อยแล้ว" });
 });
 
 app.listen(PORT, () => {

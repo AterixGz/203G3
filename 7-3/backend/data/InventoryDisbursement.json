@@ -1,0 +1,17 @@
+[
+  {
+    "disbursementNumber": "DSB-317069",
+    "date": "2025-03-30",
+    "department": "1",
+    "requester": "kamin",
+    "items": [
+      {
+        "id": 1,
+        "itemId": "1",
+        "name": "คอมพิวเตอร์",
+        "quantity": 5,
+        "available": 15
+      }
+    ]
+  }
+]

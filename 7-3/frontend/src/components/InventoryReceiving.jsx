@@ -44,10 +44,35 @@ function InventoryReceiving() {
     setItems(updatedItems)
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    alert("บันทึกการรับพัสดุเรียบร้อยแล้ว")
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    const receivingData = {
+      receiptNumber,
+      date: document.getElementById("receipt-date").value,
+      deliveryNote: document.getElementById("delivery-note").value,
+      selectedPO,
+      items,
+    };
+  
+    try {
+      const response = await fetch("http://localhost:3000/inventory-receiving", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(receivingData),
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message); // แจ้งเตือนว่าบันทึกสำเร็จ
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    }
+  };
 
   return (
     <div className="card">
