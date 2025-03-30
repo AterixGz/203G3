@@ -43,10 +43,37 @@ function PurchaseOrder() {
     return items.reduce((sum, item) => sum + item.total, 0)
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    alert("บันทึกใบสั่งซื้อเรียบร้อยแล้ว")
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // ป้องกันการรีเฟรชหน้า
+  
+    const orderData = {
+      poNumber,
+      date: new Date().toISOString().split("T")[0],
+      supplier: document.getElementById("supplier").value,
+      selectedPR,
+      items,
+      total: calculateTotal(),
+    };
+  
+    try {
+      const response = await fetch("http://localhost:3000/purchase-orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message); // แจ้งเตือนว่าบันทึกสำเร็จ
+      } 
+    } catch (error) {
+      console.error("Error:", error);
+      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    }
+  };
+  
 
   return (
     <div className="card">
