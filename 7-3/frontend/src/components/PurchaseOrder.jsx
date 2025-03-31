@@ -49,7 +49,7 @@ function PurchaseOrder() {
     const orderData = {
       poNumber,
       date: new Date().toISOString().split("T")[0],
-      supplier: document.getElementById("supplier").value,
+      supplier_name: document.getElementById("supplier").value,
       selectedPR,
       items,
       total: calculateTotal(),
