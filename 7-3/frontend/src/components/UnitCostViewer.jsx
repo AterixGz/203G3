@@ -1,23 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 function UnitCostViewer() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [inventoryItems, setInventoryItems] = useState([])
+  const [filteredItems, setFilteredItems] = useState([])
 
-  // Mock inventory data
-  const inventoryItems = [
-    { id: 1, code: "IT001", name: "คอมพิวเตอร์", quantity: 15, unitCost: 25000, location: "คลังใหญ่" },
-    { id: 2, code: "IT002", name: "เมาส์", quantity: 30, unitCost: 500, location: "คลังใหญ่" },
-    { id: 3, code: "IT003", name: "คีย์บอร์ด", quantity: 25, unitCost: 890, location: "คลังใหญ่" },
-    { id: 4, code: "OF001", name: "โต๊ะทำงาน", quantity: 8, unitCost: 4500, location: "คลังเฟอร์นิเจอร์" },
-    { id: 5, code: "OF002", name: "เก้าอี้สำนักงาน", quantity: 12, unitCost: 2200, location: "คลังเฟอร์นิเจอร์" },
-  ]
-
-  const [filteredItems, setFilteredItems] = useState(inventoryItems)
+  useEffect(() => {
+    fetch("http://localhost:3000/inventory")
+      .then((res) => res.json())
+      .then((data) => {
+        setInventoryItems(data)
+        setFilteredItems(data)
+      })
+      .catch((err) => console.error("Error fetching data:", err))
+  }, [])
 
   const handleSearch = () => {
-    const filtered = inventoryItems.filter((item) => item.name.includes(searchTerm) || item.code.includes(searchTerm))
+    const filtered = inventoryItems.filter(
+      (item) => item.name.includes(searchTerm) || item.code.includes(searchTerm)
+    )
     setFilteredItems(filtered)
   }
 
@@ -93,4 +96,3 @@ function UnitCostViewer() {
 }
 
 export default UnitCostViewer
-
