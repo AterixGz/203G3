@@ -75,14 +75,14 @@ app.get("/inventory-receiving", (req, res) => {
 // บันทึกข้อมูลการรับพัสดุใหม่
 app.post("/inventory-receiving", (req, res) => {
   const newReceiving = req.body;
+  console.log("Request body:", newReceiving);
+  const query = `INSERT INTO inventory_receiving (item_id, receiptNumber, date, deliveryNote, selectedPO) VALUES (?, ?, ?, ?, ?)`;
 
-  const query = `INSERT INTO inventory_receiving (item_id, item_name, quantity_received, date_received) VALUES (?, ?, ?, ?)`;
-
-  connection.query(query, [newReceiving.item_id, newReceiving.item_name, newReceiving.quantity_received, newReceiving.date_received], (err, result) => {
+  connection.query(query, [newReceiving.item_id, newReceiving.receiptNumber, newReceiving.date, newReceiving.deliveryNote, newReceiving.selectedPO], (err, result) => {
     if (err) {
       console.error("Error inserting data: ", err);
       return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
-    }
+    } 
     res.json({ message: "บันทึกการรับพัสดุเรียบร้อยแล้ว" });
   });
 });
