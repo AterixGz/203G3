@@ -1,48 +1,152 @@
 const express = require('express');
-const dotenv = require('dotenv');
-const authRoutes = require('./routes/authRoutes');  // ตรวจสอบให้แน่ใจว่าเส้นทางนี้ถูกต้อง
-const prRoutes = require('./routes/prRoutes');
-const poRoutes = require('./routes/poRoutes');
-const poReceiptRoutes = require('./routes/poreceiptRoutes');
-const invoiceRoutes = require('./routes/invoiceRoutes');
-const balanceRoutes = require('./routes/balanceRoutes');
-const balanceAfterPaymentRoutes = require('./routes/balanceAfterPaymentRoutes');
-const paymentRoutes = require('./routes/payments');
+const mysql = require('mysql2/promise');
+const bodyParser = require('body-parser');
+require('dotenv').config();
 
-dotenv.config();
 const app = express();
-app.use(express.json());
+const port = 3000;
 
+// Middleware
+app.use(bodyParser.json());
 
-
-const mysql = require('mysql2');
-const connection = mysql.createConnection({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASS,
+// Database connection
+const db = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'asset_management',
 });
 
-connection.connect((err) => {
-    if (err) {
-        console.error('❌ Database connection failed:', err);
-    } else {
-        console.log('✅ Database connected successfully!');
+// Routes
+
+// Requisition API
+app.post('/requisition', async (req, res) => {
+  const { prNumber, requestDate, department, requester, purpose, items } = req.body;
+  try {
+    const [result] = await db.query(
+      'INSERT INTO requisitions (pr_number, request_date, department, requester, purpose) VALUES (?, ?, ?, ?, ?)',
+      [prNumber, requestDate, department, requester, purpose]
+    );
+    const requisitionId = result.insertId;
+
+    for (const item of items) {
+      await db.query(
+        'INSERT INTO requisition_items (requisition_id, details, quantity, unit_price) VALUES (?, ?, ?, ?)',
+        [requisitionId, item.details, item.quantity, item.unitPrice]
+      );
     }
+
+    res.status(201).json({ message: 'Requisition created successfully', requisitionId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-console.log('Database Config:', process.env.DB_USER, process.env.DB_PASS, process.env.DB_NAME);
+// Purchase Order API
+app.post('/purchase-order', async (req, res) => {
+  const { poNumber, orderDate, vendor, items } = req.body;
+  try {
+    const [result] = await db.query(
+      'INSERT INTO purchase_orders (po_number, order_date, vendor) VALUES (?, ?, ?)',
+      [poNumber, orderDate, vendor]
+    );
+    const purchaseOrderId = result.insertId;
 
+    for (const item of items) {
+      await db.query(
+        'INSERT INTO purchase_order_items (purchase_order_id, name, quantity, price) VALUES (?, ?, ?, ?)',
+        [purchaseOrderId, item.name, item.quantity, item.price]
+      );
+    }
 
-// ตรวจสอบว่าไม่มีข้อผิดพลาดในการใช้งาน
-app.use('/api/auth', authRoutes);
-app.use('/api/pr', prRoutes);
-app.use('/api/po', poRoutes);
-app.use('/api/po-receipt', poReceiptRoutes);
-app.use('/api/invoice', invoiceRoutes);
-app.use('/api/balances', balanceRoutes);
-app.use('/api/balance_after_payment', balanceAfterPaymentRoutes);
-app.use('/api/payments', paymentRoutes);
+    res.status(201).json({ message: 'Purchase Order created successfully', purchaseOrderId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+// PO Receipt API
+app.post('/po-receipt', async (req, res) => {
+  const { poNumber, receiptDate, items } = req.body;
+  try {
+    const [result] = await db.query(
+      'INSERT INTO po_receipts (po_number, receipt_date) VALUES (?, ?)',
+      [poNumber, receiptDate]
+    );
+    const receiptId = result.insertId;
 
+    for (const item of items) {
+      await db.query(
+        'INSERT INTO po_receipt_items (receipt_id, details, quantity) VALUES (?, ?, ?)',
+        [receiptId, item.details, item.quantity]
+      );
+    }
+
+    res.status(201).json({ message: 'PO Receipt created successfully', receiptId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Invoice API
+app.post('/invoice', async (req, res) => {
+  const { invoiceNumber, invoiceDate, dueDate, poRef, vendor, items } = req.body;
+  try {
+    const [result] = await db.query(
+      'INSERT INTO invoices (invoice_number, invoice_date, due_date, po_ref, vendor) VALUES (?, ?, ?, ?, ?)',
+      [invoiceNumber, invoiceDate, dueDate, poRef, vendor]
+    );
+    const invoiceId = result.insertId;
+
+    for (const item of items) {
+      await db.query(
+        'INSERT INTO invoice_items (invoice_id, details, quantity, unit_price) VALUES (?, ?, ?, ?)',
+        [invoiceId, item.details, item.quantity, item.unitPrice]
+      );
+    }
+
+    res.status(201).json({ message: 'Invoice created successfully', invoiceId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Payment API
+app.post('/payment', async (req, res) => {
+  const { paymentNumber, paymentDate, method, bankAccount, notes, invoices } = req.body;
+  try {
+    const [result] = await db.query(
+      'INSERT INTO payments (payment_number, payment_date, method, bank_account, notes) VALUES (?, ?, ?, ?, ?)',
+      [paymentNumber, paymentDate, method, bankAccount, notes]
+    );
+    const paymentId = result.insertId;
+
+    for (const invoice of invoices) {
+      await db.query(
+        'INSERT INTO payment_invoices (payment_id, invoice_number, amount) VALUES (?, ?, ?)',
+        [paymentId, invoice.invoiceNumber, invoice.amount]
+      );
+    }
+
+    res.status(201).json({ message: 'Payment recorded successfully', paymentId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// AP Balance API
+app.get('/ap-balance', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT invoice_number, vendor, due_date, total_amount, paid_amount, (total_amount - paid_amount) AS balance FROM invoices'
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Start server
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
