@@ -25,30 +25,32 @@ function InventoryReceiving() {
 
   // โหลดข้อมูลรายการสินค้าจากใบสั่งซื้อที่เลือก
   const handlePOSelect = (poId) => {
-    setSelectedPO(poId)
+    console.log("Selected PO:", poId); // ✅ Debug
+  
+    setSelectedPO(poId);
     if (!poId) {
-      setItems([])
-      return
+      setItems([]);
+      return;
     }
-
-    // Fetch both PO details and items
+  
     Promise.all([
       fetch(`http://localhost:3000/purchase-orders/${poId}`).then(res => res.json()),
       fetch(`http://localhost:3000/purchase-items/${poId}`).then(res => res.json())
     ])
     .then(([poDetails, itemsData]) => {
-      setItems(itemsData.map((item) => ({ 
+      console.log("Fetched Items:", itemsData); // ✅ Debug ตรวจสอบข้อมูล
+      setItems(itemsData.map((item) => ({
         ...item,
         name: item.name || '',
-        code: item.code || '',
+        code: item.id || '',
         quantity: item.quantity || 0,
         unit_price: item.unit_price || 0,
         received: 0,
         storageLocation: ""
-      })))
+      })));
     })
-    .catch((err) => console.error("Error fetching data:", err))
-  }
+    .catch((err) => console.error("Error fetching data:", err));
+  };
 
   const handleQuantityChange = (id, value) => {
     setItems(items.map((item) => item.id === id ? { ...item, received: value } : item))
