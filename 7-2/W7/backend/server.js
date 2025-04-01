@@ -7,6 +7,7 @@ const poReceiptRoutes = require('./routes/poreceiptRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
 const balanceRoutes = require('./routes/balanceRoutes');
 const balanceAfterPaymentRoutes = require('./routes/balanceAfterPaymentRoutes');
+const paymentRoutes = require('./routes/payments');
 
 dotenv.config();
 const app = express();
@@ -41,6 +42,7 @@ app.use('/api/po-receipt', poReceiptRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/balances', balanceRoutes);
 app.use('/api/balance_after_payment', balanceAfterPaymentRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.listen(3000, () => console.log('Server running on port 3000'));
 
