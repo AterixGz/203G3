@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');  // ตรวจสอบให้แน่ใจว่าเส้นทางนี้ถูกต้อง
 const prRoutes = require('./routes/prRoutes');
 const poRoutes = require('./routes/poRoutes');
+const poReceiptRoutes = require('./routes/poreceiptRoutes');
 
 dotenv.config();
 const app = express();
@@ -33,6 +34,7 @@ console.log('Database Config:', process.env.DB_USER, process.env.DB_PASS, proces
 app.use('/api/auth', authRoutes);
 app.use('/api/pr', prRoutes);
 app.use('/api/po', poRoutes);
+app.use('/api/po-receipt', poReceiptRoutes);
 
 app.listen(3000, () => console.log('Server running on port 3000'));
 
