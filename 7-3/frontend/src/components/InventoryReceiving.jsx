@@ -1,78 +1,89 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 function InventoryReceiving() {
   const [selectedPO, setSelectedPO] = useState("")
   const [receiptNumber, setReceiptNumber] = useState("RCV-" + new Date().getTime().toString().slice(-6))
   const [items, setItems] = useState([])
+  const [purchaseOrders, setPurchaseOrders] = useState([])
 
-  // Mock data for purchase orders
-  const purchaseOrders = [
-    { id: "PO001", supplier: "บริษัท เอบีซี จำกัด", date: "2023-10-25" },
-    { id: "PO002", supplier: "บริษัท เอ็กซ์วาย จำกัด", date: "2023-10-28" },
-  ]
+  // โหลดข้อมูลใบสั่งซื้อจากเซิร์ฟเวอร์
+  useEffect(() => {
+    fetch("http://localhost:3000/purchase-orders")
+      .then((res) => res.json())
+      .then((data) => setPurchaseOrders(data))
+      .catch((err) => console.error("Error fetching purchase orders:", err))
+  }, [])
 
-  // Mock items for selected PO
-  const poItems = {
-    PO001: [
-      { id: 1, name: "คอมพิวเตอร์", quantity: 5, received: 0 },
-      { id: 2, name: "เมาส์", quantity: 10, received: 0 },
-    ],
-    PO002: [
-      { id: 1, name: "โต๊ะทำงาน", quantity: 3, received: 0 },
-      { id: 2, name: "เก้าอี้สำนักงาน", quantity: 6, received: 0 },
-    ],
-  }
-
+  // โหลดข้อมูลรายการสินค้าจากใบสั่งซื้อที่เลือก
   const handlePOSelect = (poId) => {
     setSelectedPO(poId)
-    if (poId && poItems[poId]) {
-      setItems(poItems[poId].map((item) => ({ ...item })))
-    } else {
+    if (!poId) {
       setItems([])
+      return
     }
+
+    fetch(`http://localhost:3000/purchase-items/${poId}`)
+      .then((res) => res.json())
+      .then((data) => setItems(data.map((item) => ({ ...item, received: 0 }))))
+      .catch((err) => console.error("Error fetching purchase items:", err))
   }
 
   const handleQuantityChange = (id, value) => {
-    const updatedItems = items.map((item) => {
-      if (item.id === id) {
-        return { ...item, received: value }
-      }
-      return item
-    })
-    setItems(updatedItems)
+    setItems(items.map((item) => item.id === id ? { ...item, received: value } : item))
   }
 
+  // ตรวจสอบว่าได้กรอกจำนวนรับครบถ้วนทุกรายการหรือไม่
+  const isAllItemsReceived = items.every(item => item.received === item.quantity)
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-  
+    e.preventDefault()
+
+    if (!isAllItemsReceived) {
+      alert("กรุณากรอกจำนวนรับให้ครบถ้วนก่อน")
+      return
+    }
+
     const receivingData = {
       receiptNumber,
       date: document.getElementById("receipt-date").value,
       deliveryNote: document.getElementById("delivery-note").value,
       selectedPO,
       items,
-    };
-  
+    }
+
     try {
       const response = await fetch("http://localhost:3000/inventory-receiving", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(receivingData),
-      });
-  
+      })
+
       if (response.ok) {
-        const result = await response.json();
-        alert(result.message); // แจ้งเตือนว่าบันทึกสำเร็จ
+        const result = await response.json()
+        alert(result.message)
+
+        // บันทึกข้อมูลลงใน inventory_items
+        const inventoryItemsData = items.map(item => ({
+          item_id: item.id,
+          po_id: selectedPO,
+          received_quantity: item.received,
+          total: item.unit_price * item.received,
+        }))
+        await fetch("http://localhost:3000/inventory-items", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(inventoryItemsData),
+        })
+
+        alert("ข้อมูลการรับพัสดุและสินค้าเข้าสู่คลังสำเร็จ")
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+      console.error("Error:", error)
+      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้")
     }
-  };
+  }
 
   return (
     <div className="card">
@@ -97,7 +108,7 @@ function InventoryReceiving() {
                 <option value="">เลือกใบสั่งซื้อ</option>
                 {purchaseOrders.map((po) => (
                   <option key={po.id} value={po.id}>
-                    {po.id} - {po.supplier}
+                    {po.po_number} - {po.supplier_name}
                   </option>
                 ))}
               </select>
@@ -147,6 +158,9 @@ function InventoryReceiving() {
                       </td>
                     </tr>
                   ))}
+                  <tr>
+                    <td colSpan="4"></td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -155,7 +169,7 @@ function InventoryReceiving() {
       </div>
       <div className="card-footer">
         <button className="btn-outline">ยกเลิก</button>
-        <button className="btn-primary" onClick={handleSubmit} disabled={!selectedPO || items.length === 0}>
+        <button className="btn-primary" onClick={handleSubmit} disabled={!selectedPO || items.length === 0 || !isAllItemsReceived}>
           บันทึกการรับพัสดุ
         </button>
       </div>
@@ -164,4 +178,3 @@ function InventoryReceiving() {
 }
 
 export default InventoryReceiving
-

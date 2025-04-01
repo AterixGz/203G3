@@ -60,6 +60,32 @@ app.post("/purchase-orders", (req, res) => {
   });
 });
 
+// API สำหรับดึงข้อมูลใบสั่งซื้อ
+app.get("/purchase-orders", (req, res) => {
+  const sql = "SELECT * FROM purchase_orders";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching purchase orders: ", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลใบสั่งซื้อ" });
+    }
+    res.json(results);
+  });
+});
+
+// API สำหรับดึงรายการสินค้าตามใบสั่งซื้อที่เลือก
+app.get("/purchase-items/:po_id", (req, res) => {
+  const { po_id } = req.params;
+  const sql = "SELECT * FROM purchase_items WHERE po_id = ?";
+  connection.query(sql, [po_id], (err, results) => {
+    if (err) {
+      console.error("Error fetching purchase items: ", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลรายการสินค้า" });
+    }
+    res.json(results);
+  });
+});
+
+
 // บันทึกข้อมูลการรับพัสดุใหม่
 app.post("/inventory-receiving", (req, res) => {
   const newReceiving = req.body;
