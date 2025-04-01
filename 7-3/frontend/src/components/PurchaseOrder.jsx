@@ -4,14 +4,23 @@ import { useState } from "react"
 
 function PurchaseOrder() {
   const [poNumber, setPoNumber] = useState("PO-" + new Date().getTime().toString().slice(-6))
-  const [selectedPR, setSelectedPR] = useState("")
-  const [items, setItems] = useState([{ id: 1, name: "", quantity: 0, unitPrice: 0, total: 0 }])
+  const [items, setItems] = useState([
+    { 
+      id: 1, 
+      name: "", 
+      description: "",
+      quantity: 0,
+      unitPrice: 0, 
+      total: 0 
+    }
+  ])
+  const [formErrors, setFormErrors] = useState({})
 
-  // Mock data for purchase requests
-  const purchaseRequests = [
-    { id: "PR001", date: "2023-10-15", department: "IT" },
-    { id: "PR002", date: "2023-10-18", department: "HR" },
-    { id: "PR003", date: "2023-10-20", department: "Finance" },
+  // Mock data for branches
+  const branches = [
+    { id: 1, name: "สาขากรุงเทพ" },
+    { id: 2, name: "สาขาเชียงใหม่" },
+    { id: 3, name: "สาขาภูเก็ต" },
   ]
 
   const handleItemChange = (id, field, value) => {
@@ -30,7 +39,14 @@ function PurchaseOrder() {
 
   const addItem = () => {
     const newId = Math.max(...items.map((item) => item.id), 0) + 1
-    setItems([...items, { id: newId, name: "", quantity: 0, unitPrice: 0, total: 0 }])
+    setItems([...items, { 
+      id: newId, 
+      name: "", 
+      description: "", 
+      quantity: 0,
+      unitPrice: 0, 
+      total: 0 
+    }])
   }
 
   const removeItem = (id) => {
@@ -43,18 +59,52 @@ function PurchaseOrder() {
     return items.reduce((sum, item) => sum + item.total, 0)
   }
 
+  const validateForm = () => {
+    const errors = {}
+    
+    // Validate header fields
+    if (!poNumber) errors.poNumber = "กรุณากรอกเลขที่ใบสั่งซื้อ"
+    if (!document.getElementById("po-date").value) errors.poDate = "กรุณาเลือกวันที่สั่ง"
+    if (!document.getElementById("required-date").value) errors.requiredDate = "กรุณาเลือกวันที่ต้องการสินค้า"
+    if (!document.getElementById("branch").value) errors.branch = "กรุณาเลือกสาขา"
+    if (!document.getElementById("requester").value) errors.requester = "กรุณากรอกชื่อผู้สั่ง"
+    if (!document.getElementById("supplier").value) errors.supplier = "กรุณากรอกชื่อผู้จำหน่าย"
+
+    // Validate items
+    const itemErrors = items.map(item => ({
+      name: !item.name ? "กรุณากรอกชื่อรายการ" : "",
+      description: !item.description ? "กรุณากรอกคำอธิบาย" : "",
+      quantity: item.quantity <= 0 ? "กรุณากรอกอย่างน้อย 1 ชิ้น" : "",
+      unitPrice: item.unitPrice <= 0 ? "กรุณากรอกราคาที่มากกว่า 0 บาท" : ""
+    }))
+
+    if (itemErrors.some(error => Object.values(error).some(e => e))) {
+      errors.items = itemErrors
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); // ป้องกันการรีเฟรชหน้า
-  
+    e.preventDefault()
+    
+    if (!validateForm()) {
+      alert("กรุณากรอกข้อมูลให้ครบถ้วน")
+      return
+    }
+
     const orderData = {
       poNumber,
-      date: new Date().toISOString().split("T")[0],
+      date: document.getElementById("po-date").value,
+      requiredDate: document.getElementById("required-date").value,
+      branch: document.getElementById("branch").value,
+      requester: document.getElementById("requester").value,
       supplier_name: document.getElementById("supplier").value,
-      selectedPR,
       items,
       total: calculateTotal(),
     };
-  
+
     try {
       const response = await fetch("http://localhost:3000/purchase-orders", {
         method: "POST",
@@ -73,7 +123,6 @@ function PurchaseOrder() {
       alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
     }
   };
-  
 
   return (
     <div className="card">
@@ -84,28 +133,76 @@ function PurchaseOrder() {
       <div className="card-content">
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
+            {/* PO Number field */}
             <div className="form-group">
               <label htmlFor="po-number">เลขที่ใบสั่งซื้อ</label>
-              <input id="po-number" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} />
+              <input 
+                id="po-number" 
+                value={poNumber} 
+                onChange={(e) => setPoNumber(e.target.value)}
+                className={formErrors.poNumber ? "error" : ""}
+              />
+              {formErrors.poNumber && <span className="error-message">{formErrors.poNumber}</span>}
             </div>
+
+            {/* Date field */}
             <div className="form-group">
-              <label htmlFor="po-date">วันที่</label>
-              <input id="po-date" type="date" defaultValue={new Date().toISOString().split("T")[0]} />
+              <label htmlFor="po-date">วันที่สั่ง</label>
+              <input 
+                id="po-date" 
+                type="date" 
+                defaultValue={new Date().toISOString().split("T")[0]}
+                className={formErrors.poDate ? "error" : ""}
+              />
+              {formErrors.poDate && <span className="error-message">{formErrors.poDate}</span>}
             </div>
+
+            {/* Required date field */}
             <div className="form-group">
-              <label htmlFor="pr-select">อ้างอิงใบขอซื้อ</label>
-              <select id="pr-select" value={selectedPR} onChange={(e) => setSelectedPR(e.target.value)}>
-                <option value="">เลือกใบขอซื้อ</option>
-                {purchaseRequests.map((pr) => (
-                  <option key={pr.id} value={pr.id}>
-                    {pr.id} - {pr.date} ({pr.department})
+              <label htmlFor="required-date">วันที่ต้องการสินค้า</label>
+              <input 
+                id="required-date" 
+                type="date"
+                className={formErrors.requiredDate ? "error" : ""}
+              />
+              {formErrors.requiredDate && <span className="error-message">{formErrors.requiredDate}</span>}
+            </div>
+
+            {/* Branch select */}
+            <div className="form-group">
+              <label htmlFor="branch">สาขาที่สั่ง</label>
+              <select 
+                id="branch"
+                className={formErrors.branch ? "error" : ""}
+              >
+                <option value="">เลือกสาขา</option>
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
                   </option>
                 ))}
               </select>
+              {formErrors.branch && <span className="error-message">{formErrors.branch}</span>}
             </div>
+
+            {/* Requester field */}
+            <div className="form-group">
+              <label htmlFor="requester">ชื่อผู้สั่ง</label>
+              <input 
+                id="requester"
+                className={formErrors.requester ? "error" : ""}
+              />
+              {formErrors.requester && <span className="error-message">{formErrors.requester}</span>}
+            </div>
+
+            {/* Supplier field */}
             <div className="form-group">
               <label htmlFor="supplier">ผู้จำหน่าย</label>
-              <input id="supplier" />
+              <input 
+                id="supplier"
+                className={formErrors.supplier ? "error" : ""}
+              />
+              {formErrors.supplier && <span className="error-message">{formErrors.supplier}</span>}
             </div>
           </div>
 
@@ -121,33 +218,69 @@ function PurchaseOrder() {
               <thead>
                 <tr>
                   <th>รายการ</th>
-                  <th>จำนวน</th>
-                  <th>ราคาต่อหน่วย</th>
-                  <th>รวม</th>
+                  <th>คำอธิบาย</th>
+                  <th>จำนวน (ชิ้น)</th>
+                  <th>ราคาต่อหน่วย (บาท)</th>
+                  <th>รวม (บาท)</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {items.map((item) => (
+                {items.map((item, index) => (
                   <tr key={item.id}>
                     <td>
-                      <input value={item.name} onChange={(e) => handleItemChange(item.id, "name", e.target.value)} />
+                      <input 
+                        value={item.name} 
+                        onChange={(e) => handleItemChange(item.id, "name", e.target.value)}
+                        className={formErrors.items?.[index]?.name ? "error" : ""}
+                      />
+                      {formErrors.items?.[index]?.name && 
+                        <span className="error-message">{formErrors.items[index].name}</span>
+                      }
                     </td>
                     <td>
+                      <input 
+                        value={item.description} 
+                        onChange={(e) => handleItemChange(item.id, "description", e.target.value)}
+                        className={formErrors.items?.[index]?.description ? "error" : ""}
+                      />
+                      {formErrors.items?.[index]?.description && 
+                        <span className="error-message">{formErrors.items[index].description}</span>
+                      }
+                    </td>
+                    <td style={{ position: 'relative' }}>
                       <input
-                        type="number"
+                        type="text" // Changed from "number" to "text"
                         value={item.quantity}
-                        onChange={(e) => handleItemChange(item.id, "quantity", Number(e.target.value))}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^\d]/g, '') // Allow only digits
+                          handleItemChange(item.id, "quantity", value ? Number(value) : 0)
+                        }}
+                        className={formErrors.items?.[index]?.quantity ? "error" : ""}
                       />
+                      <span className="unit-label">ชิ้น</span>
+                      {formErrors.items?.[index]?.quantity && 
+                        <span className="error-message">{formErrors.items[index].quantity}</span>
+                      }
                     </td>
-                    <td>
+                    <td style={{ position: 'relative' }}>
                       <input
-                        type="number"
+                        type="text" // Changed from "number" to "text"
                         value={item.unitPrice}
-                        onChange={(e) => handleItemChange(item.id, "unitPrice", Number(e.target.value))}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^\d.]/g, '') // Allow digits and decimal point
+                          if (value === '' || /^\d*\.?\d*$/.test(value)) { // Validate decimal format
+                            handleItemChange(item.id, "unitPrice", value ? Number(value) : 0)
+                          }
+                        }}
+                        className={formErrors.items?.[index]?.unitPrice ? "error" : ""}
                       />
+                      <span className="unit-label">บาท</span>
+                      {formErrors.items?.[index]?.unitPrice && 
+                        <span className="error-message">{formErrors.items[index].unitPrice}</span>
+                      }
                     </td>
-                    <td>{item.total.toFixed(2)}</td>
+                    <td>{item.total.toFixed(2)} บาท</td>
                     <td>
                       <button type="button" className="btn-icon" onClick={() => removeItem(item.id)}>
                         <span className="icon">×</span>
@@ -156,10 +289,10 @@ function PurchaseOrder() {
                   </tr>
                 ))}
                 <tr className="total-row">
-                  <td colSpan={3} className="text-right">
+                  <td colSpan={4} className="text-right">
                     รวมทั้งสิ้น
                   </td>
-                  <td>{calculateTotal().toFixed(2)}</td>
+                  <td>{calculateTotal().toFixed(2)} บาท</td>
                   <td></td>
                 </tr>
               </tbody>

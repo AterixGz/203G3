@@ -7,6 +7,13 @@ function InventoryReceiving() {
   const [receiptNumber, setReceiptNumber] = useState("RCV-" + new Date().getTime().toString().slice(-6))
   const [items, setItems] = useState([])
   const [purchaseOrders, setPurchaseOrders] = useState([])
+  const [deliveryNote, setDeliveryNote] = useState("")
+  const [storageLocations] = useState([
+    { id: 1, name: "คลังสินค้า A" },
+    { id: 2, name: "คลังสินค้า B" },
+    { id: 3, name: "คลังสินค้า C" },
+  ])
+  const [isSubmitted, setIsSubmitted] = useState(false)
 
   // โหลดข้อมูลใบสั่งซื้อจากเซิร์ฟเวอร์
   useEffect(() => {
@@ -24,14 +31,33 @@ function InventoryReceiving() {
       return
     }
 
-    fetch(`http://localhost:3000/purchase-items/${poId}`)
-      .then((res) => res.json())
-      .then((data) => setItems(data.map((item) => ({ ...item, received: 0 }))))
-      .catch((err) => console.error("Error fetching purchase items:", err))
+    // Fetch both PO details and items
+    Promise.all([
+      fetch(`http://localhost:3000/purchase-orders/${poId}`).then(res => res.json()),
+      fetch(`http://localhost:3000/purchase-items/${poId}`).then(res => res.json())
+    ])
+    .then(([poDetails, itemsData]) => {
+      setItems(itemsData.map((item) => ({ 
+        ...item,
+        name: item.name || '',
+        code: item.code || '',
+        quantity: item.quantity || 0,
+        unit_price: item.unit_price || 0,
+        received: 0,
+        storageLocation: ""
+      })))
+    })
+    .catch((err) => console.error("Error fetching data:", err))
   }
 
   const handleQuantityChange = (id, value) => {
     setItems(items.map((item) => item.id === id ? { ...item, received: value } : item))
+  }
+
+  const handleStorageChange = (id, value) => {
+    setItems(items.map((item) => 
+      item.id === id ? { ...item, storageLocation: value } : item
+    ))
   }
 
   // ตรวจสอบว่าได้กรอกจำนวนรับครบถ้วนทุกรายการหรือไม่
@@ -39,6 +65,11 @@ function InventoryReceiving() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitted(true) // Set submitted state to true
+
+    if (!deliveryNote) {
+      return // Stop if delivery note is empty
+    }
 
     if (!isAllItemsReceived) {
       alert("กรุณากรอกจำนวนรับให้ครบถ้วนก่อน")
@@ -50,7 +81,10 @@ function InventoryReceiving() {
       date: document.getElementById("receipt-date").value,
       deliveryNote: document.getElementById("delivery-note").value,
       selectedPO,
-      items,
+      items: items.map(item => ({
+        ...item,
+        storageLocation: item.storageLocation
+      }))
     }
 
     try {
@@ -115,7 +149,15 @@ function InventoryReceiving() {
             </div>
             <div className="form-group">
               <label htmlFor="delivery-note">เลขที่ใบส่งของ</label>
-              <input id="delivery-note" />
+              <input 
+                id="delivery-note" 
+                value={deliveryNote}
+                onChange={(e) => setDeliveryNote(e.target.value)}
+                className={isSubmitted && !deliveryNote ? "error" : ""}
+              />
+              {isSubmitted && !deliveryNote && 
+                <span className="error-message">กรุณากรอกเลขที่ใบส่งของ</span>
+              }
             </div>
           </div>
 
@@ -126,24 +168,44 @@ function InventoryReceiving() {
               <table>
                 <thead>
                   <tr>
+                    <th>รหัสสินค้า</th>
                     <th>รายการ</th>
                     <th>จำนวนสั่งซื้อ</th>
                     <th>จำนวนรับ</th>
+                    <th>ราคาต่อหน่วย</th>
+                    <th>สถานที่จัดเก็บ</th>
                     <th>สถานะ</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item) => (
                     <tr key={item.id}>
+                      <td>{item.code}</td>
                       <td>{item.name}</td>
-                      <td>{item.quantity}</td>
+                      <td>{item.quantity} ชิ้น</td>
                       <td>
                         <input
                           type="number"
                           value={item.received}
                           onChange={(e) => handleQuantityChange(item.id, Number(e.target.value))}
                           max={item.quantity}
+                          min={0}
                         />
+                      </td>
+                      <td>{item.unit_price?.toLocaleString()} บาท</td>
+                      <td>
+                        <select
+                          value={item.storageLocation}
+                          onChange={(e) => handleStorageChange(item.id, e.target.value)}
+                          className="storage-select"
+                        >
+                          <option value="">เลือกสถานที่</option>
+                          {storageLocations.map(location => (
+                            <option key={location.id} value={location.name}>
+                              {location.name}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                       <td>
                         {item.received === item.quantity ? (
@@ -159,7 +221,7 @@ function InventoryReceiving() {
                     </tr>
                   ))}
                   <tr>
-                    <td colSpan="4"></td>
+                    <td colSpan="5"></td>
                   </tr>
                 </tbody>
               </table>
@@ -169,7 +231,11 @@ function InventoryReceiving() {
       </div>
       <div className="card-footer">
         <button className="btn-outline">ยกเลิก</button>
-        <button className="btn-primary" onClick={handleSubmit} disabled={!selectedPO || items.length === 0 || !isAllItemsReceived}>
+        <button 
+          className="btn-primary" 
+          onClick={handleSubmit} 
+          disabled={!selectedPO || items.length === 0 || !isAllItemsReceived || !deliveryNote}
+        >
           บันทึกการรับพัสดุ
         </button>
       </div>
