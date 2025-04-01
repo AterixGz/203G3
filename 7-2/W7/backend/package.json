@@ -6,6 +6,7 @@
     "accepts": "^1.3.8",
     "array-flatten": "^1.1.1",
     "aws-ssl-profiles": "^1.1.2",
+    "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
