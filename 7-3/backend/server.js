@@ -28,24 +28,36 @@ app.use(cors());
 app.use(express.json());
 
 
+connection.connect((err) => {
+  if (err) {
+    console.error("Database connection failed: ", err);
+    return;
+  }
+  console.log("Connected to MySQL database");
+});
+
 app.post("/purchase-orders", (req, res) => {
-  const newOrder = req.body;
-  const items = newOrder.items;
+  const { poNumber, date, supplier_name, selectedPR, items, total } = req.body;
 
-  console.log("Request body:", newOrder); // Log ข้อมูลที่ได้รับ
+  const sql = "INSERT INTO purchase_orders (po_number, date, supplier_name, pr_id, total) VALUES (?, ?, ?, ?, ?)";
+  connection.query(sql, [poNumber, date, supplier_name, selectedPR, total], (err, result) => {
+    if (err) {
+      console.error("Error inserting purchase order: ", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกใบสั่งซื้อ" });
+    }
 
-  // ใช้ forEach เพื่อบันทึกทุกสินค้าใน purchase_orders (แถวแยกกัน)
-  items.forEach(item => {
-    const orderQuery = `INSERT INTO purchase_orders (poNumber, supplier_name, name, date) VALUES (?, ?, ?, ?)`;
-    connection.query(orderQuery, [newOrder.poNumber, newOrder.supplier_name, item.name, newOrder.date], (err, result) => {
+    const poId = result.insertId;
+    const itemSql = "INSERT INTO purchase_items (po_id, pr_id, name, quantity, unit_price, total) VALUES ?";
+    const itemValues = items.map(item => [poId, selectedPR, item.name, item.quantity, item.unitPrice, item.total]);
+
+    connection.query(itemSql, [itemValues], (err) => {
       if (err) {
-        console.error("Error inserting purchase order:", err);
-        return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกใบสั่งซื้อ" });
+        console.error("Error inserting purchase items: ", err);
+        return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกรายการสินค้า" });
       }
+      res.json({ message: "บันทึกใบสั่งซื้อสำเร็จ" });
     });
   });
-
-  res.json({ message: "บันทึกใบสั่งซื้อเรียบร้อยแล้ว" });
 });
 
 // บันทึกข้อมูลการรับพัสดุใหม่
