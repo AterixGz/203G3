@@ -1,0 +1,74 @@
+.purchase-requisition-form {
+    width: 80%;
+    height: 80%;
+    margin: 20px auto;
+    border: 1px solid #4CAF50;
+    padding: 20px;
+  }
+  
+  .purchase-requisition-form h2 {
+    margin-bottom: 10px;
+  }
+  
+  .purchase-requisition-form .form-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .purchase-requisition-form label {
+    width: 30%;
+  }
+  
+  .purchase-requisition-form input,
+  .purchase-requisition-form select,
+  .purchase-requisition-form textarea {
+    width: 65%;
+    padding: 5px;
+  }
+  
+  .purchase-requisition-form .item-list {
+    margin-top: 20px;
+  }
+  
+  .purchase-requisition-form .item-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .purchase-requisition-form .item-row label,
+  .purchase-requisition-form .item-row input {
+    width: 20%;
+  }
+  
+  .purchase-requisition-form .total {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+  
+  .purchase-requisition-form .total label {
+    margin-right: 10px;
+  }
+  
+  .purchase-requisition-form .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+  
+  .purchase-requisition-form .form-actions button {
+    padding: 10px 20px;
+    margin-left: 10px;
+  }
+  
+  .purchase-requisition-form .cancel-button {
+    background-color: #ff0000;
+  }
+  
+  .purchase-requisition-form .submit-button {
+    background-color: #4CAF50;
+    color: white;
+  }
