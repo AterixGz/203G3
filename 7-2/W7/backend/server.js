@@ -4,6 +4,7 @@ const authRoutes = require('./routes/authRoutes');  // ตรวจสอบใ�
 const prRoutes = require('./routes/prRoutes');
 const poRoutes = require('./routes/poRoutes');
 const poReceiptRoutes = require('./routes/poreceiptRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
 
 dotenv.config();
 const app = express();
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/pr', prRoutes);
 app.use('/api/po', poRoutes);
 app.use('/api/po-receipt', poReceiptRoutes);
+app.use('/api/invoice', invoiceRoutes);
 
 app.listen(3000, () => console.log('Server running on port 3000'));
 
