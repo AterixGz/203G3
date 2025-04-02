@@ -1,0 +1,401 @@
+.purchase-requisition-form {
+  width: calc(100% - 250px); /* Subtract sidebar width */
+  height: 100vh;
+  margin: 0 0 0 250px; /* Add left margin equal to sidebar width */
+  padding: 20px;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 0;
+  overflow-y: auto;
+  position: fixed;
+  top: 0;
+  right: 0;
+  box-sizing: border-box;
+}
+
+.purchase-requisition-form h2 {
+    margin-bottom: 10px;
+    font-size: 18px;  /* ลดขนาดตัวอักษรหัวเรื่อง */
+}
+
+.purchase-requisition-form .form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;  /* ลดระยะห่างระหว่าง label และ input */
+    margin-bottom: 10px;
+    width: 100%; /* Changed from fixed width */
+    max-width: 1200px; /* Add max-width for larger screens */
+}
+
+.purchase-requisition-form label {
+    width: 180px;  /* กำหนดความกว้างที่แน่นอน */
+    color: #000000;
+    font-weight: 500;
+    text-align: right;  /* จัดข้อความชิดขวา */
+    padding-right: 5px;  /* เพิ่มระยะห่างเล็กน้อยจากช่อง input */
+}
+
+.purchase-requisition-form input,
+.purchase-requisition-form select,
+.purchase-requisition-form textarea {
+    flex: 1;  /* ให้ขยายตามพื้นที่ที่เหลือ */
+    max-width: none; /* ลบการจำกัดความกว้างสูงสุด */
+    width: 100%; /* ให้ความกว้างเต็ม container */
+    padding: 6px;
+    border: 1px solid #000000;  /* เพิ่มสีขอบให้ input */
+    color: #000000;  /* เพิ่มสีตัวหนังสือใน input */
+    background-color: #ffffff;  /* เพิ่มพื้นหลังสีขาวใน input */
+    border-radius: 4px;
+}
+
+.purchase-requisition-form textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.purchase-requisition-form .item-list {
+    width: 100%;
+    max-width: 1200px;
+    margin: 15px 0;
+    padding: 15px;
+    background-color: #ffffff;
+    border: 1px solid #6b7280;
+    border-radius: 8px;
+}
+
+.purchase-requisition-form .item-row {
+    display: grid;
+    grid-template-columns: 150px 200px 150px 200px 150px 200px;
+    gap: 15px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.purchase-requisition-form .item-row label {
+    width: auto;
+    text-align: right;
+    padding-right: 10px;
+    color: #000000;
+}
+
+.purchase-requisition-form .item-row input,
+.purchase-requisition-form .item-row select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #6b7280;
+    border-radius: 4px;
+    background-color: #ffffff;
+}
+
+.purchase-requisition-form .item-row input[type="number"] {
+    text-align: right;
+}
+
+.purchase-requisition-form .item-row input[type="date"] {
+    width: 150px;
+}
+
+.purchase-requisition-form .total {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.purchase-requisition-form .total label {
+    margin-right: 10px;
+}
+
+.purchase-requisition-form .form-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px 0;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.purchase-requisition-form .form-actions button {
+    padding: 8px 16px;
+    min-width: 100px;
+    margin-left: 10px;
+    border: 1px solid #6b7280;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.purchase-requisition-form .cancel-button {
+    cursor: pointer;
+  }
+  
+  .purchase-requisition-form .cancel-button:active {
+    background-color: #000000;
+    color: #ffffff;
+  }
+  
+  .purchase-requisition-form .cancel-button:hover {
+    background-color: #ffffff;
+  }
+  
+  .purchase-requisition-form .submit-button {
+    background-color: #000000;
+    color: rgb(255, 255, 255);
+    border: 1px solid #6b7280;
+    cursor: pointer;
+  }
+  
+  .purchase-requisition-form .submit-button:hover {
+    opacity: 0.9;
+  }
+  
+  /* เพิ่ม hover effect */
+  .purchase-requisition-form .cancel-button:hover,
+  .purchase-requisition-form .submit-button:hover {
+    opacity: 0.9;
+  }
+
+.budget-summary-section,
+.print-documents-section {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #6b7280;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.budget-summary-section h3,
+.print-documents-section h3 {
+  margin-bottom: 20px;
+  color: #000000;
+  font-size: 16px;  /* ลดขนาดตัวอักษรหัวข้อย่อย */
+}
+
+.budget-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.budget-item {
+  padding: 15px;
+  border: 1px solid #6b7280;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.budget-item label {
+  display: block;
+  margin-bottom: 8px;
+  color: #000000;
+  font-weight: 500;
+}
+
+.budget-item span {
+  font-size: 1.2em;
+  color: #000000;
+  font-weight: bold;
+}
+
+.print-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.print-buttons button {
+  padding: 10px;
+  border: 1px solid #6b7280;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #000000;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.print-buttons button:hover {
+  background-color: #f8f9fa;
+}
+
+/* Update header section */
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px 0;
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  z-index: 100;
+}
+
+.print-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #6b7280;
+  background-color: #ffffff;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.print-button:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.05);
+}
+
+.add-item-button {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 8px 16px;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.add-item-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.add-item-button:active {
+  transform: translateY(0);
+}
+
+.item-details {
+  border: 1px solid #6b7280;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #ffffff;
+}
+
+.item-details .row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.item-details .row:last-child {
+  grid-template-columns: 120px 1fr 120px 1fr 120px 1fr;
+}
+
+.item-details label {
+  width: auto;
+  text-align: right;
+  padding-right: 5px;
+  color: #000000;
+}
+
+.item-details input,
+.item-details select {
+  width: 100%;
+  padding: 4px 6px;  /* ลด padding แนวตั้ง */
+  border: 1px solid #6b7280;
+  border-radius: 4px;
+  background-color: #ffffff;
+}
+
+.item-details input[type="number"] {
+  text-align: right;
+  height: 28px;  /* กำหนดความสูงให้คงที่ */
+}
+
+.item-details input[type="date"] {
+  width: 100%; /* เปลี่ยนจาก fixed width เป็น 100% */
+  min-width: 130px; /* กำหนดความกว้างขั้นต่ำ */
+  height: 28px;  /* กำหนดความสูงให้คงที่ */
+}
+
+/* Header buttons section */
+.header-buttons {
+  display: flex;
+  gap: 10px;
+  margin-left: auto; /* Push to the right */
+  position: relative;
+}
+
+.menu-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #6b7280;
+  background-color: #ffffff;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.menu-button:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.05);
+}
+
+.menu-dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #6b7280;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 200px;
+}
+
+.menu-dropdown button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: #000000;
+  transition: background-color 0.2s ease;
+}
+
+.menu-dropdown button:hover {
+  background-color: #f8f9fa;
+}
+
+.menu-dropdown button:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Add scrollbar styling */
+.purchase-requisition-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.purchase-requisition-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.purchase-requisition-form::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.purchase-requisition-form::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

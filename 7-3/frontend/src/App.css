@@ -1,7 +1,7 @@
 :root {
   --primary-color: #000000;  /* Changed to black */
   --primary-hover: #333333;  /* Dark gray for hover */
-  --secondary-color: #6b7280;
+  --secondary-color: hsl(220, 9%, 46%);
   --success-color: #10b981;
   --danger-color: #ef4444;
   --warning-color: #f59e0b;

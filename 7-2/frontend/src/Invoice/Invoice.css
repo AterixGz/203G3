@@ -1,0 +1,194 @@
+.invoice-form {
+  width: calc(100% - 250px);
+  height: 100vh;
+  margin: 0 0 0 250px;
+  padding: 20px;
+  background-color: #ffffff;
+  position: fixed;
+  top: 0;
+  right: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.invoice-form h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #000000;
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  padding: 10px 0;
+  z-index: 100;
+}
+
+/* Update form row and input styles */
+.invoice-form .form-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 20px;
+  margin-bottom: 15px;
+  align-items: center;
+  max-width: none;
+  padding-right: 20px;
+}
+
+.invoice-form label {
+  text-align: right;
+  color: #000000;
+}
+
+.invoice-form input,
+.invoice-form select,
+.invoice-form textarea,
+.invoice-form input[type="file"] {
+  width: 100%;
+  max-width: none;
+  padding: 8px 12px;
+  border-left: 2px solid #6b7280;
+  border-top: none;
+  border-right: none;
+  border-bottom: 1px solid #6b7280;
+  border-radius: 0;
+  background-color: #ffffff;
+}
+
+/* Update item list styles */
+.invoice-form .item-list {
+  margin-top: 30px;
+  padding: 30px;
+  border-left: 2px solid #6b7280;
+  border-top: none;
+  border-right: none;
+  border-bottom: 1px solid #6b7280;
+  border-radius: 0;
+  background-color: #ffffff;
+  max-width: none;
+  padding-right: 20px;
+}
+
+.invoice-form .item-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.invoice-form .item-row label {
+  text-align: left;
+  padding-right: 10px;
+  color: #000000;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.invoice-form .item-row input,
+.invoice-form .item-row select {
+  width: 100%;
+  max-width: none;
+  padding: 8px 12px;
+  border-left: 2px solid #6b7280;
+  border-top: none;
+  border-right: none;
+  border-bottom: 1px solid #6b7280;
+  border-radius: 0;
+  background-color: #ffffff;
+  justify-self: stretch;
+}
+
+/* Add hover effect for better user experience */
+.invoice-form .item-row input:hover,
+.invoice-form .item-row select:hover {
+  border-color: #4b5563;
+}
+
+/* Add focus state */
+.invoice-form .item-row input:focus,
+.invoice-form .item-row select:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.invoice-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: calc(100% - 250px);
+  background: #ffffff;
+  padding: 10px 20px;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.invoice-form .cancel-button,
+.invoice-form .submit-button {
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 120px;
+  height: 36px;
+}
+
+.invoice-form .cancel-button {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #6b7280;
+}
+
+.invoice-form .submit-button {
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+}
+
+/* Add scrollbar styling */
+.invoice-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.invoice-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.invoice-form::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.invoice-form::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Add bottom padding to prevent content hiding behind fixed footer */
+.item-list:last-child {
+  margin-bottom: 70px;
+}
+
+/* Update hover and focus states */
+.invoice-form input:hover,
+.invoice-form select:hover,
+.invoice-form textarea:hover,
+.invoice-form .item-row input:hover,
+.invoice-form .item-row select:hover {
+  border-left: 2px solid #000000;
+  border-bottom: 1px solid #000000;
+}
+
+.invoice-form input:focus,
+.invoice-form select:focus,
+.invoice-form textarea:focus,
+.invoice-form .item-row input:focus,
+.invoice-form .item-row select:focus {
+  outline: none;
+  border-left: 2px solid #000000;
+  border-bottom: 1px solid #000000;
+  box-shadow: none;
+}

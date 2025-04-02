@@ -1,0 +1,192 @@
+.po-receipt-form {
+  width: calc(100% - 250px);
+  height: 100vh;
+  margin: 0 0 0 250px;
+  padding: 20px;
+  background-color: #ffffff;
+  position: fixed;
+  top: 0;
+  right: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Set consistent font sizes */
+.po-receipt-form * {
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Header styles */
+.po-receipt-form h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #000000;
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  padding: 10px 0;
+  z-index: 100;
+}
+
+.po-receipt-form h3 {
+  font-size: 16px;
+  margin-bottom: 15px;
+  color: #000000;
+}
+
+/* Form row styling */
+.form-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 20px;
+  margin-bottom: 15px;
+  align-items: center;
+  max-width: 1200px;
+}
+
+.form-row label {
+  text-align: right;
+  color: #000000;
+}
+
+.form-row input,
+.form-row select {
+  width: 100%;
+  max-width: 300px;
+  padding: 8px 12px;
+  border: solid #000000;
+  border-radius: 4px;
+  background-color: #ffffff;
+}
+
+/* Remove inner borders and adjust item list styling */
+.item-list {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #6b7280;
+  border-radius: 8px;
+  background-color: #ffffff;
+  max-width: 1200px;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 15px;
+  align-items: start;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: none;
+  padding: 0;
+}
+
+.input-group label {
+  text-align: left;
+  color: #000000;
+  margin-bottom: 4px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #6b7280;
+  border-radius: 4px;
+  background-color: #ffffff;
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: calc(100% - 250px);
+  background: #ffffff;
+  padding: 15px 20px;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.cancel-button, .submit-button {
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 120px;
+  height: 36px;
+}
+
+.cancel-button {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #6b7280;
+}
+
+.submit-button {
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+}
+
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background-color: #ffffff;
+}
+
+th, td {
+  padding: 12px;
+  border: 1px solid #6b7280;
+  text-align: left;
+  vertical-align: middle;
+}
+
+th {
+  background-color: #000000;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* Input type number alignment */
+input[type="number"] {
+  text-align: left;
+}
+
+/* Ensure white background for all inputs */
+input, select, textarea {
+  background-color: #ffffff !important;
+  color: #000000;
+}
+
+/* Add scrollbar styling */
+.po-receipt-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.po-receipt-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.po-receipt-form::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.po-receipt-form::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Add bottom padding to prevent content hiding behind fixed footer */
+.item-list:last-child {
+  margin-bottom: 70px;
+}
