@@ -78,14 +78,12 @@ function UnitCostViewer() {
                 .map(
                   (item) => `
                 <tr>
-                  <td>${item.code}</td>
+                  <td>${item.item_id}</td>
                   <td>${item.name}</td>
-                  <td>${item.quantity} ชิ้น</td>
-                  <td>${item.unitCost?.toLocaleString()} บาท</td>
-                  <td>${(
-                    item.quantity * item.unitCost
-                  )?.toLocaleString()} บาท</td>
-                  <td>${item.location}</td>
+                  <td>${item.received_quantity} ชิ้น</td>
+                  <td>${item.unit_price} </td>
+                  <td>${item.total?.toLocaleString()} บาท</td>
+                  <td>${item.storage_location}</td>
                 </tr>
               `
                 )
@@ -152,33 +150,9 @@ function UnitCostViewer() {
         <div className="print-buttons">
           <button
             className="btn-outline"
-            onClick={() => handlePrint("ใบขอซื้อพัสดุ")}
+            onClick={() => handlePrint("")}
           >
-            <span className="icon"></span> พิมพ์ใบขอซื้อ
-          </button>
-          <button
-            className="btn-outline"
-            onClick={() => handlePrint("ใบสั่งซื้อพัสดุ")}
-          >
-            <span className="icon"></span> พิมพ์ใบสั่งซื้อ
-          </button>
-          <button
-            className="btn-outline"
-            onClick={() => handlePrint("ใบรับพัสดุ")}
-          >
-            <span className="icon"></span> พิมพ์ใบรับพัสดุ
-          </button>
-          <button
-            className="btn-outline"
-            onClick={() => handlePrint("ใบเบิกพัสดุ")}
-          >
-            <span className="icon"></span> พิมพ์ใบเบิกพัสดุ
-          </button>
-          <button
-            className="btn-outline"
-            onClick={() => handlePrint("ใบส่งพัสดุ")}
-          >
-            <span className="icon"></span> พิมพ์ใบส่งพัสดุ
+            <span className="icon"></span> พิมพ์
           </button>
         </div>
 
