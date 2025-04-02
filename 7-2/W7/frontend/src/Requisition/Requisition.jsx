@@ -124,6 +124,63 @@ function PurchaseRequisitionForm() {
     }
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>ใบขอซื้อ</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            table, th, td { border: 1px solid black; text-align: center; }
+            th, td { padding: 8px; }
+            .total { font-weight: bold; text-align: right; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h2>ใบขอซื้อ (Purchase Requisition)</h2>
+          <p><strong>เลขที่ใบขอซื้อ:</strong> ${formData.prNumber}</p>
+          <p><strong>วันที่ขอซื้อ:</strong> ${formData.requestDate}</p>
+          <p><strong>แผนก/ฝ่าย:</strong> ${formData.department}</p>
+          <p><strong>ผู้ขอซื้อ:</strong> ${formData.requester}</p>
+          <p><strong>วัตถุประสงค์:</strong> ${formData.purpose}</p>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>รายละเอียด</th>
+                <th>จำนวน</th>
+                <th>ราคาต่อหน่วย</th>
+                <th>จำนวนเงิน</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${formData.items.map(item => `
+                <tr>
+                  <td>${item.details}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.unitPrice.toFixed(2)}</td>
+                  <td>${item.total.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <p class="total"><strong>รวมทั้งสิ้น:</strong> ${calculateGrandTotal().toFixed(2)} บาท</p>
+          
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   return (
     <form className="purchase-requisition-form" onSubmit={handleSubmit}>
       <h2>การจัดทำใบขอซื้อ (Purchase Requisition)</h2>
@@ -221,6 +278,11 @@ function PurchaseRequisitionForm() {
         <button type="submit" className="submit-button">
           บันทึกใบขอซื้อ
         </button>
+      </div>
+      <div className="form-actions">
+      <button type="button" className="print-button" onClick={handlePrint}>
+      พิมพ์ใบขอซื้อ
+      </button>
       </div>
     </form>
   );

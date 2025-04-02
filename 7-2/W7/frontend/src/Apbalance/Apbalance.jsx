@@ -71,6 +71,82 @@ function ApBalance() {
     return <p>เกิดข้อผิดพลาด: {error}</p>;
   }
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>รายงานยอดคงเหลือเจ้าหนี้ (AP Balance)</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2, h3 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            table, th, td { border: 1px solid black; text-align: center; }
+            th, td { padding: 8px; }
+            .info { margin-bottom: 20px; }
+            .info p { margin: 5px 0; }
+            .total { font-weight: bold; text-align: right; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h2>รายงานยอดคงเหลือเจ้าหนี้ (AP Balance)</h2>
+          <div class="info">
+            <p><strong>ผู้ขาย:</strong> ${vendorFilter || 'ทั้งหมด'}</p>
+            <p><strong>สถานะ:</strong> ${statusFilter || 'ทั้งหมด'}</p>
+            <p><strong>ช่วงวันที่:</strong> ${startDate || 'ไม่ระบุ'} - ${endDate || 'ไม่ระบุ'}</p>
+          </div>
+  
+          <table>
+            <thead>
+              <tr>
+                <th>เลขที่ใบแจ้งหนี้</th>
+                <th>เลขที่ใบสั่งซื้อ</th>
+                <th>ผู้ขาย/ผู้ให้บริการ</th>
+                <th>วันที่ใบแจ้งหนี้</th>
+                <th>วันครบกำหนด</th>
+                <th>จำนวนเงิน</th>
+                <th>ชำระแล้ว</th>
+                <th>คงเหลือ</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredData.map(row => `
+                <tr>
+                  <td>${row.invoice_number}</td>
+                  <td>${row.po_number}</td>
+                  <td>${row.vendor}</td>
+                  <td>${new Date(row.invoice_date).toLocaleDateString()}</td>
+                  <td>${new Date(row.due_date).toLocaleDateString()}</td>
+                  <td>${row.total_amount.toLocaleString()}</td>
+                  <td>${row.paid_amount.toLocaleString()}</td>
+                  <td>${row.balance.toLocaleString()}</td>
+                  <td>${row.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="8" style="text-align: right; font-weight: bold;">ยอดคงเหลือรวม</td>
+                <td style="font-weight: bold;">
+                  ${filteredData.reduce((sum, row) => sum + parseFloat(row.balance || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+  
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+  
+
   return (
     <div className="ap-balance">
       <h2>ยอดคงเหลือเจ้าหนี้ (AP Balance)</h2>
@@ -153,10 +229,17 @@ function ApBalance() {
                   .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </td>
             </tr>
+            <br />
+            <br />
+            <button className="print-button" onClick={handlePrint}>
+             🖨 พิมพ์รายงาน
+            </button>
+
           </tfoot>
         </table>
       </div>
     </div>
+    
   );
 }
 

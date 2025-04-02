@@ -1,0 +1,63 @@
+.register-asset {
+    width: 80%;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    padding: 20px;
+  }
+  
+  .register-asset h2 {
+    margin-bottom: 10px;
+  }
+  
+  .register-asset .form-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .register-asset label {
+    width: 30%;
+  }
+  
+  .register-asset input,
+  .register-asset select,
+  .register-asset textarea {
+    width: 65%;
+    padding: 5px;
+  }
+  
+  .register-asset .item-list {
+    margin-top: 20px;
+  }
+  
+  .register-asset .item-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .register-asset .item-row label,
+  .register-asset .item-row input {
+    width: 20%;
+  }
+  
+  .register-asset .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+  
+  .register-asset .form-actions button {
+    padding: 10px 20px;
+    margin-left: 10px;
+  }
+  
+  .register-asset .cancel-button {
+    background-color: #f0f0f0;
+  }
+  
+  .register-asset .submit-button {
+    background-color: #216725;
+    color: white;
+  }

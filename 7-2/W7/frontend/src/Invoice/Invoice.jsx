@@ -71,6 +71,67 @@ function InvoiceForm() {
     }
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>ใบแจ้งหนี้ (Invoice)</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2, h3 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            table, th, td { border: 1px solid black; text-align: center; }
+            th, td { padding: 8px; }
+            .info { margin-bottom: 20px; }
+            .info p { margin: 5px 0; }
+            .total { font-weight: bold; text-align: right; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h2>ใบแจ้งหนี้ (Invoice)</h2>
+          <div class="info">
+            <p><strong>เลขที่ใบแจ้งหนี้:</strong> ${invoiceNumber}</p>
+            <p><strong>วันที่ออกใบแจ้งหนี้:</strong> ${invoiceDate}</p>
+            <p><strong>วันที่ครบกำหนดชำระ:</strong> ${dueDate}</p>
+            <p><strong>อ้างอิงใบสั่งซื้อ:</strong> ${poRef}</p>
+            <p><strong>ผู้ขาย/ผู้ให้บริการ:</strong> ${vendor}</p>
+          </div>
+  
+          <h3>รายละเอียดสินค้า/บริการ</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>รายละเอียด</th>
+                <th>จำนวนที่ตั้งหนี้</th>
+                <th>ราคาต่อหน่วย</th>
+                <th>จำนวนเงิน</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => `
+                <tr>
+                  <td>${item.details}</td>
+                  <td>${item.currentInvoiceQuantity}</td>
+                  <td>${item.unitPrice.toFixed(2)}</td>
+                  <td>${item.totalAmount.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+  
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+  
+
   return (
     <div className="invoice-form">
       <h2>การบันทึกตั้งหนี้โดยอ้างอิงใบสั่งซื้อ</h2>
@@ -151,6 +212,10 @@ function InvoiceForm() {
         <button className="submit-button" onClick={handleSubmit}>
           บันทึกการตั้งหนี้
         </button>
+        <button className="print-button" onClick={handlePrint}>
+         🖨 พิมพ์ใบแจ้งหนี้
+        </button>
+
       </div>
     </div>
   );

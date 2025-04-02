@@ -1,0 +1,93 @@
+/* PurchaseOrder.css */
+.purchase-order-container {
+    width: 80%;
+    margin: auto;
+    padding: 50px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h2, h3 {
+    margin-bottom: 10px;
+    color: #000000;
+}
+
+.order-info, .supplier-info {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    color: #000000;
+}
+
+input, select {
+    padding: 5px;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    width: 100%;
+    background-color: #ffffff;
+    color: #000000;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    border: 1px solid #000000;
+    padding: 25px;
+    text-align: left;
+    color: #000000;
+    background-color: #ffffff;
+}
+
+.add-item {
+    background: #007bff;
+    color: rgb(0, 0, 0);
+    border: 2px solid #ffffff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.add-item:hover {
+    background: #0056b3;
+    border-color: #f8f9fa;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.cancel {
+    background: #dc3545;
+    color: white;
+}
+
+.save {
+    background: #28a745;
+    color: white;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.8;
+}

@@ -54,6 +54,63 @@ const PurchaseOrder = () => {
     }
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>ใบสั่งซื้อ (Purchase Order)</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2, h3 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            table, th, td { border: 1px solid black; text-align: center; }
+            th, td { padding: 8px; }
+            .total { font-weight: bold; text-align: right; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h2>ใบสั่งซื้อ (Purchase Order)</h2>
+          <p><strong>เลขที่ใบสั่งซื้อ:</strong> ${poNumber}</p>
+          <p><strong>วันที่:</strong> ${orderDate}</p>
+          <p><strong>ผู้จำหน่าย:</strong> ${vendor}</p>
+          
+          <h3>รายการสินค้า</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>รายการ</th>
+                <th>จำนวน</th>
+                <th>ราคาต่อหน่วย</th>
+                <th>รวม</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => `
+                <tr>
+                  <td>${item.name}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.price.toFixed(2)}</td>
+                  <td>${(item.quantity * item.price).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+  
+          <p class="total"><strong>รวมทั้งสิ้น:</strong> ${items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toFixed(2)} บาท</p>
+          
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+  
+
   return (
     <div className="purchase-order-container">
       <h2>จัดทำใบสั่งซื้อ (Purchase Order)</h2>
@@ -62,6 +119,7 @@ const PurchaseOrder = () => {
           เลขที่ใบสั่งซื้อ:
           <input type="text" value={poNumber} readOnly />
         </label>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
         <label>
           วันที่:
           <input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
@@ -127,11 +185,15 @@ const PurchaseOrder = () => {
       <button className="add-item" onClick={handleAddItem}>
         + เพิ่มรายการ
       </button>
-
+          <br />
+          <br />
       <div className="actions">
         <button className="cancel">ยกเลิก</button>
         <button className="save" onClick={handleSubmit}>
           บันทึกใบสั่งซื้อ
+        </button>
+        <button className="print-button" onClick={handlePrint}>
+        🖨 พิมพ์ใบสั่งซื้อ
         </button>
       </div>
     </div>

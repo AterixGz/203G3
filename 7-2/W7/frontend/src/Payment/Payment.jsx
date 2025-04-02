@@ -90,6 +90,76 @@ function PaymentForm() {
     }
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>ใบจ่ายเงิน</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2, h3 { text-align: center; }
+            .info { margin-bottom: 20px; }
+            .info p { margin: 5px 0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            table, th, td { border: 1px solid black; text-align: center; }
+            th, td { padding: 8px; }
+            .total { font-weight: bold; text-align: right; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h2>ใบจ่ายเงิน</h2>
+  
+          <div class="info">
+            <p><strong>เลขที่การจ่ายเงิน:</strong> ${paymentNumber}</p>
+            <p><strong>วันที่จ่ายเงิน:</strong> ${paymentDate || 'ไม่ระบุ'}</p>
+            <p><strong>วิธีการจ่ายเงิน:</strong> โอนเงินเข้าบัญชี</p>
+            <p><strong>บัญชีธนาคาร:</strong> ${bankAccount || 'ไม่ระบุ'}</p>
+          </div>
+  
+          <h3>รายละเอียดใบแจ้งหนี้</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>เลขที่ใบแจ้งหนี้</th>
+                <th>ผู้ขาย</th>
+                <th>จำนวนเงินที่จ่าย</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${selectedInvoices.map(invoice => `
+                <tr>
+                  <td>${invoice.invoice_number}</td>
+                  <td>${invoice.vendor}</td>
+                  <td>${invoice.amount.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2" style="text-align: right; font-weight: bold;">ยอดรวมทั้งหมด</td>
+                <td style="font-weight: bold;">
+                  ${selectedInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+  
+          <h3>หมายเหตุ</h3>
+          <p>${notes || 'ไม่มีหมายเหตุ'}</p>
+  
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+  
+
   return (
     <div className="payment-form">
       <h2>การจ่ายเงินด้วยวิธีการโอนเงินเข้าบัญชี</h2>
@@ -188,6 +258,9 @@ function PaymentForm() {
         <button className="cancel-button">ยกเลิก</button>
         <button className="submit-button" onClick={handleSubmit}>
           บันทึกการจ่ายเงิน
+        </button>
+        <button className="print-button" onClick={handlePrint}>
+        🖨 พิมพ์ใบจ่ายเงิน
         </button>
       </div>
     </div>
