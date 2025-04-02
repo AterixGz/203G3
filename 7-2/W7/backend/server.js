@@ -2,6 +2,8 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -14,6 +16,29 @@ app.use(cors());
 app.use(cors({
   origin: 'http://localhost:5173', // ระบุโดเมนที่อนุญาต
 }));
+
+// กำหนดโฟลเดอร์สำหรับเก็บไฟล์
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // โฟลเดอร์สำหรับเก็บไฟล์
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  },
+});
+
+// ตรวจสอบประเภทไฟล์ที่อนุญาต
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true); // อนุญาตไฟล์
+  } else {
+    cb(new Error('กรุณาอัปโหลดไฟล์รูปภาพ (JPEG, PNG) หรือ PDF เท่านั้น'), false); // ปฏิเสธไฟล์
+  }
+};
+
+const upload = multer({ storage, fileFilter });
 
 // Database connection
 const db = mysql.createPool({
@@ -161,36 +186,36 @@ app.get('/next-receipt-number', async (req, res) => {
 });
 
 // Invoice API
-app.post('/invoice', async (req, res) => {
-  const { invoices } = req.body; // รับข้อมูล invoices เป็น array
+app.post('/invoice', upload.single('attachment'), async (req, res) => {
+  const { invoiceNumber, invoiceDate, dueDate, poRef, vendor, items } = req.body;
+  const attachment = req.file; // ไฟล์ที่แนบมา
+
   try {
-    for (const invoice of invoices) {
-      const { invoiceNumber, invoiceDate, dueDate, poRef, vendor, items } = invoice;
+    // เพิ่มข้อมูลใบแจ้งหนี้ในตาราง invoices
+    const [result] = await db.query(
+      'INSERT INTO invoices (invoice_number, invoice_date, due_date, po_ref, vendor, attachment_path) VALUES (?, ?, ?, ?, ?, ?)',
+      [invoiceNumber, invoiceDate, dueDate, poRef, vendor, attachment?.path || null]
+    );
+    const invoiceId = result.insertId;
 
-      // เพิ่มข้อมูลใบแจ้งหนี้ในตาราง invoices
-      const [result] = await db.query(
-        'INSERT INTO invoices (invoice_number, invoice_date, due_date, po_ref, vendor) VALUES (?, ?, ?, ?, ?)',
-        [invoiceNumber, invoiceDate, dueDate, poRef, vendor]
-      );
-      const invoiceId = result.insertId;
-
-      // เพิ่มรายการสินค้าในตาราง invoice_items
-      for (const item of items) {
-        await db.query(
-          'INSERT INTO invoice_items (invoice_id, details, quantity, unit_price) VALUES (?, ?, ?, ?)',
-          [invoiceId, item.details, item.quantity, item.unitPrice]
-        );
-      }
-
-      // อัปเดต total_amount ในตาราง invoices
+    // เพิ่มรายการสินค้าในตาราง invoice_items
+    const parsedItems = JSON.parse(items);
+    for (const item of parsedItems) {
       await db.query(
-        'UPDATE invoices SET total_amount = (SELECT COALESCE(SUM(quantity * unit_price), 0) FROM invoice_items WHERE invoice_id = ?) WHERE id = ?',
-        [invoiceId, invoiceId]
+        'INSERT INTO invoice_items (invoice_id, details, quantity, unit_price) VALUES (?, ?, ?, ?)',
+        [invoiceId, item.details, item.quantity, item.unitPrice]
       );
     }
 
-    res.status(201).json({ message: 'Invoices created successfully' });
+    // อัปเดต total_amount ในตาราง invoices
+    await db.query(
+      'UPDATE invoices SET total_amount = (SELECT COALESCE(SUM(quantity * unit_price), 0) FROM invoice_items WHERE invoice_id = ?) WHERE id = ?',
+      [invoiceId, invoiceId]
+    );
+
+    res.status(201).json({ message: 'Invoice created successfully', invoiceId });
   } catch (error) {
+    console.error('Error in /invoice API:', error);
     res.status(500).json({ error: error.message });
   }
 });
