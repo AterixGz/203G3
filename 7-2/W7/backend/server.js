@@ -40,6 +40,83 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter });
 
+// กำหนดโฟลเดอร์สำหรับเก็บไฟล์ Invoice
+const invoiceStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, 'uploads/invoices')); // โฟลเดอร์สำหรับ Invoice
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  },
+});
+
+const invoiceUpload = multer({
+  storage: invoiceStorage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('กรุณาอัปโหลดไฟล์รูปภาพ (JPEG, PNG) หรือ PDF เท่านั้น'), false);
+    }
+  },
+});
+
+// API สำหรับการสร้าง Invoice
+app.post('/invoice', invoiceUpload.single('attachment'), async (req, res) => {
+  const { invoiceNumber, invoiceDate, dueDate, poRef, vendor, items } = req.body;
+  const attachmentPath = req.file ? req.file.path : null;
+
+  try {
+    const [result] = await db.query(
+      'INSERT INTO invoices (invoice_number, invoice_date, due_date, po_ref, vendor, attachment_path) VALUES (?, ?, ?, ?, ?, ?)',
+      [invoiceNumber, invoiceDate, dueDate, poRef, vendor, attachmentPath]
+    );
+    const invoiceId = result.insertId;
+
+    const parsedItems = JSON.parse(items);
+    for (const item of parsedItems) {
+      await db.query(
+        'INSERT INTO invoice_items (invoice_id, details, quantity, unit_price) VALUES (?, ?, ?, ?)',
+        [invoiceId, item.details, item.quantity, item.unitPrice]
+      );
+    }
+
+    await db.query(
+      'UPDATE invoices SET total_amount = (SELECT COALESCE(SUM(quantity * unit_price), 0) FROM invoice_items WHERE invoice_id = ?) WHERE id = ?',
+      [invoiceId, invoiceId]
+    );
+
+    res.status(201).json({ message: 'Invoice created successfully', invoiceId });
+  } catch (error) {
+    console.error('Error in /invoice API:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+const paymentStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, 'uploads/payments')); // โฟลเดอร์สำหรับ Payment
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  },
+});
+
+const paymentUpload = multer({
+  storage: paymentStorage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('กรุณาอัปโหลดไฟล์รูปภาพ (JPEG, PNG) หรือ PDF เท่านั้น'), false);
+    }
+  },
+});
+
 // Database connection
 const db = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -185,20 +262,18 @@ app.get('/next-receipt-number', async (req, res) => {
   }
 });
 
-// Invoice API
-app.post('/invoice', upload.single('attachment'), async (req, res) => {
+// API สำหรับการสร้าง Invoice
+app.post('/invoice', invoiceUpload.single('attachment'), async (req, res) => {
   const { invoiceNumber, invoiceDate, dueDate, poRef, vendor, items } = req.body;
-  const attachment = req.file; // ไฟล์ที่แนบมา
+  const attachmentPath = req.file ? req.file.path : null;
 
   try {
-    // เพิ่มข้อมูลใบแจ้งหนี้ในตาราง invoices
     const [result] = await db.query(
       'INSERT INTO invoices (invoice_number, invoice_date, due_date, po_ref, vendor, attachment_path) VALUES (?, ?, ?, ?, ?, ?)',
-      [invoiceNumber, invoiceDate, dueDate, poRef, vendor, attachment?.path || null]
+      [invoiceNumber, invoiceDate, dueDate, poRef, vendor, attachmentPath]
     );
     const invoiceId = result.insertId;
 
-    // เพิ่มรายการสินค้าในตาราง invoice_items
     const parsedItems = JSON.parse(items);
     for (const item of parsedItems) {
       await db.query(
@@ -207,7 +282,6 @@ app.post('/invoice', upload.single('attachment'), async (req, res) => {
       );
     }
 
-    // อัปเดต total_amount ในตาราง invoices
     await db.query(
       'UPDATE invoices SET total_amount = (SELECT COALESCE(SUM(quantity * unit_price), 0) FROM invoice_items WHERE invoice_id = ?) WHERE id = ?',
       [invoiceId, invoiceId]
@@ -249,50 +323,64 @@ app.post('/invoice', upload.single('attachment'), async (req, res) => {
     }
   });
 
-// Payment API
-app.post(
-  '/payment',
-  authorizeRoles('Finance & Accounting'),
-  async (req, res) => {
-    const { paymentNumber, paymentDate, method, bankAccount, notes, invoices } = req.body;
-    try {
-      const [result] = await db.query(
-        'INSERT INTO payments (payment_number, payment_date, method, bank_account, notes) VALUES (?, ?, ?, ?, ?)',
-        [paymentNumber, paymentDate, method, bankAccount, notes]
-      );
-      const paymentId = result.insertId;
+// API สำหรับการบันทึก Payment
+app.post('/payment', paymentUpload.single('attachment'), async (req, res) => {
+  const { paymentNumber, paymentDate, method, bankAccount, notes, invoices } = req.body;
+  const attachmentPath = req.file ? req.file.path : null;
 
-      for (const invoice of invoices) {
-        // ตรวจสอบว่า invoice_number มีอยู่ในตาราง invoices หรือไม่
-        const [existingInvoice] = await db.query(
-          'SELECT * FROM invoices WHERE invoice_number = ?',
-          [invoice.invoiceNumber]
-        );
-        if (existingInvoice.length === 0) {
-          return res.status(400).json({
-            error: `Invoice number ${invoice.invoiceNumber} does not exist`,
-          });
-        }
+  try {
+    const [result] = await db.query(
+      'INSERT INTO payments (payment_number, payment_date, method, bank_account, notes, attachment_path) VALUES (?, ?, ?, ?, ?, ?)',
+      [paymentNumber, paymentDate, method, bankAccount, notes, attachmentPath]
+    );
+    const paymentId = result.insertId;
 
-        // เพิ่มข้อมูลการชำระเงินใน payment_invoices
-        await db.query(
-          'INSERT INTO payment_invoices (payment_id, invoice_number, amount) VALUES (?, ?, ?)',
-          [paymentId, invoice.invoiceNumber, invoice.amount]
-        );
-
-        // คำนวณ paid_amount ใหม่จากตาราง payment_invoices
-        await db.query(
-          'UPDATE invoices SET paid_amount = (SELECT COALESCE(SUM(amount), 0) FROM payment_invoices WHERE invoice_number = ?) WHERE invoice_number = ?',
-          [invoice.invoiceNumber, invoice.invoiceNumber]
-        );
+    for (const invoice of JSON.parse(invoices)) {
+      console.log('Processing invoice:', invoice); // แสดงข้อมูลใบแจ้งหนี้ใน Console
+    
+      // กำหนดค่าเริ่มต้นให้ amount หากไม่มีการส่งมาจาก Frontend
+      const amount = invoice.amount || invoice.balance;
+    
+      if (!amount || amount <= 0) {
+        throw new Error(`Invalid amount for invoice ${invoice.invoice_number}`);
       }
-
-      res.status(201).json({ message: 'Payment recorded successfully', paymentId });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+    
+      await db.query(
+        'INSERT INTO payment_invoices (payment_id, invoice_number, amount) VALUES (?, ?, ?)',
+        [paymentId, invoice.invoice_number, amount]
+      );
+    
+      await db.query(
+        'UPDATE invoices SET paid_amount = (SELECT COALESCE(SUM(amount), 0) FROM payment_invoices WHERE invoice_number = ?) WHERE invoice_number = ?',
+        [invoice.invoice_number, invoice.invoice_number]
+      );
     }
+
+    res.status(201).json({ message: 'Payment recorded successfully', paymentId });
+  } catch (error) {
+    console.error('Error in /payment API:', error);
+    res.status(500).json({ error: error.message });
   }
-);
+});
+
+app.get('/invoices', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        invoice_number, 
+        vendor, 
+        total_amount, 
+        paid_amount, 
+        (total_amount - paid_amount) AS balance 
+      FROM invoices
+      WHERE (total_amount - paid_amount) > 0
+    `);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching invoices:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // AP Balance API
 app.get('/ap-balance', async (req, res) => {
