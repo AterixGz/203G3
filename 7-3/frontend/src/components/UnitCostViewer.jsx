@@ -198,7 +198,7 @@ function UnitCostViewer() {
               filteredItems.map((item) => (
                 <tr key={item.id}>
                   <td>{item.item_id}</td>
-                  <td>{item.receiving_id}</td>
+                  <td>{item.name}</td>
                   <td>{item.received_quantity}ชิ้น</td>
                   <td>{item.unit_price} </td>
                   <td>{item.total?.toLocaleString()} บาท</td>

@@ -143,8 +143,8 @@ app.post('/inventory-receiving', (req, res) => {
 
           req.body.items.forEach((item) => {
             connection.query(
-              'INSERT INTO inventory_items (receiving_id, item_id, po_id, received_quantity, total, storage_location ,unit_price) VALUES (?, ?, ?, ?, ?, ?, ?)',
-              [receivingId, item.id, req.body.selectedPO, item.received, item.unit_price * item.received, item.storageLocation, item.unit_price],
+              'INSERT INTO inventory_items (receiving_id, item_id, po_id, received_quantity, total, storage_location ,unit_price , name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+              [receivingId, item.id, req.body.selectedPO, item.received, item.unit_price * item.received, item.storageLocation, item.unit_price , item.name],
               (err) => {
                 itemsProcessed++;
                 if (err) {
@@ -210,48 +210,80 @@ app.get("/inventory-items/search", (req, res) => {
   });
 });
 
-// อ่านข้อมูลการเบิกจ่ายพัสดุ
-app.get("/inventory-disbursement", (req, res) => {
-  if (!fs.existsSync(DISBURSEMENT_FILE)) {
-    return res.json([]);
-  }
-  const data = fs.readFileSync(DISBURSEMENT_FILE, "utf-8");
-  res.json(JSON.parse(data));
-});
 
-
-// อ่านข้อมูลการรับพัสดุ
-app.get("/inventory-receiving", (req, res) => {
-  const query = "SELECT * FROM inventory_receiving"; // คำสั่ง SQL เพื่อดึงข้อมูลทั้งหมดจากตาราง inventory_receiving
-
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error("Error retrieving data: ", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+// ดึงข้อมูลพัสดุ
+app.get('/api/inventory-items', (req, res) => {
+  connection.query(
+    'SELECT * FROM inventory_items',
+    (err, results) => {
+      if (err) {
+        console.error('เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ:', err);
+        return res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ' });
+      }
+      res.json(results);
     }
-    res.json(results); // ส่งผลลัพธ์กลับเป็น JSON
-  });
+  );
 });
 
+// บันทึกการเบิกพัสดุ
+app.post('/api/inventory-disbursement', async (req, res) => {
+  const { disbursementNumber, date, department, requester, items } = req.body;
+  console.log("Request body:", req.body);
 
+  try {
+    // เริ่ม transaction เพื่อให้แน่ใจว่าการดำเนินการทั้งหมดสำเร็จหรือไม่ก็ล้มเหลวทั้งหมด
+    await connection.promise().beginTransaction();
 
+    // บันทึกข้อมูลการเบิกจ่าย
+    const [disbursementResult] = await connection
+      .promise()
+      .query(
+        'INSERT INTO inventory_disbursement (disbursementNumber, date, department, requester) VALUES (?, ?, ?, ?)',
+        [disbursementNumber, date, department, requester]
+      );
 
+    const disbursementId = disbursementResult.insertId;
 
+    // อัปเดตจำนวนพัสดุและบันทึกรายละเอียดการเบิกจ่าย
+    for (const item of items) {
+      // ตรวจสอบว่ามีจำนวนพัสดุเพียงพอหรือไม่
+      const [inventoryItem] = await connection
+        .promise()
+        .query('SELECT received_quantity FROM inventory_items WHERE id = ?', [
+          item.itemId,
+        ]);
 
+      if (inventoryItem.length === 0 || inventoryItem[0].received_quantity < item.quantity) {
+        throw new Error(`จำนวนพัสดุไม่เพียงพอสำหรับ item_id: ${item.itemId}`);
+      }
 
-// บันทึกข้อมูลการเบิกจ่ายพัสดุใหม่
-app.post("/inventory-disbursement", (req, res) => {
-  const newDisbursement = req.body;
-  let disbursements = [];
+      // อัปเดตจำนวนพัสดุ
+      await connection
+        .promise()
+        .query(
+          'UPDATE inventory_items SET received_quantity = received_quantity - ? WHERE id = ?',
+          [item.quantity, item.itemId]
+        );
 
-  if (fs.existsSync(DISBURSEMENT_FILE)) {
-    const data = fs.readFileSync(DISBURSEMENT_FILE, "utf-8");
-    disbursements = JSON.parse(data);
+      // บันทึกรายละเอียดการเบิกจ่าย
+      await connection
+        .promise()
+        .query(
+          'INSERT INTO inventory_disbursement_details (disbursementId, itemId, quantity, name) VALUES (?, ?, ?, ?)',
+          [disbursementId, item.itemId, item.quantity, item.name]
+        );
+    }
+
+    // commit transaction หากทุกอย่างสำเร็จ
+    await connection.promise().commit();
+
+    res.json({ message: 'บันทึกการเบิกจ่ายสำเร็จ' });
+  } catch (err) {
+    // rollback transaction หากมีข้อผิดพลาด
+    await connection.promise().rollback();
+    console.error('เกิดข้อผิดพลาดในการบันทึกการเบิกจ่าย:', err);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการบันทึกการเบิกจ่าย' });
   }
-
-  disbursements.push(newDisbursement);
-  fs.writeFileSync(DISBURSEMENT_FILE, JSON.stringify(disbursements, null, 2));
-  res.json({ message: "บันทึกการเบิกจ่ายพัสดุเรียบร้อยแล้ว" });
 });
 
 
