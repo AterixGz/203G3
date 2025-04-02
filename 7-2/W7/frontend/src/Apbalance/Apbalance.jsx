@@ -1,7 +1,76 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './ApBalance.css';
 
 function ApBalance() {
+  const [apData, setApData] = useState([]); // เก็บข้อมูล AP Balance
+  const [filteredData, setFilteredData] = useState([]); // เก็บข้อมูลที่กรองแล้ว
+  const [loading, setLoading] = useState(true); // สถานะการโหลดข้อมูล
+  const [error, setError] = useState(null); // เก็บข้อความข้อผิดพลาด
+
+  // ตัวกรอง
+  const [vendorFilter, setVendorFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  useEffect(() => {
+    // ดึงข้อมูลจาก API
+    const fetchApBalance = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/ap-balance'); // เรียก API
+        setApData(response.data); // เก็บข้อมูลใน state
+        setFilteredData(response.data); // ตั้งค่าเริ่มต้นข้อมูลที่กรองแล้ว
+        setLoading(false); // ปิดสถานะการโหลด
+      } catch (err) {
+        setError(err.message); // เก็บข้อความข้อผิดพลาด
+        setLoading(false);
+      }
+    };
+
+    fetchApBalance();
+  }, []);
+
+  // ฟังก์ชันสำหรับกรองข้อมูล
+  const handleFilter = () => {
+    let filtered = apData;
+
+    if (vendorFilter) {
+      filtered = filtered.filter((row) => row.vendor === vendorFilter);
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((row) => row.status === statusFilter);
+    }
+
+    if (startDate) {
+      filtered = filtered.filter((row) => new Date(row.invoice_date) >= new Date(startDate));
+    }
+
+    if (endDate) {
+      filtered = filtered.filter((row) => new Date(row.invoice_date) <= new Date(endDate));
+    }
+
+    setFilteredData(filtered);
+  };
+
+  // ฟังก์ชันสำหรับล้างตัวกรอง
+  const handleClearFilters = () => {
+    setVendorFilter('');
+    setStatusFilter('');
+    setStartDate('');
+    setEndDate('');
+    setFilteredData(apData); // รีเซ็ตข้อมูลที่กรองแล้ว
+  };
+
+  if (loading) {
+    return <p>กำลังโหลดข้อมูล...</p>;
+  }
+
+  if (error) {
+    return <p>เกิดข้อผิดพลาด: {error}</p>;
+  }
+
   return (
     <div className="ap-balance">
       <h2>ยอดคงเหลือเจ้าหนี้ (AP Balance)</h2>
@@ -10,27 +79,36 @@ function ApBalance() {
       <div className="filter-section">
         <div className="filter-row">
           <label htmlFor="vendor">ผู้ขาย/ผู้ให้บริการ</label>
-          <select id="vendor">
+          <select id="vendor" value={vendorFilter} onChange={(e) => setVendorFilter(e.target.value)}>
             <option value="">ทั้งหมด</option>
-            {/* เพิ่มตัวเลือกผู้ขาย/ผู้ให้บริการ */}
+            {[...new Set(apData.map((row) => row.vendor))].map((vendor) => (
+              <option key={vendor} value={vendor}>
+                {vendor}
+              </option>
+            ))}
           </select>
 
           <label htmlFor="status">สถานะ</label>
-          <select id="status">
+          <select id="status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">ทั้งหมด</option>
-            {/* เพิ่มตัวเลือกสถานะ */}
+            <option value="ชำระแล้ว">ชำระแล้ว</option>
+            <option value="ยังไม่ชำระ">ยังไม่ชำระ</option>
           </select>
 
           <label htmlFor="startDate">วันที่เริ่มต้น</label>
-          <input type="date" id="startDate" />
+          <input type="date" id="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
 
           <label htmlFor="endDate">วันที่สิ้นสุด</label>
-          <input type="date" id="endDate" />
+          <input type="date" id="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         </div>
 
         <div className="filter-actions">
-          <button className="clear-button">ล้างการค้นหา</button>
-          <button className="export-button">ส่งออกข้อมูล</button>
+          <button className="clear-button" onClick={handleClearFilters}>
+            ล้างการค้นหา
+          </button>
+          <button className="export-button" onClick={handleFilter}>
+            ส่งออกข้อมูล
+          </button>
         </div>
       </div>
 
@@ -50,46 +128,30 @@ function ApBalance() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>INV00001</td>
-              <td>P000001</td>
-              <td>บริษัท เอ บี ซี จำกัด</td>
-              <td>15/5/2566</td>
-              <td>15/6/2566</td>
-              <td>$100,000.00</td>
-              <td>$0.00</td>
-              <td>$100,000.00</td>
-              <td>ยังไม่ชำระ</td>
-            </tr>
-            <tr>
-              <td>INV00002</td>
-              <td>P000002</td>
-              <td>บริษัท เอ็กซ์ วาย แซด จำกัด</td>
-              <td>20/5/2566</td>
-              <td>20/6/2566</td>
-              <td>$15,000.00</td>
-              <td>$0.00</td>
-              <td>฿15,000.00</td>
-              <td>ยังไม่ชำระ</td>
-            </tr>
-            <tr>
-              <td>INV00003</td>
-              <td>P000003</td>
-              <td>ห้างหุ้นส่วนจำกัด 123</td>
-              <td>10/4/2566</td>
-              <td>10/5/2566</td>
-              <td>$50,000.00</td>
-              <td>$50,000.00</td>
-              <td>$0.00</td>
-              <td>ชำระแล้ว</td>
-            </tr>
+            {filteredData.map((row) => (
+              <tr key={row.invoice_number}>
+                <td>{row.invoice_number}</td>
+                <td>{row.po_number}</td>
+                <td>{row.vendor}</td>
+                <td>{new Date(row.invoice_date).toLocaleDateString()}</td>
+                <td>{new Date(row.due_date).toLocaleDateString()}</td>
+                <td>{row.total_amount.toLocaleString()}</td>
+                <td>{row.paid_amount.toLocaleString()}</td>
+                <td>{row.balance.toLocaleString()}</td>
+                <td>{row.status}</td>
+              </tr>
+            ))}
           </tbody>
           <tfoot>
             <tr>
               <td colSpan="8" style={{ textAlign: 'right' }}>
                 ยอดคงเหลือรวม
               </td>
-              <td>$115,000.00</td>
+              <td>
+                {filteredData
+                  .reduce((sum, row) => sum + parseFloat(row.balance || 0), 0)
+                  .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
             </tr>
           </tfoot>
         </table>
