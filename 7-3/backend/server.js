@@ -286,7 +286,17 @@ app.post('/api/inventory-disbursement', async (req, res) => {
   }
 });
 
-
+// API สำหรับดึงข้อมูลพัสดุจากฐานข้อมูล
+app.get("/api/inventory-items", (req, res) => {
+  const sql = "SELECT * FROM inventory_items";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching inventory items:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ" });
+    }
+    res.json(results);
+  });
+});
 
 
 

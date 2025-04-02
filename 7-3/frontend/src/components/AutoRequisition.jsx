@@ -1,44 +1,40 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState, useEffect } from "react";
 
 function AutoRequisition() {
-  // Mock inventory data with minimum thresholds
-  const inventoryItems = [
-    { id: 1, code: "IT001", name: "คอมพิวเตอร์", available: 2, minThreshold: 5, unitCost: 25000, autoReorder: true },
-    { id: 2, code: "IT002", name: "เมาส์", available: 3, minThreshold: 10, unitCost: 500, autoReorder: true },
-    { id: 3, code: "IT003", name: "คีย์บอร์ด", available: 25, minThreshold: 10, unitCost: 890, autoReorder: true },
-    { id: 4, code: "OF001", name: "โต๊ะทำงาน", available: 1, minThreshold: 3, unitCost: 4500, autoReorder: true },
-    { id: 5, code: "OF002", name: "เก้าอี้สำนักงาน", available: 12, minThreshold: 5, unitCost: 2200, autoReorder: false },
-  ]
+  const [itemSettings, setItemSettings] = useState([]); // เก็บข้อมูลพัสดุจากฐานข้อมูล
+  const [requisitions, setRequisitions] = useState([]); // เก็บข้อมูลใบขอซื้อ
+  const [showSettings, setShowSettings] = useState(false);
 
-  // Mock auto-generated requisitions
-  const initialRequisitions = [
-    {
-      id: "PR-AUTO-001",
-      date: "2023-11-01",
-      status: "รออนุมัติ",
-      items: [{ itemId: 1, code: "IT001", name: "คอมพิวเตอร์", quantity: 5, unitCost: 25000 }],
-    },
-    {
-      id: "PR-AUTO-002",
-      date: "2023-11-02",
-      status: "อนุมัติแล้ว",
-      items: [{ itemId: 2, code: "IT002", name: "เมาส์", quantity: 10, unitCost: 500 }],
-    },
-  ]
+  // ดึงข้อมูลพัสดุจาก API เมื่อโหลดหน้า
+  useEffect(() => {
+    const fetchInventoryItems = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/inventory-items");
+        if (!response.ok) {
+          throw new Error("เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ");
+        }
+        const data = await response.json();
+        setItemSettings(data); // ตั้งค่าข้อมูลพัสดุจากฐานข้อมูล
+      } catch (error) {
+        console.error("Error fetching inventory items:", error);
+        alert("ไม่สามารถดึงข้อมูลพัสดุได้");
+      }
+    };
 
-  const [requisitions, setRequisitions] = useState(initialRequisitions)
-  const [itemSettings, setItemSettings] = useState(inventoryItems)
-  const [showSettings, setShowSettings] = useState(false)
+    fetchInventoryItems();
+  }, []);
 
-  // Function to check inventory levels and generate requisitions
+  // ฟังก์ชันตรวจสอบระดับสินค้าคงเหลือและสร้างใบขอซื้อ
   const checkInventoryLevels = () => {
-    const belowThresholdItems = itemSettings.filter((item) => item.autoReorder && item.available < item.minThreshold)
+    const belowThresholdItems = itemSettings.filter(
+      (item) => item.autoReorder && item.received_quantity < item.minThreshold
+    );
 
     if (belowThresholdItems.length > 0) {
-      const newRequisitionId = `PR-AUTO-${(requisitions.length + 1).toString().padStart(3, "0")}`
-      const today = new Date().toISOString().split("T")[0]
+      const newRequisitionId = `PR-AUTO-${(requisitions.length + 1).toString().padStart(3, "0")}`;
+      const today = new Date().toISOString().split("T")[0];
 
       const newRequisition = {
         id: newRequisitionId,
@@ -46,34 +42,42 @@ function AutoRequisition() {
         status: "รออนุมัติ",
         items: belowThresholdItems.map((item) => ({
           itemId: item.id,
-          code: item.code,
+          code: item.item_id,
           name: item.name,
-          quantity: item.minThreshold - item.available,
-          unitCost: item.unitCost,
+          quantity: item.minThreshold - item.received_quantity,
+          unit_price: item.unit_price,
         })),
-      }
+      };
 
-      setRequisitions([newRequisition, ...requisitions])
-      alert(`สร้างใบขอซื้ออัตโนมัติ ${newRequisitionId} สำหรับพัสดุที่ต่ำกว่าพิกัด`)
+      setRequisitions([newRequisition, ...requisitions]);
+      alert(`สร้างใบขอซื้ออัตโนมัติ ${newRequisitionId} สำหรับพัสดุที่ต่ำกว่าพิกัด`);
     } else {
-      alert("ไม่มีพัสดุที่ต่ำกว่าพิกัดขั้นต่ำ")
+      alert("ไม่มีพัสดุที่ต่ำกว่าพิกัดขั้นต่ำ");
     }
-  }
+  };
 
-  // Toggle auto-reorder for an item
+  // Toggle auto-reorder สำหรับพัสดุ
   const toggleAutoReorder = (id) => {
-    setItemSettings(itemSettings.map((item) => (item.id === id ? { ...item, autoReorder: !item.autoReorder } : item)))
-  }
+    setItemSettings(
+      itemSettings.map((item) =>
+        item.id === id ? { ...item, autoReorder: !item.autoReorder } : item
+      )
+    );
+  };
 
-  // Update minimum threshold for an item
+  // อัปเดตพิกัดขั้นต่ำสำหรับพัสดุ
   const updateMinThreshold = (id, value) => {
-    setItemSettings(itemSettings.map((item) => (item.id === id ? { ...item, minThreshold: value } : item)))
-  }
+    setItemSettings(
+      itemSettings.map((item) =>
+        item.id === id ? { ...item, minThreshold: value } : item
+      )
+    );
+  };
 
-  // Calculate total value of a requisition
+  // คำนวณมูลค่ารวมของใบขอซื้อ
   const calculateTotal = (items) => {
-    return items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0)
-  }
+    return items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+  };
 
   return (
     <>
@@ -81,10 +85,16 @@ function AutoRequisition() {
         <div className="header-content">
           <div>
             <h2 className="card-title">การจัดทำใบขอซื้ออัตโนมัติ</h2>
-            <p className="card-description">ระบบสร้างใบขอซื้อโดยอัตโนมัติเมื่อพัสดุต่ำกว่าพิกัดขั้นต่ำ</p>
+            <p className="card-description">
+              ระบบสร้างใบขอซื้อโดยอัตโนมัติเมื่อพัสดุต่ำกว่าพิกัดขั้นต่ำ
+            </p>
           </div>
           <div className="header-actions">
-            <button key="settings-button" className="btn-outline" onClick={() => setShowSettings(!showSettings)}>
+            <button
+              key="settings-button"
+              className="btn-outline"
+              onClick={() => setShowSettings(!showSettings)}
+            >
               {showSettings ? "ดูใบขอซื้ออัตโนมัติ" : "ตั้งค่าพิกัดขั้นต่ำ"}
             </button>
             <button className="btn-primary" onClick={checkInventoryLevels}>
@@ -113,13 +123,13 @@ function AutoRequisition() {
                 <tbody>
                   {itemSettings.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.code}</td>
+                      <td>{item.item_id}</td>
                       <td>{item.name}</td>
-                      <td>{item.available}</td>
+                      <td>{item.received_quantity} ชิ้น</td>
                       <td>
                         <input
                           type="number"
-                          value={item.minThreshold}
+                          value={item.minThreshold || 0}
                           onChange={(e) => updateMinThreshold(item.id, Number(e.target.value))}
                           min={1}
                           className="input-small"
@@ -127,12 +137,16 @@ function AutoRequisition() {
                       </td>
                       <td>
                         <label className="switch">
-                          <input type="checkbox" checked={item.autoReorder} onChange={() => toggleAutoReorder(item.id)} />
+                          <input
+                            type="checkbox"
+                            checked={item.autoReorder || false}
+                            onChange={() => toggleAutoReorder(item.id)}
+                          />
                           <span className="slider"></span>
                         </label>
                       </td>
                       <td>
-                        {item.available < item.minThreshold ? (
+                        {item.received_quantity < item.minThreshold ? (
                           <span className="status-error">
                             <span className="icon">⚠</span> ต่ำกว่าพิกัด
                           </span>
@@ -161,7 +175,9 @@ function AutoRequisition() {
                           <p className="requisition-date">วันที่: {req.date}</p>
                         </div>
                         <span
-                          className={`status-badge ${req.status === "อนุมัติแล้ว" ? "status-approved" : "status-pending"}`}
+                          className={`status-badge ${
+                            req.status === "อนุมัติแล้ว" ? "status-approved" : "status-pending"
+                          }`}
                         >
                           {req.status}
                         </span>
@@ -183,8 +199,13 @@ function AutoRequisition() {
                                 <td>{item.code}</td>
                                 <td>{item.name}</td>
                                 <td>{item.quantity}</td>
-                                <td>{item.unitCost.toLocaleString()} บาท</td>
-                                <td>{(item.quantity * item.unitCost).toLocaleString()} บาท</td>
+                                <td>{item.unit_price ? item.unit_price.toLocaleString() : "0"} บาท</td>
+                                <td>
+                                  {item.unit_price && item.quantity
+                                    ? (item.quantity * item.unit_price).toLocaleString()
+                                    : "0"}{" "}
+                                  บาท
+                                </td>
                               </tr>
                             ))}
                             <tr className="total-row">
@@ -203,7 +224,9 @@ function AutoRequisition() {
                             <button className="btn-primary btn-sm">อนุมัติ</button>
                           </>
                         )}
-                        {req.status === "อนุมัติแล้ว" && <button className="btn-outline btn-sm">สร้างใบสั่งซื้อ</button>}
+                        {req.status === "อนุมัติแล้ว" && (
+                          <button className="btn-outline btn-sm">สร้างใบสั่งซื้อ</button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -216,8 +239,7 @@ function AutoRequisition() {
         </div>
       </div>
     </>
-  )
+  );
 }
 
-export default AutoRequisition
-
+export default AutoRequisition;
