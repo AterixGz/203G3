@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -8,6 +9,11 @@ const port = 3000;
 
 // Middleware
 app.use(bodyParser.json());
+app.use(cors());
+
+app.use(cors({
+  origin: 'http://localhost:5173', // ระบุโดเมนที่อนุญาต
+}));
 
 // Database connection
 const db = mysql.createPool({
@@ -46,6 +52,7 @@ app.post(
     authorizeRoles('Procurement Officer'),
     async (req, res) => {
       const { prNumber, requestDate, department, requester, purpose, items } = req.body;
+      console.log('Request body:', req.body);
       try {
         const [result] = await db.query(
           'INSERT INTO requisitions (pr_number, request_date, department, requester, purpose) VALUES (?, ?, ?, ?, ?)',
@@ -62,6 +69,7 @@ app.post(
   
         res.status(201).json({ message: 'Requisition created successfully', requisitionId });
       } catch (error) {
+        console.error('Error in /requisition API:', error);
         res.status(500).json({ error: error.message });
       }
     }
