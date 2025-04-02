@@ -142,6 +142,20 @@ app.post('/po-receipt', async (req, res) => {
 
     res.status(201).json({ message: 'PO Receipt created successfully', receiptId });
   } catch (error) {
+    console.error('Error in /po-receipt API:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/next-receipt-number', async (req, res) => {
+  try {
+    // ดึง Receipt Number ล่าสุดจากฐานข้อมูล
+    const [rows] = await db.query('SELECT MAX(id) AS maxId FROM po_receipts');
+    const nextId = (rows[0].maxId || 0) + 1; // หากไม่มีข้อมูล ให้เริ่มจาก 1
+    const receiptNumber = `REC${String(nextId).padStart(5, '0')}`; // เช่น REC00001
+    res.json({ receiptNumber });
+  } catch (error) {
+    console.error('Error fetching next Receipt Number:', error);
     res.status(500).json({ error: error.message });
   }
 });
