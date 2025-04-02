@@ -37,18 +37,19 @@ connection.connect((err) => {
 });
 
 app.post("/purchase-orders", (req, res) => {
-  const { poNumber, date, supplier_name, selectedPR, items, total } = req.body;
+  const { poNumber, date, supplier_name, requiredDate, requester, branch, items, total } = req.body;
+  console.log("Request body:", req.body);
 
-  const sql = "INSERT INTO purchase_orders (po_number, date, supplier_name, pr_id, total) VALUES (?, ?, ?, ?, ?)";
-  connection.query(sql, [poNumber, date, supplier_name, selectedPR, total], (err, result) => {
+  const sql = "INSERT INTO purchase_orders (po_number, date, requiredDate, supplier_name, requester, branch, total) VALUES (?, ?, ?, ?, ?, ?, ?)";
+  connection.query(sql, [poNumber, date, requiredDate, supplier_name, requester, branch, total], (err, result) => {
     if (err) {
       console.error("Error inserting purchase order: ", err);
       return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกใบสั่งซื้อ" });
     }
 
     const poId = result.insertId;
-    const itemSql = "INSERT INTO purchase_items (po_id, pr_id, name, quantity, unit_price, total) VALUES ?";
-    const itemValues = items.map(item => [poId, selectedPR, item.name, item.quantity, item.unitPrice, item.total]);
+    const itemSql = "INSERT INTO purchase_items (po_id, name, description, quantity, unit_price, total) VALUES ?";
+    const itemValues = items.map(item => [poId, item.name, item.description, item.quantity, item.unitPrice, item.total]);
 
     connection.query(itemSql, [itemValues], (err) => {
       if (err) {
@@ -73,90 +74,229 @@ app.get("/purchase-orders", (req, res) => {
 });
 
 // API สำหรับดึงรายการสินค้าตามใบสั่งซื้อที่เลือก
+app.get("/purchase-orders/:po_id", (req, res) => {
+  const { po_id } = req.params;
+
+  const sql = "SELECT * FROM purchase_orders WHERE id = ?"; // <-- เช็คให้แน่ใจว่าใช้ `id`
+  
+  connection.query(sql, [po_id], (err, results) => {
+    if (err) {
+      console.error("Error fetching purchase order: ", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลใบสั่งซื้อ" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "ไม่พบใบสั่งซื้อที่ต้องการ" });
+    }
+
+    res.json(results[0]); // ส่งใบสั่งซื้อเพียงรายการเดียว
+  });
+});
+
+
 app.get("/purchase-items/:po_id", (req, res) => {
   const { po_id } = req.params;
-  const sql = "SELECT * FROM purchase_items WHERE po_id = ?";
+
+  const sql = "SELECT * FROM purchase_items WHERE po_id = ?"; // <-- ตรวจสอบว่ามีคอลัมน์ `po_id` จริงหรือไม่
+
   connection.query(sql, [po_id], (err, results) => {
     if (err) {
       console.error("Error fetching purchase items: ", err);
       return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลรายการสินค้า" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "ไม่พบรายการสินค้าในใบสั่งซื้อนี้" });
+    }
+
+    res.json(results);
+  });
+});
+
+// API สำหรับบันทึกการรับพัสดุและรายการสินค้า
+app.post('/inventory-receiving', (req, res) => {
+  const { receiptNumber, deliveryNote } = req.body;
+
+  connection.beginTransaction((err) => {
+    if (err) {
+      console.error('Transaction begin error:', err);
+      return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
+    }
+
+    // บันทึกข้อมูลลงในตาราง inventory_receiving เฉพาะ receiptNumber และ deliveryNote
+    connection.query(
+      'INSERT INTO inventory_receiving (receipt_number, delivery_note) VALUES (?, ?)',
+      [receiptNumber, deliveryNote],
+      (err, receivingResult) => {
+        if (err) {
+          return connection.rollback(() => {
+            console.error('Error inserting inventory_receiving:', err);
+            res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
+          });
+        }
+
+        const receivingId = receivingResult.insertId;
+
+        if (req.body.items && req.body.items.length > 0) {
+          let itemsProcessed = 0;
+          let itemsError = false;
+
+          req.body.items.forEach((item) => {
+            connection.query(
+              'INSERT INTO inventory_items (receiving_id, item_id, po_id, received_quantity, total, storage_location ,unit_price , name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+              [receivingId, item.id, req.body.selectedPO, item.received, item.unit_price * item.received, item.storageLocation, item.unit_price , item.name],
+              (err) => {
+                itemsProcessed++;
+                if (err) {
+                  itemsError = true;
+                  return connection.rollback(() => {
+                    console.error('Error inserting inventory_items:', err);
+                    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
+                  });
+                }
+
+                if (itemsProcessed === req.body.items.length && !itemsError) {
+                  connection.commit((err) => {
+                    if (err) {
+                      return connection.rollback(() => {
+                        console.error('Transaction commit error:', err);
+                        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
+                      });
+                    }
+                    res.status(201).json({ message: 'บันทึกข้อมูลสำเร็จ' });
+                  });
+                }
+              }
+            );
+          });
+        } else {
+          // หากไม่มี items ให้ commit transaction เลย
+          connection.commit((err) => {
+            if (err) {
+              return connection.rollback(() => {
+                console.error('Transaction commit error:', err);
+                res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
+              });
+            }
+            res.status(201).json({ message: 'บันทึกข้อมูลสำเร็จ' });
+          });
+        }
+      }
+    );
+  });
+});
+// อ่านข้อมูลคลังสินค้า
+app.get("/inventory", (req, res) => {
+  connection.query("SELECT * FROM inventory_items", (err, results) => {
+    if (err) {
+      console.error("Error querying database:", err);
+      res.status(500).json({ error: "Internal server error" });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+app.get("/inventory-items/search", (req, res) => {
+  const searchTerm = req.query.searchTerm;
+  const query = `SELECT * FROM inventory_items WHERE item_id LIKE '%${searchTerm}%' OR receiving_id LIKE '%${searchTerm}%'`;
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error("Error querying database:", err);
+      res.status(500).json({ error: "Internal server error" });
+      return;
     }
     res.json(results);
   });
 });
 
 
-// บันทึกข้อมูลการรับพัสดุใหม่
-app.post("/inventory-receiving", (req, res) => {
-  const newReceiving = req.body;
-  console.log("Request body:", newReceiving);
-  const query = `INSERT INTO inventory_receiving (item_id, receiptNumber, date, deliveryNote, selectedPO) VALUES (?, ?, ?, ?, ?)`;
+// ดึงข้อมูลพัสดุ
+app.get('/api/inventory-items', (req, res) => {
+  connection.query(
+    'SELECT * FROM inventory_items',
+    (err, results) => {
+      if (err) {
+        console.error('เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ:', err);
+        return res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ' });
+      }
+      res.json(results);
+    }
+  );
+});
 
-  connection.query(query, [newReceiving.item_id, newReceiving.receiptNumber, newReceiving.date, newReceiving.deliveryNote, newReceiving.selectedPO], (err, result) => {
+// บันทึกการเบิกพัสดุ
+app.post('/api/inventory-disbursement', async (req, res) => {
+  const { disbursementNumber, date, department, requester, items } = req.body;
+  console.log("Request body:", req.body);
+
+  try {
+    // เริ่ม transaction เพื่อให้แน่ใจว่าการดำเนินการทั้งหมดสำเร็จหรือไม่ก็ล้มเหลวทั้งหมด
+    await connection.promise().beginTransaction();
+
+    // บันทึกข้อมูลการเบิกจ่าย
+    const [disbursementResult] = await connection
+      .promise()
+      .query(
+        'INSERT INTO inventory_disbursement (disbursementNumber, date, department, requester) VALUES (?, ?, ?, ?)',
+        [disbursementNumber, date, department, requester]
+      );
+
+    const disbursementId = disbursementResult.insertId;
+
+    // อัปเดตจำนวนพัสดุและบันทึกรายละเอียดการเบิกจ่าย
+    for (const item of items) {
+      // ตรวจสอบว่ามีจำนวนพัสดุเพียงพอหรือไม่
+      const [inventoryItem] = await connection
+        .promise()
+        .query('SELECT received_quantity FROM inventory_items WHERE id = ?', [
+          item.itemId,
+        ]);
+
+      if (inventoryItem.length === 0 || inventoryItem[0].received_quantity < item.quantity) {
+        throw new Error(`จำนวนพัสดุไม่เพียงพอสำหรับ item_id: ${item.itemId}`);
+      }
+
+      // อัปเดตจำนวนพัสดุ
+      await connection
+        .promise()
+        .query(
+          'UPDATE inventory_items SET received_quantity = received_quantity - ? WHERE id = ?',
+          [item.quantity, item.itemId]
+        );
+
+      // บันทึกรายละเอียดการเบิกจ่าย
+      await connection
+        .promise()
+        .query(
+          'INSERT INTO inventory_disbursement_details (disbursementId, itemId, quantity, name) VALUES (?, ?, ?, ?)',
+          [disbursementId, item.itemId, item.quantity, item.name]
+        );
+    }
+
+    // commit transaction หากทุกอย่างสำเร็จ
+    await connection.promise().commit();
+
+    res.json({ message: 'บันทึกการเบิกจ่ายสำเร็จ' });
+  } catch (err) {
+    // rollback transaction หากมีข้อผิดพลาด
+    await connection.promise().rollback();
+    console.error('เกิดข้อผิดพลาดในการบันทึกการเบิกจ่าย:', err);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการบันทึกการเบิกจ่าย' });
+  }
+});
+
+// API สำหรับดึงข้อมูลพัสดุจากฐานข้อมูล
+app.get("/api/inventory-items", (req, res) => {
+  const sql = "SELECT * FROM inventory_items";
+  connection.query(sql, (err, results) => {
     if (err) {
-      console.error("Error inserting data: ", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
-    } 
-    res.json({ message: "บันทึกการรับพัสดุเรียบร้อยแล้ว" });
+      console.error("Error fetching inventory items:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ" });
+    }
+    res.json(results);
   });
 });
-
-
-// อ่านข้อมูลคลังสินค้า
-app.get("/inventory", (req, res) => {
-  connection.query("SELECT * FROM inventory_items", (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: err.message })
-    }
-    res.json(result)
-  })
-})
-
-// อ่านข้อมูลการเบิกจ่ายพัสดุ
-app.get("/inventory-disbursement", (req, res) => {
-  if (!fs.existsSync(DISBURSEMENT_FILE)) {
-    return res.json([]);
-  }
-  const data = fs.readFileSync(DISBURSEMENT_FILE, "utf-8");
-  res.json(JSON.parse(data));
-});
-
-
-// อ่านข้อมูลการรับพัสดุ
-app.get("/inventory-receiving", (req, res) => {
-  const query = "SELECT * FROM inventory_receiving"; // คำสั่ง SQL เพื่อดึงข้อมูลทั้งหมดจากตาราง inventory_receiving
-
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error("Error retrieving data: ", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
-    }
-    res.json(results); // ส่งผลลัพธ์กลับเป็น JSON
-  });
-});
-
-
-
-
-
-
-
-// บันทึกข้อมูลการเบิกจ่ายพัสดุใหม่
-app.post("/inventory-disbursement", (req, res) => {
-  const newDisbursement = req.body;
-  let disbursements = [];
-
-  if (fs.existsSync(DISBURSEMENT_FILE)) {
-    const data = fs.readFileSync(DISBURSEMENT_FILE, "utf-8");
-    disbursements = JSON.parse(data);
-  }
-
-  disbursements.push(newDisbursement);
-  fs.writeFileSync(DISBURSEMENT_FILE, JSON.stringify(disbursements, null, 2));
-  res.json({ message: "บันทึกการเบิกจ่ายพัสดุเรียบร้อยแล้ว" });
-});
-
-
 
 
 

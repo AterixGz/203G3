@@ -1,42 +1,44 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 
 function UnitCostViewer() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [inventoryItems, setInventoryItems] = useState([])
-  const [filteredItems, setFilteredItems] = useState([])
+  const [searchTerm, setSearchTerm] = useState("");
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
 
   useEffect(() => {
     fetch("http://localhost:3000/inventory")
       .then((res) => res.json())
       .then((data) => {
-        setInventoryItems(data)
-        setFilteredItems(data)
+        setInventoryItems(data);
+        setFilteredItems(data);
       })
-      .catch((err) => console.error("Error fetching data:", err))
-  }, [])
+      .catch((err) => console.error("Error fetching data:", err));
+  }, []);
 
   const handleSearch = () => {
-    const filtered = inventoryItems.filter(
-      (item) => item.name.includes(searchTerm) || item.code.includes(searchTerm)
-    )
-    setFilteredItems(filtered)
-  }
+    fetch(`http://localhost:3000/inventory-items/search?searchTerm=${searchTerm}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setFilteredItems(data);
+      })
+      .catch((err) => console.error("Error fetching data:", err));
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      handleSearch()
+      handleSearch();
     }
-  }
+  };
 
   const handlePrint = (documentType) => {
     // Format current date
-    const today = new Date().toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    const today = new Date().toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
     // Create print window content
     const printContent = `
@@ -72,16 +74,20 @@ function UnitCostViewer() {
               </tr>
             </thead>
             <tbody>
-              ${filteredItems.map(item => `
+              ${filteredItems
+                .map(
+                  (item) => `
                 <tr>
-                  <td>${item.code}</td>
+                  <td>${item.item_id}</td>
                   <td>${item.name}</td>
-                  <td>${item.quantity} ชิ้น</td>
-                  <td>${item.unitCost?.toLocaleString()} บาท</td>
-                  <td>${(item.quantity * item.unitCost)?.toLocaleString()} บาท</td>
-                  <td>${item.location}</td>
+                  <td>${item.received_quantity} ชิ้น</td>
+                  <td>${item.unit_price} </td>
+                  <td>${item.total?.toLocaleString()} บาท</td>
+                  <td>${item.storage_location}</td>
                 </tr>
-              `).join('')}
+              `
+                )
+                .join("")}
             </tbody>
           </table>
 
@@ -110,21 +116,23 @@ function UnitCostViewer() {
           </div>
         </body>
       </html>
-    `
+    `;
 
     // Open print window
-    const printWindow = window.open('', '_blank')
-    printWindow.document.write(printContent)
-    printWindow.document.close()
-    printWindow.focus()
-    printWindow.print()
-  }
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
 
   return (
     <div className="card">
       <div className="card-header">
         <h2 className="card-title">ต้นทุนต่อหน่วยของพัสดุ</h2>
-        <p className="card-description">ตรวจสอบต้นทุนต่อหน่วยและจำนวนคงเหลือของพัสดุในคลัง</p>
+        <p className="card-description">
+          ตรวจสอบต้นทุนต่อหน่วยและจำนวนคงเหลือของพัสดุในคลัง
+        </p>
       </div>
       <div className="card-content">
         <div className="search-container">
@@ -140,20 +148,11 @@ function UnitCostViewer() {
         </div>
 
         <div className="print-buttons">
-          <button className="btn-outline" onClick={() => handlePrint('ใบขอซื้อพัสดุ')}>
-            <span className="icon"></span> พิมพ์ใบขอซื้อ
-          </button>
-          <button className="btn-outline" onClick={() => handlePrint('ใบสั่งซื้อพัสดุ')}>
-            <span className="icon"></span> พิมพ์ใบสั่งซื้อ
-          </button>
-          <button className="btn-outline" onClick={() => handlePrint('ใบรับพัสดุ')}>
-            <span className="icon"></span> พิมพ์ใบรับพัสดุ
-          </button>
-          <button className="btn-outline" onClick={() => handlePrint('ใบเบิกพัสดุ')}>
-            <span className="icon"></span> พิมพ์ใบเบิกพัสดุ
-          </button>
-          <button className="btn-outline" onClick={() => handlePrint('ใบส่งพัสดุ')}>
-            <span className="icon"></span> พิมพ์ใบส่งพัสดุ
+          <button
+            className="btn-outline"
+            onClick={() => handlePrint("")}
+          >
+            <span className="icon"></span> พิมพ์
           </button>
         </div>
 
@@ -165,7 +164,6 @@ function UnitCostViewer() {
               <th>จำนวนคงเหลือ</th>
               <th>ต้นทุนต่อหน่วย</th>
               <th>มูลค่าคงเหลือก่อนรับ</th>
-              <th>มูลค่าคงเหลือหลังรับ</th>
               <th>สถานที่เก็บ</th>
             </tr>
           </thead>
@@ -173,13 +171,12 @@ function UnitCostViewer() {
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.code}</td>
+                  <td>{item.item_id}</td>
                   <td>{item.name}</td>
-                  <td>{item.quantity} ชิ้น</td>
-                  <td>{item.unitCost?.toLocaleString()} บาท</td>
-                  <td>{(item.quantity * item.unitCost)?.toLocaleString()} บาท</td>
-                  <td>{((item.quantity + (item.pending_receive || 0)) * item.unitCost)?.toLocaleString()} บาท</td>
-                  <td>{item.location}</td>
+                  <td>{item.received_quantity}ชิ้น</td>
+                  <td>{item.unit_price} </td>
+                  <td>{item.total?.toLocaleString()} บาท</td>
+                  <td>{item.storage_location}</td>
                 </tr>
               ))
             ) : (
@@ -199,21 +196,28 @@ function UnitCostViewer() {
                 มูลค่าพัสดุคงเหลือก่อนรับ:{" "}
                 {filteredItems
                   .reduce((sum, item) => sum + item.quantity * item.unitCost, 0)
-                  .toLocaleString()} บาท
+                  .toLocaleString()}{" "}
+                บาท
               </p>
               <p>
                 มูลค่าพัสดุคงเหลือหลังรับ:{" "}
                 {filteredItems
-                  .reduce((sum, item) => 
-                    sum + (item.quantity + (item.pending_receive || 0)) * item.unitCost, 0)
-                  .toLocaleString()} บาท
+                  .reduce(
+                    (sum, item) =>
+                      sum +
+                      (item.quantity + (item.pending_receive || 0)) *
+                        item.unitCost,
+                    0
+                  )
+                  .toLocaleString()}{" "}
+                บาท
               </p>
             </div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default UnitCostViewer
+export default UnitCostViewer;
