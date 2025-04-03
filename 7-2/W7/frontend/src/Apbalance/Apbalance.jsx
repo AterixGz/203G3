@@ -1,79 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ApBalance.css';
+import axios from 'axios';
 
 function ApBalance() {
   const [activeTab, setActiveTab] = useState('current'); // 'current' or 'after'
-  const [assetItems, setAssetItems] = useState([{
-    id: 1,
-    description: '',
-    unit: '',
-    quantity: 0,
-    receivedDate: '',
-    poReference: ''
-  }]);
+  const [apBalanceData, setApBalanceData] = useState([]);
+  const [filters, setFilters] = useState({
+    vendor: '',
+    status: '',
+    startDate: '',
+    endDate: ''
+  });
 
-  const handleAddItem = () => {
-    setAssetItems([...assetItems, {
-      id: assetItems.length + 1,
-      description: '',
-      unit: '',
-      quantity: 0,
-      receivedDate: '',
-      poReference: ''
-    }]);
-  };
+  // Fetch AP Balance data
+  useEffect(() => {
+    const fetchApBalance = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/ap-balance', {
+          params: filters
+        });
+        setApBalanceData(response.data);
+      } catch (error) {
+        console.error('Error fetching AP Balance:', error);
+      }
+    };
 
-  const handleRemoveItem = (index) => {
-    setAssetItems(assetItems.filter((_, i) => i !== index));
+    fetchApBalance();
+  }, [filters]);
+
+  const handleFilterChange = (e) => {
+    const { id, value } = e.target;
+    setFilters((prev) => ({ ...prev, [id]: value }));
   };
 
   return (
     <div className="ap-balance">
-      <div className="header-section">
-        {/* <h2>ยอดคงเหลือเจ้าหนี้ (AP Balance)</h2> */}
-      </div>
-      <div className="tab-buttons">
-        <button 
-          className={`tab-button ${activeTab === 'current' ? 'active' : ''}`}
-          onClick={() => setActiveTab('current')}
-        >
-          ยอดคงเหลือเจ้าหนี้ปัจจุบัน
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'after' ? 'active' : ''}`}
-          onClick={() => setActiveTab('after')}
-        >
-          ยอดคงเหลือเจ้าหนี้หลังการจ่ายเงิน
-        </button>
-      </div>
-
-      <h2>{activeTab === 'current' ? 'ยอดคงเหลือเจ้าหนี้ (AP Balance)' : 'ยอดคงเหลือเจ้าหนี้หลังการจ่ายเงิน'}</h2>
-      <p>{activeTab === 'current' ? 'ดูยอดคงเหลือเจ้าหนี้ทั้งหมด' : 'ดูยอดคงเหลือเจ้าหนี้หลังจากการจ่ายเงิน'}</p>
-
+      {/* ...existing code... */}
       <div className="filter-section">
         <div className="filter-row">
           <label htmlFor="vendor">ผู้ขาย/ผู้ให้บริการ</label>
-          <select id="vendor">
-            <option value="">ทั้งหมด</option>
-            {/* เพิ่มตัวเลือกผู้ขาย/ผู้ให้บริการ */}
-          </select>
+          <input
+            id="vendor"
+            type="text"
+            value={filters.vendor}
+            onChange={handleFilterChange}
+          />
 
           <label htmlFor="status">สถานะ</label>
-          <select id="status">
+          <select id="status" value={filters.status} onChange={handleFilterChange}>
             <option value="">ทั้งหมด</option>
-            {/* เพิ่มตัวเลือกสถานะ */}
+            <option value="ชำระแล้ว">ชำระแล้ว</option>
+            <option value="ยังไม่ชำระ">ยังไม่ชำระ</option>
           </select>
 
           <label htmlFor="startDate">วันที่เริ่มต้น</label>
-          <input type="date" id="startDate" />
+          <input
+            type="date"
+            id="startDate"
+            value={filters.startDate}
+            onChange={handleFilterChange}
+          />
 
           <label htmlFor="endDate">วันที่สิ้นสุด</label>
-          <input type="date" id="endDate" />
+          <input
+            type="date"
+            id="endDate"
+            value={filters.endDate}
+            onChange={handleFilterChange}
+          />
         </div>
 
         <div className="filter-actions">
-          <button className="clear-button">ล้างการค้นหา</button>
-          <button className="export-button">ส่งออกข้อมูล</button>
+          <button onClick={() => setFilters({ vendor: '', status: '', startDate: '', endDate: '' })}>
+            ล้างการค้นหา
+          </button>
         </div>
       </div>
 
@@ -88,145 +88,28 @@ function ApBalance() {
               <th>วันครบกำหนด</th>
               <th>จำนวนเงิน</th>
               <th>ชำระแล้ว</th>
-              <th>คงเหลือ</th>
               <th>สถานะ</th>
-              {activeTab === 'after' && (
-                <>
-                  <th>วันที่ชำระ</th>
-                  <th>วิธีการชำระ</th>
-                </>
-              )}
+              <th>คงเหลือ</th>
             </tr>
           </thead>
           <tbody>
-            {activeTab === 'current' ? (
-              // Current balance rows
-              <>
-                <tr>
-                  <td>INV00001</td>
-                  <td>P000001</td>
-                  <td>บริษัท เอ บี ซี จำกัด</td>
-                  <td>15/5/2566</td>
-                  <td>15/6/2566</td>
-                  <td>฿100,000.00</td>
-                  <td>฿0.00</td>
-                  <td>฿100,000.00</td>
-                  <td>ยังไม่ชำระ</td>
-                </tr>
-                <tr>
-                  <td>INV00002</td>
-                  <td>P000002</td>
-                  <td>บริษัท เอ็กซ์ วาย แซด จำกัด</td>
-                  <td>20/5/2566</td>
-                  <td>20/6/2566</td>
-                  <td>฿15,000.00</td>
-                  <td>฿0.00</td>
-                  <td>฿15,000.00</td>
-                  <td>ยังไม่ชำระ</td>
-                </tr>
-                <tr>
-                  <td>INV00003</td>
-                  <td>P000003</td>
-                  <td>ห้างหุ้นส่วนจำกัด 123</td>
-                  <td>10/4/2566</td>
-                  <td>10/5/2566</td>
-                  <td>฿50,000.00</td>
-                  <td>฿50,000.00</td>
-                  <td>฿0.00</td>
-                  <td>ชำระแล้ว</td>
-                </tr>
-              </>
-            ) : (
-              // After payment rows
-              <>
-                <tr>
-                  <td>INV00001</td>
-                  <td>P000001</td>
-                  <td>บริษัท เอ บี ซี จำกัด</td>
-                  <td>15/5/2566</td>
-                  <td>15/6/2566</td>
-                  <td>฿100,000.00</td>
-                  <td>฿100,000.00</td>
-                  <td>฿0.00</td>
-                  <td>ชำระแล้ว</td>
-                  <td>1/6/2566</td>
-                  <td>โอนเงินเข้าบัญชี</td>
-                </tr>
-              </>
-            )}
+            {apBalanceData.map((row) => (
+              <tr key={row.invoice_number}>
+                <td>{row.invoice_number}</td>
+                <td>{row.po_number}</td>
+                <td>{row.vendor}</td>
+                <td>{row.invoice_date}</td>
+                <td>{row.due_date}</td>
+                <td>฿{row.total_amount.toLocaleString()}</td>
+                <td>฿{row.paid_amount.toLocaleString()}</td>
+                <td>{row.status}</td>
+                <td>฿{row.balance.toLocaleString()}</td>
+                
+              </tr>
+            ))}
           </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={activeTab === 'current' ? 8 : 10} style={{ textAlign: 'right' }}>
-                ยอดคงเหลือรวม
-              </td>
-              <td>{activeTab === 'current' ? '฿115,000.00' : '฿0.00'}</td>
-            </tr>
-          </tfoot>
         </table>
       </div>
-
-      {activeTab === 'current' && (
-        <div className="asset-receipt-section">
-          <h3>การรับสินทรัพย์</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>อ้างอิงหมายเลขใบสั่งซื้อ</th>
-                <th>คำอธิบายรายการ</th>
-                <th>หน่วยนับ</th>
-                <th>ปริมาณการรับ</th>
-                <th>วันที่รับ</th>
-                <th>การดำเนินการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assetItems.map((item, index) => (
-                <tr key={item.id}>
-                  <td>
-                    <select>
-                      <option value="">เลือกใบสั่งซื้อ</option>
-                      <option value="PO-001">PO-001</option>
-                      <option value="PO-002">PO-002</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      placeholder="รายละเอียดสินทรัพย์"
-                    />
-                  </td>
-                  <td>
-                    <select>
-                      <option value="">เลือกหน่วย</option>
-                      <option value="piece">ชิ้น</option>
-                      <option value="unit">หน่วย</option>
-                      <option value="set">ชุด</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="จำนวน"
-                    />
-                  </td>
-                  <td>
-                    <input type="date" />
-                  </td>
-                  <td>
-                    <button onClick={() => handleRemoveItem(index)}>ลบ</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="asset-actions">
-            <button onClick={handleAddItem}>เพิ่มรายการ</button>
-            <button className="save">บันทึกการรับ</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

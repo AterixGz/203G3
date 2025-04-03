@@ -471,15 +471,17 @@ app.get('/invoices', async (req, res) => {
 });
 
 // AP Balance API
-app.get('/ap-balance', async (req, res) => {
+app.get('/api/ap-balance', async (req, res) => {
   try {
-    const [rows] = await db.query(`
+    const { vendor, status, startDate, endDate } = req.query;
+
+    let query = `
       SELECT 
         i.invoice_number, 
         i.po_ref AS po_number,
         i.vendor, 
-        i.invoice_date,
-        i.due_date, 
+        DATE_FORMAT(i.invoice_date, '%d/%m/%Y') AS invoice_date,
+        DATE_FORMAT(i.due_date, '%d/%m/%Y') AS due_date,
         i.total_amount, 
         COALESCE(SUM(pi.amount), 0) AS paid_amount, 
         (i.total_amount - COALESCE(SUM(pi.amount), 0)) AS balance,
@@ -489,21 +491,50 @@ app.get('/ap-balance', async (req, res) => {
         END AS status
       FROM invoices i
       LEFT JOIN payment_invoices pi ON i.invoice_number = pi.invoice_number
-      GROUP BY i.invoice_number
-    `);
+    `;
 
-    // ตรวจสอบว่า balance ถูกส่งกลับมาเป็นตัวเลข
-    const formattedRows = rows.map(row => ({
-      ...row,
-      balance: parseFloat(row.balance), // แปลง balance เป็นตัวเลข
-    }));
+    const conditions = [];
+    const params = [];
 
-    res.status(200).json(formattedRows);
+    if (vendor) {
+      conditions.push('i.vendor = ?');
+      params.push(vendor);
+    }
+
+    if (status) {
+      if (status === 'ชำระแล้ว') {
+        conditions.push('(i.total_amount - COALESCE(SUM(pi.amount), 0)) = 0');
+      } else if (status === 'ยังไม่ชำระ') {
+        conditions.push('(i.total_amount - COALESCE(SUM(pi.amount), 0)) > 0');
+      }
+    }
+
+    if (startDate) {
+      conditions.push('i.invoice_date >= ?');
+      params.push(startDate);
+    }
+
+    if (endDate) {
+      conditions.push('i.invoice_date <= ?');
+      params.push(endDate);
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' GROUP BY i.invoice_number';
+
+    const [rows] = await db.query(query, params);
+
+    res.status(200).json(rows);
   } catch (error) {
-    console.error('Error in /ap-balance API:', error);
+    console.error('Error fetching AP Balance:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
+
   app.get(
     '/users',
     async (req, res) => {
