@@ -1,31 +1,18 @@
 import React, { useState } from "react";
-import axios from "axios";
 import "./Login.css";
 
-const Login = ({ onLogin }) => { // รับ props onLogin
-  const [username, setUsername] = useState("");
+const Login = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [name, setName] = useState("");
+  const [id, setId] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError("");
-
-    try {
-      const response = await axios.post("http://localhost:3000/login", {
-        username,
-        password,
-      });
-
-      alert(`เข้าสู่ระบบสำเร็จ: ${response.data.user.username}`);
-      onLogin(); // เรียกฟังก์ชัน onLogin เพื่อเปลี่ยนไปหน้าหลัก
-    } catch (err) {
-      if (err.response && err.response.status === 401) {
-        setError("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
-      } else {
-        setError("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์");
-      }
-    }
+    alert(`เข้าสู่ระบบด้วย:
+    ชื่อ: ${name}
+    รหัส: ${id}
+    อีเมล: ${email}`);
   };
 
   return (
@@ -36,12 +23,30 @@ const Login = ({ onLogin }) => { // รับ props onLogin
         <p>กรอกข้อมูลเพื่อเข้าใช้งานระบบ</p>
 
         <form onSubmit={handleSubmit}>
-          <label>ชื่อผู้ใช้</label>
+          <label>ชื่อ-นามสกุล</label>
           <input
             type="text"
-            placeholder="your_username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            placeholder="ชื่อ นามสกุล"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+
+          <label>รหัสประจำตัว</label>
+          <input
+            type="text"
+            placeholder="รหัสประจำตัว"
+            value={id}
+            onChange={(e) => setId(e.target.value)}
+            required
+          />
+
+          <label>อีเมล</label>
+          <input
+            type="email"
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
 
@@ -54,15 +59,16 @@ const Login = ({ onLogin }) => { // รับ props onLogin
             required
           />
 
-          <button type="submit">เข้าสู่ระบบ</button>
+          <div className="form-buttons">
+            <button type="submit">เข้าสู่ระบบ</button>
+            <button type="button" onClick={() => window.location.reload()}>ยกเลิก</button>
+          </div>
         </form>
-
-        {error && <p className="error-message">{error}</p>}
 
         <div className="test-credentials">
           <p>🛠 ข้อมูลสำหรับทดสอบ:</p>
-          <p>ชื่อผู้ใช้: admin / รหัสผ่าน: admin123</p>
-          <p>ชื่อผู้ใช้: user / รหัสผ่าน: user123</p>
+          <p>ชื่อ: Admin User / รหัส: ADM001</p>
+          <p>อีเมล: admin@example.com / รหัสผ่าน: admin123</p>
         </div>
       </div>
     </div>

@@ -1,211 +1,391 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import './Requisition.css';
+import api from '../utils/axios';
 
 function PurchaseRequisitionForm() {
-  const [formData, setFormData] = useState({
-    prNumber: '',
+  const initialFormData = {
+    prNumber: 'PR07677',
+    creator: '',
     requestDate: '',
-    department: '',
-    requester: '',
-    purpose: '',
-    items: [
-      { details: '', quantity: 1, unitPrice: 0, total: 0 },
-    ],
-  });
+    vendorName: '',
+    vendorContact: '',
+    description: '',
+    status: 'draft',
+    paymentTerms: 'cash',
+    refPR: ''
+  };
 
+  const initialItemData = {
+    description: '',
+    unit: 'piece',
+    requiredDate: '',
+    quantity: 1,
+    price: 0,
+    amount: 0
+  };
+
+  // State declarations
+  const [formData, setFormData] = useState(initialFormData);
+  const [items, setItems] = useState([initialItemData]);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Fetch initial data
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    setFormData(prevData => ({ ...prevData, requestDate: today }));
+    fetchRequisitionData();
   }, []);
 
+  // Fetch requisition data
+  const fetchRequisitionData = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/requisitions');
+      if (response.data) {
+        setFormData({
+          ...initialFormData,
+          ...response.data
+        });
+        setItems(response.data.items || [initialItemData]);
+        calculateTotal(response.data.items || [initialItemData]);
+      }
+    } catch (error) {
+      setError('Error fetching data: ' + error.message);
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate total amount
+  const calculateTotal = (items) => {
+    const total = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    setTotalAmount(total);
+  };
+
+  // Handle form input changes
   const handleInputChange = (e) => {
     const { id, value } = e.target;
-    setFormData({ ...formData, [id]: value });
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
 
+  // Handle item changes
   const handleItemChange = (index, field, value) => {
-    const updatedItems = [...formData.items];
-    updatedItems[index][field] = value;
-    if (field === 'quantity' || field === 'unitPrice') {
-      updatedItems[index].total = updatedItems[index].quantity * updatedItems[index].unitPrice;
+    const newItems = [...items];
+    newItems[index] = {
+      ...newItems[index],
+      [field]: value
+    };
+
+    // Recalculate amount if quantity or price changes
+    if (field === 'quantity' || field === 'price') {
+      newItems[index].amount = newItems[index].quantity * newItems[index].price;
     }
-    setFormData({ ...formData, items: updatedItems });
+
+    setItems(newItems);
+    calculateTotal(newItems);
   };
 
-  const addItem = () => {
-    setFormData({
-      ...formData,
-      items: [...formData.items, { details: '', quantity: 1, unitPrice: 0, total: 0 }],
-    });
+  // Add new item
+  const handleAddItem = () => {
+    setItems([...items, { ...initialItemData }]);
   };
 
-  const removeItem = (index) => {
-    const updatedItems = formData.items.filter((_, i) => i !== index);
-    setFormData({ ...formData, items: updatedItems });
+  // Remove item
+  const handleRemoveItem = (index) => {
+    const newItems = items.filter((_, i) => i !== index);
+    setItems(newItems);
+    calculateTotal(newItems);
   };
 
-  const calculateGrandTotal = () => {
-    return formData.items.reduce((sum, item) => sum + item.total, 0);
-  };
-
-  const validateForm = () => {
-    if (!formData.prNumber || !formData.department || !formData.requester || !formData.purpose) {
-      return false;
-    }
-    return formData.items.every(item => item.details && item.quantity > 0 && item.unitPrice >= 0);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) {
-      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
+  // Submit form
+  const handleSubmit = async () => {
     try {
-      const response = await axios.post('http://localhost:3000/requisition', formData);
-      alert(`Requisition created successfully: ID ${response.data.requisitionId}`);
+      setLoading(true);
+      setError(null);
+
+      const payload = {
+        ...formData,
+        items,
+        totalAmount,
+        submittedAt: new Date().toISOString()
+      };
+
+      const response = await api.post('/api/requisitions', payload);
+      
+      if (response.status === 201) {
+        // Handle success
+        console.log('Requisition created successfully');
+        // Reset form or redirect
+      }
     } catch (error) {
-      alert('Failed to create requisition');
+      setError('Error submitting form: ' + error.message);
+      console.error('Error submitting form:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePrint = () => {
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>ใบขอซื้อ</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2 { text-align: center; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            table, th, td { border: 1px solid black; text-align: center; }
-            th, td { padding: 8px; }
-            .total { font-weight: bold; text-align: right; margin-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <h2>ใบขอซื้อ (Purchase Requisition)</h2>
-          <p><strong>เลขที่ใบขอซื้อ:</strong> ${formData.prNumber}</p>
-          <p><strong>วันที่ขอซื้อ:</strong> ${formData.requestDate}</p>
-          <p><strong>แผนก/ฝ่าย:</strong> ${formData.department}</p>
-          <p><strong>ผู้ขอซื้อ:</strong> ${formData.requester}</p>
-          <p><strong>วัตถุประสงค์:</strong> ${formData.purpose}</p>
-          
-          <table>
-            <thead>
-              <tr>
-                <th>รายละเอียด</th>
-                <th>จำนวน</th>
-                <th>ราคาต่อหน่วย</th>
-                <th>จำนวนเงิน</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${formData.items.map(item => `
-                <tr>
-                  <td>${item.details}</td>
-                  <td>${item.quantity}</td>
-                  <td>${item.unitPrice.toFixed(2)}</td>
-                  <td>${item.total.toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          
-          <p class="total"><strong>รวมทั้งสิ้น:</strong> ${calculateGrandTotal().toFixed(2)} บาท</p>
-          
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+  // Reset form
+  const handleReset = () => {
+    setFormData(initialFormData);
+    setItems([initialItemData]);
+    setTotalAmount(0);
+    setError(null);
+  };
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
+
+  const handleViewHistory = (type) => {
+    switch(type) {
+      case 'purchase':
+        console.log('View purchase history');
+        break;
+      case 'receipt':
+        console.log('View receipt history');
+        break;
+      case 'invoice':
+        console.log('View invoice history');
+        break;
+      case 'payment':
+        console.log('View payment history');
+        break;
+      case 'balance':
+        console.log('View AP balance history');
+        break;
+      default:
+        break;
+    }
+    setShowMenu(false);
   };
 
   return (
-    <form className="purchase-requisition-form" onSubmit={handleSubmit}>
-      <h2>การจัดทำใบขอซื้อ (Purchase Requisition)</h2>
+    <div className="purchase-requisition-form">
+      {error && <div className="error-message">{error}</div>}
+      
+      <div className="header-section">
+        <h2>การจัดทำใบขอซื้อ (Purchase Requisition)</h2>
+        <div className="header-buttons">
+          <button 
+            className="menu-button"
+            onClick={() => setShowMenu(!showMenu)}
+            title="เมนู"
+          >
+            ...
+          </button>
+          {showMenu && (
+            <div className="menu-dropdown">
+              <button onClick={() => handleViewHistory('purchase')}>
+                📋 ประวัติการสั่งซื้อ
+              </button>
+              <button onClick={() => handleViewHistory('receipt')}>
+                📦 ประวัติรับสินค้า
+              </button>
+              <button onClick={() => handleViewHistory('invoice')}>
+                📄 ประวัติใบแจ้งหนี้
+              </button>
+              <button onClick={() => handleViewHistory('balance')}>
+                💵 ประวัติยอดคงเหลือเจ้าหนี้
+              </button>
+              <button onClick={() => handleViewHistory('payment')}>
+                💰 ประวัติการจ่ายเงิน
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      <p>กรอกข้อมูลเพื่อสร้างใบขอซื้อ พร้อมตรวจสอบงบประมาณคงเหลือ</p>
 
       <div className="form-row">
         <label htmlFor="prNumber">เลขที่ใบขอซื้อ</label>
-        <input type="text" id="prNumber" value={formData.prNumber} onChange={handleInputChange} />
+        <input 
+          type="text" 
+          id="prNumber" 
+          value={formData.prNumber} 
+          readOnly 
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="creator">ผู้จัดทำ</label>
+        <input 
+          type="text" 
+          id="creator" 
+          value={formData.creator}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="form-row">
         <label htmlFor="requestDate">วันที่ขอซื้อ</label>
-        <input type="date" id="requestDate" value={formData.requestDate} readOnly />
+        <input 
+          type="date" 
+          id="requestDate" 
+          value={formData.requestDate}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="form-row">
-        <label htmlFor="department">แผนก/ฝ่าย</label>
-        <select id="department" value={formData.department} onChange={handleInputChange}>
-          <option value=""></option>
-          <option value="IT">IT</option>
-          <option value="Management">ฝ่ายบริหารและอนุมัติ</option>
-          <option value="Procurement Officer">ฝ่ายจัดซื้อ</option>
-          <option value="Finance">การเงินและบัญชี</option>
+        <label htmlFor="vendorName">ชื่อผู้ขาย</label>
+        <input 
+          type="text" 
+          id="vendorName" 
+          placeholder="ระบุชื่อผู้ขาย" 
+          value={formData.vendorName}
+          onChange={handleInputChange}
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="vendorContact">ชื่อผู้ติดต่อของผู้ขาย</label>
+        <input 
+          type="text" 
+          id="vendorContact" 
+          placeholder="ระบุชื่อผู้ติดต่อ" 
+          value={formData.vendorContact}
+          onChange={handleInputChange}
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="description">คำอธิบายหัวเรื่อง</label>
+        <textarea 
+          id="description" 
+          placeholder="รายละเอียดการขอซื้อ" 
+          value={formData.description}
+          onChange={handleInputChange}
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="status">สถานะ</label>
+        <select 
+          id="status"
+          value={formData.status}
+          onChange={handleInputChange}
+        >
+          <option value="draft">แบบร่าง</option>
+          <option value="pending">รออนุมัติ</option>
+          <option value="approved">อนุมัติแล้ว</option>
+          <option value="rejected">ไม่อนุมัติ</option>
         </select>
       </div>
 
       <div className="form-row">
-        <label htmlFor="requester">ผู้ขอซื้อ</label>
-        <input type="text" id="requester" value={formData.requester} onChange={handleInputChange} />
+        <label htmlFor="paymentTerms">เงื่อนไขการชำระเงิน</label>
+        <select 
+          id="paymentTerms"
+          value={formData.paymentTerms}
+          onChange={handleInputChange}
+        >
+          <option value="cash">เงินสด</option>
+          <option value="credit30">เครดิต 30 วัน</option>
+          <option value="credit60">เครดิต 60 วัน</option>
+        </select>
       </div>
 
       <div className="form-row">
-        <label htmlFor="purpose">วัตถุประสงค์การขอซื้อ</label>
-        <textarea id="purpose" value={formData.purpose} onChange={handleInputChange} />
+        <label htmlFor="refPR">เลขที่อ้างอิงใบขอซื้อ</label>
+        <input 
+          type="text" 
+          id="refPR" 
+          placeholder="ระบุเลขที่อ้างอิง" 
+          value={formData.refPR}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="item-list">
-        <div className="item-controls">
-          <button type="button" className="add-item" onClick={addItem}>
-            + เพิ่มรายการ
-          </button>
-          <button type="button" className="remove-item" onClick={() => removeItem(formData.items.length - 1)}>
-            - ลบรายการ
-          </button>
-        </div>
-        {formData.items.map((item, index) => (
-          <div className="item-row" key={index}>
-            <label>รายละเอียด</label>
-            <input type="text" value={item.details} onChange={(e) => handleItemChange(index, 'details', e.target.value)} />
-            <label>จำนวน</label>
-            <input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)} />
-            <label>ราคาต่อหน่วย</label>
-            <input type="number" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)} />
-            <label>จำนวนเงิน</label>
-            <input type="text" value={item.total.toFixed(2)} readOnly />
+        <h3>รายการสินค้า/บริการ</h3>
+        <button className="add-item-button" onClick={handleAddItem}>เพิ่มรายการ</button>
+
+        {items.map((item, index) => (
+          <div className="item-details" key={index}>
+            <div className="row">
+              <label>คำอธิบายรายการ</label>
+              <input 
+                type="text" 
+                placeholder="รายละเอียดสินค้า/บริการ" 
+                value={item.description}
+                onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+              />
+              
+              <label>หน่วยนับ</label>
+              <select 
+                value={item.unit}
+                onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+              >
+                <option value="piece">ชิ้น</option>
+                <option value="unit">หน่วย</option>
+                <option value="set">ชุด</option>
+              </select>
+
+              <label>วันที่ต้องการ</label>
+              <input 
+                type="date" 
+                value={item.requiredDate}
+                onChange={(e) => handleItemChange(index, 'requiredDate', e.target.value)}
+              />
+            </div>
+            <div className="row">
+              <label>ปริมาณ</label>
+              <input 
+                type="number" 
+                min="1" 
+                value={item.quantity}
+                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+              />
+
+              <label>ราคาต่อหน่วย</label>
+              <input 
+                type="number" 
+                min="0" 
+                step="0.01" 
+                value={item.price}
+                onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+              />
+
+              <label>จำนวนเงิน</label>
+              <input 
+                type="number" 
+                readOnly 
+                value={item.amount}
+              />
+            </div>
+            <button className="remove-item-button" onClick={() => handleRemoveItem(index)}>ลบรายการ</button>
           </div>
         ))}
       </div>
 
       <div className="total">
-        <label>รวมทั้งสิ้น</label>
-        <input type="text" value={calculateGrandTotal().toFixed(2)} readOnly />
+        <label>จำนวนเงินรวม</label>
+        <input type="text" value={`฿${totalAmount.toFixed(2)}`} readOnly />
       </div>
 
       <div className="form-actions">
-        <div className="print-buttons">
-          <button type="button" className="print-button" onClick={handlePrint}>
-            พิมพ์ใบขอซื้อ
-          </button>
-        </div>
-        <div className="action-buttons">
-          <button type="button" className="cancel-button">
-            ยกเลิก
-          </button>
-          <button type="submit" className="submit-button">
-            บันทึก
-          </button>
-        </div>
+        <button 
+          className="cancel-button" 
+          onClick={handleReset}
+          disabled={loading}
+        >
+          ยกเลิก
+        </button>
+        <button 
+          className="submit-button" 
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? 'กำลังบันทึก...' : 'บันทึกใบขอซื้อ'}
+        </button>
       </div>
-    </form>
+    </div>
   );
 }
 

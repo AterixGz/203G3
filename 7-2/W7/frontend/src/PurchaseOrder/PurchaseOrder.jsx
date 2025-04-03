@@ -1,35 +1,89 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import "./PurchaseOrder.css";
+import api from '../utils/axios';
 
 const PurchaseOrder = () => {
-  const [items, setItems] = useState([{ id: 1, name: "", quantity: 0, price: 0 }]);
-  const [vendor, setVendor] = useState("");
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().split("T")[0]); // วันที่ปัจจุบัน
-  const [poNumber, setPoNumber] = useState(""); // PO Number
-
-  // ดึง PO Number จาก Backend เมื่อโหลดหน้า
-  useEffect(() => {
-    const fetchPoNumber = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/next-po-number");
-        setPoNumber(response.data.poNumber);
-      } catch (error) {
-        console.error("Error fetching PO Number:", error);
-      }
-    };
-
-    fetchPoNumber();
-  }, []);
-
-  const handleAddItem = () => {
-    setItems([...items, { id: items.length + 1, name: "", quantity: 0, price: 0 }]);
+  const initialFormData = {
+    poNumber: 'PO-047690',
+    orderDate: '2025-03-27',
+    requisitionRef: '',
+    vendorName: '',
+    status: 'draft'
   };
 
+  // States
+  const [formData, setFormData] = useState(initialFormData);
+  const [items, setItems] = useState([{ id: 1, name: "", quantity: 0, price: 0 }]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [requisitions, setRequisitions] = useState([]);
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchRequisitions();
+  }, []);
+
+  // Fetch available requisitions
+  const fetchRequisitions = async () => {
+    try {
+      const response = await api.get('/api/requisitions');
+      setRequisitions(response.data);
+    } catch (error) {
+      setError('Error fetching requisitions: ' + error.message);
+      console.error('Error:', error);
+    }
+  };
+
+  // Handle form input changes
+  const handleFormChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle requisition selection
+  const handleRequisitionSelect = async (requisitionId) => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/api/requisitions/${requisitionId}`);
+      const requisitionData = response.data;
+      
+      // Update form with requisition data
+      setFormData(prev => ({
+        ...prev,
+        requisitionRef: requisitionId,
+        vendorName: requisitionData.vendorName
+      }));
+      
+      // Update items from requisition
+      setItems(requisitionData.items.map(item => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })));
+    } catch (error) {
+      setError('Error loading requisition: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle item changes
   const handleChange = (index, field, value) => {
     const newItems = [...items];
     newItems[index][field] = value;
     setItems(newItems);
+  };
+
+  const handleAddItem = () => {
+    setItems([...items, { 
+      id: items.length + 1, 
+      name: "", 
+      quantity: 0, 
+      price: 0 
+    }]);
   };
 
   const handleRemoveItem = (index) => {
@@ -37,116 +91,92 @@ const PurchaseOrder = () => {
     setItems(newItems);
   };
 
-  const isFormValid = () => {
-    if (!vendor.trim()) return false; // ตรวจสอบว่ามีชื่อผู้จำหน่าย
-    if (items.length === 0) return false; // ต้องมีอย่างน้อย 1 รายการสินค้า
-    return items.every(item => item.name.trim() && item.quantity > 0 && item.price > 0);
+  // Calculate total
+  const calculateTotal = () => {
+    return items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
   };
-  
 
+  // Submit form
   const handleSubmit = async () => {
-
-    if (!isFormValid()) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก!");
-      return;
-    }
-
-    const data = {
-      poNumber,
-      orderDate,
-      vendor,
-      items: items.map(({ id, ...rest }) => rest), // ลบ `id` ออกจากรายการสินค้า
-    };
-
     try {
-      const response = await axios.post("http://localhost:3000/purchase-order", data);
-      alert(`Purchase Order created successfully: ID ${response.data.purchaseOrderId}`);
+      setLoading(true);
+      setError(null);
+
+      const payload = {
+        ...formData,
+        items,
+        totalAmount: calculateTotal(),
+        submittedAt: new Date().toISOString()
+      };
+
+      const response = await api.post('/api/purchase-orders', payload);
+      
+      if (response.status === 201) {
+        // Handle success - could redirect or show message
+        console.log('Purchase order created successfully');
+      }
     } catch (error) {
-      console.error("Error creating purchase order:", error.response?.data || error.message);
-      alert("Failed to create purchase order");
+      setError('Error submitting purchase order: ' + error.message);
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePrint = () => {
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>ใบสั่งซื้อ (Purchase Order)</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2, h3 { text-align: center; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            table, th, td { border: 1px solid black; text-align: center; }
-            th, td { padding: 8px; }
-            .total { font-weight: bold; text-align: right; margin-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <h2>ใบสั่งซื้อ (Purchase Order)</h2>
-          <p><strong>เลขที่ใบสั่งซื้อ:</strong> ${poNumber}</p>
-          <p><strong>วันที่:</strong> ${orderDate}</p>
-          <p><strong>ผู้จำหน่าย:</strong> ${vendor}</p>
-          
-          <h3>รายการสินค้า</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>รายการ</th>
-                <th>จำนวน</th>
-                <th>ราคาต่อหน่วย</th>
-                <th>รวม</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map(item => `
-                <tr>
-                  <td>${item.name}</td>
-                  <td>${item.quantity}</td>
-                  <td>${item.price.toFixed(2)}</td>
-                  <td>${(item.quantity * item.price).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-  
-          <p class="total"><strong>รวมทั้งสิ้น:</strong> ${items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toFixed(2)} บาท</p>
-          
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+  // Reset form
+  const handleReset = () => {
+    setFormData(initialFormData);
+    setItems([{ id: 1, name: "", quantity: 0, price: 0 }]);
+    setError(null);
   };
-  
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
 
   return (
     <div className="purchase-order-container">
+      {error && <div className="error-message">{error}</div>}
+      
       <h2>จัดทำใบสั่งซื้อ (Purchase Order)</h2>
+      
       <div className="order-info">
         <label>
           เลขที่ใบสั่งซื้อ:
-          <input type="text" value={poNumber} readOnly />
+          <input type="text" value={formData.poNumber} readOnly />
         </label>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
         <label>
           วันที่:
-          <input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
+          <input 
+            type="date" 
+            value={formData.orderDate}
+            onChange={(e) => handleFormChange('orderDate', e.target.value)}
+          />
         </label>
       </div>
 
       <div className="supplier-info">
         <label>
+          อ้างถึงใบขอซื้อ:
+          <select 
+            value={formData.requisitionRef}
+            onChange={(e) => handleRequisitionSelect(e.target.value)}
+          >
+            <option value="">เลือกใบขอซื้อ</option>
+            {requisitions.map(req => (
+              <option key={req.id} value={req.id}>
+                {req.requisitionNumber}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
           ผู้จำหน่าย:
-          <input
-            type="text"
-            placeholder="ชื่อผู้จำหน่าย"
-            value={vendor}
-            onChange={(e) => setVendor(e.target.value)}
+          <input 
+            type="text" 
+            value={formData.vendorName}
+            onChange={(e) => handleFormChange('vendorName', e.target.value)}
+            placeholder="ชื่อผู้จำหน่าย" 
           />
         </label>
       </div>
@@ -159,7 +189,7 @@ const PurchaseOrder = () => {
             <th>จำนวน</th>
             <th>ราคาต่อหน่วย</th>
             <th>รวม</th>
-            <th></th>
+            <th>ลบ</th>
           </tr>
         </thead>
         <tbody>
@@ -176,37 +206,45 @@ const PurchaseOrder = () => {
                 <input
                   type="number"
                   value={item.quantity}
-                  onChange={(e) => handleChange(index, "quantity", parseFloat(e.target.value) || 0)}
+                  onChange={(e) => handleChange(index, "quantity", e.target.value)}
                 />
               </td>
               <td>
                 <input
                   type="number"
                   value={item.price}
-                  onChange={(e) => handleChange(index, "price", parseFloat(e.target.value) || 0)}
+                  onChange={(e) => handleChange(index, "price", e.target.value)}
                 />
               </td>
               <td>{(item.quantity * item.price).toFixed(2)}</td>
               <td>
-                <button onClick={() => handleRemoveItem(index)}>🗑</button>
+                <button onClick={() => handleRemoveItem(index)}>ลบ</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <button className="add-item" onClick={handleAddItem}>
-        + เพิ่มรายการ
-      </button>
-          <br />
-          <br />
+      <button className="add-item" onClick={handleAddItem}>+ เพิ่มรายการ</button>
+
+      <div className="summary">
+        <p>ยอดรวมทั้งสิ้น: {calculateTotal().toFixed(2)} บาท</p>
+      </div>
+
       <div className="actions">
-        <button className="cancel">ยกเลิก</button>
-        <button className="save" onClick={handleSubmit}>
-          บันทึกใบสั่งซื้อ
+        <button 
+          className="cancel" 
+          onClick={handleReset}
+          disabled={loading}
+        >
+          ยกเลิก
         </button>
-        <button className="print-button" onClick={handlePrint}>
-        🖨 พิมพ์ใบสั่งซื้อ
+        <button 
+          className="save" 
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? 'กำลังบันทึก...' : 'บันทึกใบสั่งซื้อ'}
         </button>
       </div>
     </div>

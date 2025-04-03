@@ -1,189 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import './ApBalance.css';
 
 function ApBalance() {
-  const [apData, setApData] = useState([]); // เก็บข้อมูล AP Balance
-  const [filteredData, setFilteredData] = useState([]); // เก็บข้อมูลที่กรองแล้ว
-  const [loading, setLoading] = useState(true); // สถานะการโหลดข้อมูล
-  const [error, setError] = useState(null); // เก็บข้อความข้อผิดพลาด
+  const [activeTab, setActiveTab] = useState('current'); // 'current' or 'after'
+  const [assetItems, setAssetItems] = useState([{
+    id: 1,
+    description: '',
+    unit: '',
+    quantity: 0,
+    receivedDate: '',
+    poReference: ''
+  }]);
 
-  // ตัวกรอง
-  const [vendorFilter, setVendorFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-
-  useEffect(() => {
-    // ดึงข้อมูลจาก API
-    const fetchApBalance = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/ap-balance'); // เรียก API
-        setApData(response.data); // เก็บข้อมูลใน state
-        setFilteredData(response.data); // ตั้งค่าเริ่มต้นข้อมูลที่กรองแล้ว
-        setLoading(false); // ปิดสถานะการโหลด
-      } catch (err) {
-        setError(err.message); // เก็บข้อความข้อผิดพลาด
-        setLoading(false);
-      }
-    };
-
-    fetchApBalance();
-  }, []);
-
-  // ฟังก์ชันสำหรับกรองข้อมูล
-  const handleFilter = () => {
-    let filtered = apData;
-
-    if (vendorFilter) {
-      filtered = filtered.filter((row) => row.vendor === vendorFilter);
-    }
-
-    if (statusFilter) {
-      filtered = filtered.filter((row) => row.status === statusFilter);
-    }
-
-    if (startDate) {
-      filtered = filtered.filter((row) => new Date(row.invoice_date) >= new Date(startDate));
-    }
-
-    if (endDate) {
-      filtered = filtered.filter((row) => new Date(row.invoice_date) <= new Date(endDate));
-    }
-
-    setFilteredData(filtered);
+  const handleAddItem = () => {
+    setAssetItems([...assetItems, {
+      id: assetItems.length + 1,
+      description: '',
+      unit: '',
+      quantity: 0,
+      receivedDate: '',
+      poReference: ''
+    }]);
   };
 
-  // ฟังก์ชันสำหรับล้างตัวกรอง
-  const handleClearFilters = () => {
-    setVendorFilter('');
-    setStatusFilter('');
-    setStartDate('');
-    setEndDate('');
-    setFilteredData(apData); // รีเซ็ตข้อมูลที่กรองแล้ว
+  const handleRemoveItem = (index) => {
+    setAssetItems(assetItems.filter((_, i) => i !== index));
   };
-
-  if (loading) {
-    return <p>กำลังโหลดข้อมูล...</p>;
-  }
-
-  if (error) {
-    return <p>เกิดข้อผิดพลาด: {error}</p>;
-  }
-
-  const handlePrint = () => {
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>รายงานยอดคงเหลือเจ้าหนี้ (AP Balance)</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2, h3 { text-align: center; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            table, th, td { border: 1px solid black; text-align: center; }
-            th, td { padding: 8px; }
-            .info { margin-bottom: 20px; }
-            .info p { margin: 5px 0; }
-            .total { font-weight: bold; text-align: right; margin-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <h2>รายงานยอดคงเหลือเจ้าหนี้ (AP Balance)</h2>
-  
-          <table>
-            <thead>
-              <tr>
-                <th>เลขที่ใบแจ้งหนี้</th>
-                <th>เลขที่ใบสั่งซื้อ</th>
-                <th>ผู้ขาย/ผู้ให้บริการ</th>
-                <th>วันที่ใบแจ้งหนี้</th>
-                <th>วันครบกำหนด</th>
-                <th>จำนวนเงิน</th>
-                <th>ชำระแล้ว</th>
-                <th>สถานะ</th>
-                <th>คงเหลือ</th>
-                
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredData.map(row => `
-                <tr>
-                  <td>${row.invoice_number}</td>
-                  <td>${row.po_number}</td>
-                  <td>${row.vendor}</td>
-                  <td>${new Date(row.invoice_date).toLocaleDateString()}</td>
-                  <td>${new Date(row.due_date).toLocaleDateString()}</td>
-                  <td>${row.total_amount.toLocaleString()}</td>
-                  <td>${row.paid_amount.toLocaleString()}</td>
-                  <td>${row.status}</td>
-                  <td>${row.balance.toLocaleString()}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="8" style="text-align: right; font-weight: bold;">ยอดคงเหลือรวม</td>
-                <td style="font-weight: bold;">
-                  ${filteredData.reduce((sum, row) => sum + parseFloat(row.balance || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-  
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-  
 
   return (
     <div className="ap-balance">
-      <h2>ยอดคงเหลือเจ้าหนี้ (AP Balance)</h2>
-      <p>ดูยอดคงเหลือเจ้าหนี้ทั้งหมด</p>
+      <div className="header-section">
+        {/* <h2>ยอดคงเหลือเจ้าหนี้ (AP Balance)</h2> */}
+      </div>
+      <div className="tab-buttons">
+        <button 
+          className={`tab-button ${activeTab === 'current' ? 'active' : ''}`}
+          onClick={() => setActiveTab('current')}
+        >
+          ยอดคงเหลือเจ้าหนี้ปัจจุบัน
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'after' ? 'active' : ''}`}
+          onClick={() => setActiveTab('after')}
+        >
+          ยอดคงเหลือเจ้าหนี้หลังการจ่ายเงิน
+        </button>
+      </div>
+
+      <h2>{activeTab === 'current' ? 'ยอดคงเหลือเจ้าหนี้ (AP Balance)' : 'ยอดคงเหลือเจ้าหนี้หลังการจ่ายเงิน'}</h2>
+      <p>{activeTab === 'current' ? 'ดูยอดคงเหลือเจ้าหนี้ทั้งหมด' : 'ดูยอดคงเหลือเจ้าหนี้หลังจากการจ่ายเงิน'}</p>
 
       <div className="filter-section">
         <div className="filter-row">
           <label htmlFor="vendor">ผู้ขาย/ผู้ให้บริการ</label>
-          <select id="vendor" value={vendorFilter} onChange={(e) => setVendorFilter(e.target.value)}>
+          <select id="vendor">
             <option value="">ทั้งหมด</option>
-            {[...new Set(apData.map((row) => row.vendor))].map((vendor) => (
-              <option key={vendor} value={vendor}>
-                {vendor}
-              </option>
-            ))}
+            {/* เพิ่มตัวเลือกผู้ขาย/ผู้ให้บริการ */}
           </select>
 
           <label htmlFor="status">สถานะ</label>
-          <select id="status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <select id="status">
             <option value="">ทั้งหมด</option>
-            <option value="ชำระแล้ว">ชำระแล้ว</option>
-            <option value="ยังไม่ชำระ">ยังไม่ชำระ</option>
+            {/* เพิ่มตัวเลือกสถานะ */}
           </select>
 
           <label htmlFor="startDate">วันที่เริ่มต้น</label>
-          <input type="date" id="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          <input type="date" id="startDate" />
 
           <label htmlFor="endDate">วันที่สิ้นสุด</label>
-          <input type="date" id="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          <input type="date" id="endDate" />
         </div>
 
         <div className="filter-actions">
-          <button className="clear-button" onClick={handleClearFilters}>
-            ล้างการค้นหา
-          </button>
-          <button className="export-button" onClick={handleFilter}>
-            ส่งออกข้อมูล
-          </button>
-          <button className="print-button" onClick={handlePrint}>
-             🖨 พิมพ์รายงาน
-          </button>
+          <button className="clear-button">ล้างการค้นหา</button>
+          <button className="export-button">ส่งออกข้อมูล</button>
         </div>
       </div>
 
@@ -198,46 +88,146 @@ function ApBalance() {
               <th>วันครบกำหนด</th>
               <th>จำนวนเงิน</th>
               <th>ชำระแล้ว</th>
-              <th>สถานะ</th>
               <th>คงเหลือ</th>
-              
+              <th>สถานะ</th>
+              {activeTab === 'after' && (
+                <>
+                  <th>วันที่ชำระ</th>
+                  <th>วิธีการชำระ</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((row) => (
-              <tr key={row.invoice_number}>
-                <td>{row.invoice_number}</td>
-                <td>{row.po_number}</td>
-                <td>{row.vendor}</td>
-                <td>{new Date(row.invoice_date).toLocaleDateString()}</td>
-                <td>{new Date(row.due_date).toLocaleDateString()}</td>
-                <td>{row.total_amount.toLocaleString()}</td>
-                <td>{row.paid_amount.toLocaleString()}</td>
-                <td>{row.status}</td>
-                <td>{row.balance.toLocaleString()}</td>
-                
-              </tr>
-            ))}
+            {activeTab === 'current' ? (
+              // Current balance rows
+              <>
+                <tr>
+                  <td>INV00001</td>
+                  <td>P000001</td>
+                  <td>บริษัท เอ บี ซี จำกัด</td>
+                  <td>15/5/2566</td>
+                  <td>15/6/2566</td>
+                  <td>฿100,000.00</td>
+                  <td>฿0.00</td>
+                  <td>฿100,000.00</td>
+                  <td>ยังไม่ชำระ</td>
+                </tr>
+                <tr>
+                  <td>INV00002</td>
+                  <td>P000002</td>
+                  <td>บริษัท เอ็กซ์ วาย แซด จำกัด</td>
+                  <td>20/5/2566</td>
+                  <td>20/6/2566</td>
+                  <td>฿15,000.00</td>
+                  <td>฿0.00</td>
+                  <td>฿15,000.00</td>
+                  <td>ยังไม่ชำระ</td>
+                </tr>
+                <tr>
+                  <td>INV00003</td>
+                  <td>P000003</td>
+                  <td>ห้างหุ้นส่วนจำกัด 123</td>
+                  <td>10/4/2566</td>
+                  <td>10/5/2566</td>
+                  <td>฿50,000.00</td>
+                  <td>฿50,000.00</td>
+                  <td>฿0.00</td>
+                  <td>ชำระแล้ว</td>
+                </tr>
+              </>
+            ) : (
+              // After payment rows
+              <>
+                <tr>
+                  <td>INV00001</td>
+                  <td>P000001</td>
+                  <td>บริษัท เอ บี ซี จำกัด</td>
+                  <td>15/5/2566</td>
+                  <td>15/6/2566</td>
+                  <td>฿100,000.00</td>
+                  <td>฿100,000.00</td>
+                  <td>฿0.00</td>
+                  <td>ชำระแล้ว</td>
+                  <td>1/6/2566</td>
+                  <td>โอนเงินเข้าบัญชี</td>
+                </tr>
+              </>
+            )}
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan="8" style={{ textAlign: 'right' }}>
+              <td colSpan={activeTab === 'current' ? 8 : 10} style={{ textAlign: 'right' }}>
                 ยอดคงเหลือรวม
               </td>
-              <td>
-                {filteredData
-                  .reduce((sum, row) => sum + parseFloat(row.balance || 0), 0)
-                  .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </td>
+              <td>{activeTab === 'current' ? '฿115,000.00' : '฿0.00'}</td>
             </tr>
-            <br />
-            <br />
-
           </tfoot>
         </table>
       </div>
+
+      {activeTab === 'current' && (
+        <div className="asset-receipt-section">
+          <h3>การรับสินทรัพย์</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>อ้างอิงหมายเลขใบสั่งซื้อ</th>
+                <th>คำอธิบายรายการ</th>
+                <th>หน่วยนับ</th>
+                <th>ปริมาณการรับ</th>
+                <th>วันที่รับ</th>
+                <th>การดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assetItems.map((item, index) => (
+                <tr key={item.id}>
+                  <td>
+                    <select>
+                      <option value="">เลือกใบสั่งซื้อ</option>
+                      <option value="PO-001">PO-001</option>
+                      <option value="PO-002">PO-002</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      placeholder="รายละเอียดสินทรัพย์"
+                    />
+                  </td>
+                  <td>
+                    <select>
+                      <option value="">เลือกหน่วย</option>
+                      <option value="piece">ชิ้น</option>
+                      <option value="unit">หน่วย</option>
+                      <option value="set">ชุด</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="จำนวน"
+                    />
+                  </td>
+                  <td>
+                    <input type="date" />
+                  </td>
+                  <td>
+                    <button onClick={() => handleRemoveItem(index)}>ลบ</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="asset-actions">
+            <button onClick={handleAddItem}>เพิ่มรายการ</button>
+            <button className="save">บันทึกการรับ</button>
+          </div>
+        </div>
+      )}
     </div>
-    
   );
 }
 

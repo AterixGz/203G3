@@ -1,271 +1,324 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import './Payment.css';
+import api from '../utils/axios';
 
 function PaymentForm() {
-  const [paymentNumber, setPaymentNumber] = useState(''); // เลขที่การจ่ายเงิน
-  const [paymentDate, setPaymentDate] = useState(''); // วันที่จ่ายเงิน
-  const [paymentMethod, setPaymentMethod] = useState('transfer');
-  const [bankAccount, setBankAccount] = useState('');
-  const [attachment, setAttachment] = useState(null);
-  const [notes, setNotes] = useState('');
-  const [invoices, setInvoices] = useState([]); // รายการใบแจ้งหนี้จาก SQL
-  const [selectedInvoices, setSelectedInvoices] = useState([]); // ใบแจ้งหนี้ที่เลือก
-  const [selectedInvoiceNumber, setSelectedInvoiceNumber] = useState(''); // ใบแจ้งหนี้ที่เลือกจาก Dropdown
+  // Initial form state
+  const initialFormData = {
+    paymentNumber: 'PAY04927',
+    paymentDate: '',
+    paymentMethod: 'transfer',
+    bankAccount: '',
+    notes: '',
+    status: 'draft'
+  };
 
-  // ดึงข้อมูลใบแจ้งหนี้จาก Backend
+  // States
+  const [formData, setFormData] = useState(initialFormData);
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [attachmentFile, setAttachmentFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Fetch initial data
   useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/invoices');
-        setInvoices(response.data);
-      } catch (error) {
-        console.error('Error fetching invoices:', error);
-      }
-    };
-
-    // สร้างเลขที่การจ่ายเงิน
-    const generatePaymentNumber = () => {
-      const timestamp = Date.now();
-      setPaymentNumber(`PAY${timestamp}`);
-    };
-
-    // กำหนดวันที่ปัจจุบัน
-    const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
-    setPaymentDate(currentDate); // กำหนดค่า default เป็นวันที่ปัจจุบัน
-
+    fetchBankAccounts();
     fetchInvoices();
-    generatePaymentNumber();
   }, []);
 
+  // Fetch bank accounts
+  const fetchBankAccounts = async () => {
+    try {
+      const response = await api.get('/api/bank-accounts');
+      setBankAccounts(response.data);
+    } catch (err) {
+      setError('Error fetching bank accounts: ' + err.message);
+    }
+  };
+
+  // Fetch invoices
+  const fetchInvoices = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/invoices', {
+        params: { status: 'pending', search: searchTerm }
+      });
+      setInvoices(response.data);
+    } catch (err) {
+      setError('Error fetching invoices: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  // Handle file attachment
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const allowedTypes = ['image/jpeg', 'image/png']; // ประเภทไฟล์ที่อนุญาต
-      if (allowedTypes.includes(file.type)) {
-        setAttachment(file); // บันทึกไฟล์ลงใน state
-      } else {
-        alert('กรุณาอัปโหลดไฟล์รูปภาพ (JPEG, PNG) เท่านั้น');
-        e.target.value = ''; // รีเซ็ต input file
+    setAttachmentFile(file);
+  };
+
+  // Handle invoice selection
+  const handleInvoiceSelect = (invoice) => {
+    setSelectedInvoices(prev => {
+      const exists = prev.find(i => i.id === invoice.id);
+      if (exists) {
+        return prev.filter(i => i.id !== invoice.id);
       }
-    }
+      return [...prev, invoice];
+    });
   };
 
-  const handleAddInvoice = () => {
-    const selectedInvoice = invoices.find(
-      (invoice) => invoice.invoice_number === selectedInvoiceNumber
-    );
-    if (selectedInvoice) {
-      if (!selectedInvoices.some((invoice) => invoice.invoice_number === selectedInvoice.invoice_number)) {
-        setSelectedInvoices((prev) => [
-          ...prev,
-          { ...selectedInvoice, amount: selectedInvoice.balance }, // กำหนดค่า amount เป็น balance
-        ]);
-      } else {
-        alert('ใบแจ้งหนี้นี้ถูกเลือกแล้ว');
-      }
-    }
-  };
-
-  const handleRemoveInvoice = (invoiceNumber) => {
-    setSelectedInvoices((prev) => prev.filter((invoice) => invoice.invoice_number !== invoiceNumber));
-  };
-
+  // Handle form submission
   const handleSubmit = async () => {
-    if (!paymentDate || !bankAccount || selectedInvoices.length === 0) {
-      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('paymentNumber', paymentNumber);
-    formData.append('paymentDate', paymentDate);
-    formData.append('method', paymentMethod);
-    formData.append('bankAccount', bankAccount);
-    formData.append('notes', notes);
-    formData.append('attachment', attachment); // แนบไฟล์
-    formData.append('invoices', JSON.stringify(selectedInvoices)); // ส่งรายการใบแจ้งหนี้
-  
     try {
-      const response = await axios.post('http://localhost:3000/payment', formData, {
+      setLoading(true);
+      setError(null);
+
+      const formPayload = new FormData();
+      Object.keys(formData).forEach(key => {
+        formPayload.append(key, formData[key]);
+      });
+
+      if (attachmentFile) {
+        formPayload.append('attachment', attachmentFile);
+      }
+
+      formPayload.append('invoices', JSON.stringify(selectedInvoices.map(inv => inv.id)));
+
+      const response = await api.post('/api/payments', formPayload, {
         headers: {
           'Content-Type': 'multipart/form-data',
-        },
+        }
       });
-      alert(`Payment recorded successfully: ID ${response.data.paymentId}`);
-    } catch (error) {
-      console.error('Error recording payment:', error.response?.data || error.message);
-      alert('Failed to record payment');
+
+      if (response.status === 201) {
+        console.log('Payment created successfully');
+        // Reset form or redirect
+      }
+    } catch (err) {
+      setError('Error creating payment: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePrint = () => {
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>ใบจ่ายเงิน</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2, h3 { text-align: center; }
-            .info { margin-bottom: 20px; }
-            .info p { margin: 5px 0; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            table, th, td { border: 1px solid black; text-align: center; }
-            th, td { padding: 8px; }
-            .total { font-weight: bold; text-align: right; margin-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <h2>ใบจ่ายเงิน</h2>
-  
-          <div class="info">
-            <p><strong>เลขที่การจ่ายเงิน:</strong> ${paymentNumber}</p>
-            <p><strong>วันที่จ่ายเงิน:</strong> ${paymentDate || 'ไม่ระบุ'}</p>
-            <p><strong>วิธีการจ่ายเงิน:</strong> โอนเงินเข้าบัญชี</p>
-            <p><strong>บัญชีธนาคาร:</strong> ${bankAccount || 'ไม่ระบุ'}</p>
-          </div>
-  
-          <h3>รายละเอียดใบแจ้งหนี้</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>เลขที่ใบแจ้งหนี้</th>
-                <th>ผู้ขาย</th>
-                <th>จำนวนเงินที่จ่าย</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${selectedInvoices.map(invoice => `
-                <tr>
-                  <td>${invoice.invoice_number}</td>
-                  <td>${invoice.vendor}</td>
-                  <td>${invoice.amount.toLocaleString()}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="2" style="text-align: right; font-weight: bold;">ยอดรวมทั้งหมด</td>
-                <td style="font-weight: bold;">
-                  ${selectedInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-  
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+  // Handle form reset
+  const handleReset = () => {
+    setFormData(initialFormData);
+    setSelectedInvoices([]);
+    setAttachmentFile(null);
+    setError(null);
   };
+
+  // Document actions
+  const handlePrint = () => {
+    window.print();
+    setShowDropdown(false);
+  };
+
+  const handleShare = async () => {
+    try {
+      const response = await api.post('/api/payments/share', {
+        paymentId: formData.paymentNumber
+      });
+      console.log('Document shared:', response.data);
+    } catch (err) {
+      setError('Error sharing document: ' + err.message);
+    }
+    setShowDropdown(false);
+  };
+
+  const handleForward = async () => {
+    try {
+      const response = await api.post('/api/payments/forward', {
+        paymentId: formData.paymentNumber
+      });
+      console.log('Document forwarded:', response.data);
+    } catch (err) {
+      setError('Error forwarding document: ' + err.message);
+    }
+    setShowDropdown(false);
+  };
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
 
   return (
     <div className="payment-form">
-      <h2>การจ่ายเงินด้วยวิธีการโอนเงินเข้าบัญชี</h2>
-      <p>บันทึกการจ่ายเงินให้เจ้าหนี้พร้อมแนบหลักฐานการชำระเงิน</p>
+      {error && <div className="error-message">{error}</div>}
+
+      <div className="header-section">
+        <h2>การจ่ายเงินด้วยวิธีการโอนเงินเข้าบัญชี</h2>
+        <div className="print-button-container">
+          <button 
+            className="print-button"
+            onClick={() => setShowDropdown(!showDropdown)}
+            title="ตัวเลือกเอกสาร"
+          >
+            🖨️
+          </button>
+          {showDropdown && (
+            <div className="print-dropdown">
+              <button onClick={handlePrint}>
+                🖨️ พิมพ์เอกสาร
+              </button>
+              <button onClick={handleShare}>
+                📤 แชร์เอกสาร
+              </button>
+              <button onClick={handleForward}>
+                ↪️ ส่งต่อ
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="form-row">
         <label htmlFor="paymentNumber">เลขที่การจ่ายเงิน</label>
-        <input type="text" id="paymentNumber" value={paymentNumber} readOnly />
+        <input 
+          type="text" 
+          id="paymentNumber" 
+          value={formData.paymentNumber}
+          readOnly 
+        />
       </div>
 
       <div className="form-row">
         <label htmlFor="paymentDate">วันที่จ่ายเงิน</label>
-        <input
-          type="date"
+        <input 
+          type="date" 
           id="paymentDate"
-          value={paymentDate}
-          readOnly // ทำให้ไม่สามารถแก้ไขได้
+          value={formData.paymentDate}
+          onChange={handleInputChange}
+          required
         />
       </div>
 
       <div className="form-row">
         <label htmlFor="paymentMethod">วิธีการจ่ายเงิน</label>
-        <select
+        <select 
           id="paymentMethod"
-          value={paymentMethod}
-          onChange={(e) => setPaymentMethod(e.target.value)}
+          value={formData.paymentMethod}
+          onChange={handleInputChange}
         >
           <option value="transfer">โอนเงินเข้าบัญชี</option>
+          <option value="check">เช็ค</option>
+          <option value="cash">เงินสด</option>
         </select>
       </div>
 
       <div className="form-row">
         <label htmlFor="bankAccount">บัญชีธนาคารที่ใช้จ่ายเงิน</label>
-        <select
+        <select 
           id="bankAccount"
-          value={bankAccount}
-          onChange={(e) => setBankAccount(e.target.value)}
+          value={formData.bankAccount}
+          onChange={handleInputChange}
+          required
         >
           <option value="">เลือกบัญชีธนาคาร</option>
-          <option value="bank1">ธนาคาร A</option>
-          <option value="bank2">ธนาคาร B</option>
-        </select>
-      </div>
-
-      <div className="form-row">
-        <label htmlFor="invoiceSelect">กรุณาเลือกรายการใบแจ้งหนี้</label>
-        <select
-          id="invoiceSelect"
-          value={selectedInvoiceNumber}
-          onChange={(e) => setSelectedInvoiceNumber(e.target.value)}
-        >
-          <option value="">เลือกใบแจ้งหนี้</option>
-          {invoices.map((invoice) => (
-            <option key={invoice.invoice_number} value={invoice.invoice_number}>
-              {invoice.invoice_number} - {invoice.vendor} - {invoice.balance.toLocaleString()}
+          {bankAccounts.map(account => (
+            <option key={account.id} value={account.id}>
+              {account.bankName} - {account.accountNumber}
             </option>
           ))}
         </select>
-        <button type="button" onClick={handleAddInvoice}>
-          เพิ่ม
-        </button>
       </div>
 
-      <div className="selected-invoices">
-        <h3>ใบแจ้งหนี้ที่เลือก</h3>
-        {selectedInvoices.map((invoice) => (
-          <div className="selected-invoice-row" key={invoice.invoice_number}>
-            <span>{invoice.invoice_number}</span>
-            &nbsp; &nbsp;
-            <span>{invoice.vendor}</span>
-            &nbsp; &nbsp;
-            <span>{invoice.balance.toLocaleString()}</span>
-            &nbsp; &nbsp;
-            <button type="button" onClick={() => handleRemoveInvoice(invoice.invoice_number)}>
-              ลบ
-            </button>
-          </div>
-        ))}
+      <div className="invoice-list">
+        <h3>รายการใบแจ้งหนี้</h3>
+        <input 
+          type="text" 
+          placeholder="ค้นหาใบแจ้งหนี้"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            fetchInvoices();
+          }}
+        />
+
+        <div className="invoice-table">
+          {invoices.length > 0 ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>เลือก</th>
+                  <th>เลขที่</th>
+                  <th>วันที่</th>
+                  <th>จำนวนเงิน</th>
+                  <th>เจ้าหนี้</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.map(invoice => (
+                  <tr key={invoice.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedInvoices.some(i => i.id === invoice.id)}
+                        onChange={() => handleInvoiceSelect(invoice)}
+                      />
+                    </td>
+                    <td>{invoice.invoiceNumber}</td>
+                    <td>{invoice.invoiceDate}</td>
+                    <td>{invoice.amount}</td>
+                    <td>{invoice.vendorName}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>ไม่พบรายการใบแจ้งหนี้</p>
+          )}
+        </div>
       </div>
 
       <div className="attachment">
         <label htmlFor="attachment">แนบหลักฐานการชำระเงิน</label>
-        <input type="file" id="attachment" onChange={handleFileChange} />
+        <input 
+          type="file" 
+          id="attachment"
+          onChange={handleFileChange}
+          accept=".pdf,.jpg,.jpeg,.png"
+        />
       </div>
 
       <div className="notes">
         <label htmlFor="notes">หมายเหตุ</label>
-        <textarea
+        <textarea 
           id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          value={formData.notes}
+          onChange={handleInputChange}
         />
       </div>
 
       <div className="form-actions">
-        <button className="cancel-button">ยกเลิก</button>
-        <button className="submit-button" onClick={handleSubmit}>
-          บันทึกการจ่ายเงิน
+        <button 
+          className="cancel-button"
+          onClick={handleReset}
+          disabled={loading}
+        >
+          ยกเลิก
         </button>
-        <button className="print-button" onClick={handlePrint}>
-          🖨 พิมพ์ใบจ่ายเงิน
+        <button 
+          className="submit-button"
+          onClick={handleSubmit}
+          disabled={loading || selectedInvoices.length === 0}
+        >
+          {loading ? 'กำลังบันทึก...' : 'บันทึกการจ่ายเงิน'}
         </button>
       </div>
     </div>

@@ -43,35 +43,7 @@ function POReceiptForm() {
     setItems(updatedItems);
   };
 
-  const validateForm = () => {
-    if (!poNumber.trim()) {
-      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-      return false;
-    }
-    if (!vendor.trim()) {
-      alert('กรุณากรอกชื่อผู้ขาย/ผู้ให้บริการ');
-      return false;
-    }
-    if (items.length === 0) {
-      alert('ต้องมีรายการสินค้าขั้นต่ำ 1 รายการ');
-      return false;
-    }
-    for (const item of items) {
-      if (!item.details.trim()) {
-        alert('กรุณากรอกรายละเอียดสินค้าทุกแถว');
-        return false;
-      }
-      if (item.currentReceiveQuantity <= 0) {
-        alert('จำนวนที่รับครั้งนี้ต้องมากกว่า 0');
-        return false;
-      }
-    }
-    return true;
-  };
-
   const handleSubmit = async () => {
-    if (!validateForm()) return;
-
     const data = {
       receiptNumber,
       poNumber,
@@ -90,67 +62,6 @@ function POReceiptForm() {
       alert('Failed to create PO Receipt');
     }
   };
-
-  const handlePrint = () => {
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>ใบรับสินทรัพย์ (PO Receipt)</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2, h3 { text-align: center; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            table, th, td { border: 1px solid black; text-align: center; }
-            th, td { padding: 8px; }
-            .total { font-weight: bold; text-align: right; margin-top: 20px; }
-            .info { margin-bottom: 20px; }
-            .info p { margin: 5px 0; }
-          </style>
-        </head>
-        <body>
-          <h2>ใบรับสินทรัพย์ (PO Receipt)</h2>
-          <div class="info">
-            <p><strong>เลขที่ใบรับสินทรัพย์:</strong> ${receiptNumber}</p>
-            <p><strong>วันที่รับ:</strong> ${receiptDate}</p>
-            <p><strong>อ้างอิงใบสั่งซื้อ:</strong> ${poNumber}</p>
-            <p><strong>ผู้ขาย/ผู้ให้บริการ:</strong> ${vendor}</p>
-          </div>
-  
-          <h3>รายการสินทรัพย์</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>รายละเอียด</th>
-                <th>จำนวนตามใบสั่งซื้อ</th>
-                <th>จำนวนที่รับแล้ว</th>
-                <th>จำนวนที่รับครั้งนี้</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map(item => `
-                <tr>
-                  <td>${item.details}</td>
-                  <td>${item.orderedQuantity}</td>
-                  <td>${item.receivedQuantity}</td>
-                  <td>${item.currentReceiveQuantity}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-  
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-  
-  
   return (
     <div className="po-receipt-form">
       <h2>การบันทึกรับสินทรัพย์ถาวร (PO Receipt)</h2>
@@ -158,7 +69,7 @@ function POReceiptForm() {
 
       <div className="form-row">
         <label htmlFor="receiptNumber">เลขที่ใบรับสินทรัพย์</label>
-        <input type="text" id="receiptNumber" value={receiptNumber} readOnly />
+        <input type="text" id="receiptNumber" value="RR07677"  />
       </div>
 
       <div className="form-row">
@@ -167,7 +78,7 @@ function POReceiptForm() {
           type="date"
           id="receiptDate"
           value={receiptDate}
-          readOnly
+          onChange={(e) => setReceiptDate(e.target.value)}
         />
       </div>
 
@@ -225,22 +136,37 @@ function POReceiptForm() {
           เพิ่มรายการ
         </button>
 
-          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+        <div className="item-list">
+  {/* <h3>รายการสินทรัพย์</h3>
+  <p>กรุณาเลือกใบสั่งซื้อเพื่อดูรายการสินทรัพย์</p> */}
 
-        <button type="button" onClick={() => handleRemoveItem(index)}>
-              ลบรายการ
-            </button>
+  <div className="item-row">
+    <div className="input-group">
+      <label htmlFor="itemDetails">รายละเอียด</label>
+      <input type="text" id="itemDetails" />
+    </div>
+    <div className="input-group">
+      <label htmlFor="orderedQuantity">จำนวนตามใบสั่งซื้อ</label>
+      <input type="number" id="orderedQuantity" />
+    </div>
+    <div className="input-group">
+      <label htmlFor="receivedQuantity">จำนวนที่รับแล้ว</label>
+      <input type="number" id="receivedQuantity" />
+    </div>
+    <div className="input-group">
+      <label htmlFor="currentReceiveQuantity">จำนวนที่รับครั้งนี้</label>
+      <input type="number" id="currentReceiveQuantity" />
+    </div>
+  </div>
+  
+  <p>จำนวนรายการที่เลือก: 0 รายการ</p>
+</div>
       </div>
-
       <div className="form-actions">
         <button className="cancel-button">ยกเลิก</button>
         <button className="submit-button" onClick={handleSubmit}>
           บันทึกการรับสินทรัพย์
         </button>
-        <button className="print-button" onClick={handlePrint}>
-        🖨 พิมพ์ใบรับสินทรัพย์
-        </button>
-
       </div>
     </div>
   );
