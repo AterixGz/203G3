@@ -4,6 +4,7 @@ import cors from "cors";
 import express from "express";
 import { fileURLToPath } from "url"; // ใช้สำหรับหา __dirname ใน ES Module
 import mysql from "mysql2";
+import { readFileSync } from 'fs';
 
 // ตั้งค่าการเชื่อมต่อฐานข้อมูล
 const connection = mysql.createConnection({
@@ -298,7 +299,82 @@ app.get("/api/inventory-items", (req, res) => {
   });
 });
 
+// Add login endpoint
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  
+  try {
+    const userData = JSON.parse(
+      readFileSync(path.join(__dirname, "data", "userRole.json"), "utf8")
+    );
+    
+    const user = userData.users.find(
+      (u) => u.username === username && u.password === password
+    );
 
+    if (user) {
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          name: user.name
+        }
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Invalid username or password"
+      });
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+});
+
+// Get pending orders
+app.get("/pending-orders", (req, res) => {
+  const sql = "SELECT * FROM purchase_orders WHERE status = 'pending' OR status IS NULL";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching pending orders:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+    }
+    res.json(results);
+  });
+});
+
+// Get approved orders
+app.get("/approved-orders", (req, res) => {
+  const sql = "SELECT * FROM purchase_orders WHERE status = 'approved'";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching approved orders:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+    }
+    res.json(results);
+  });
+});
+
+// Handle order approval/rejection
+app.post("/approve-order/:id", (req, res) => {
+  const { id } = req.params;
+  const { status, comment } = req.body;
+
+  const sql = "UPDATE purchase_orders SET status = ?, comment = ? WHERE id = ?";
+  connection.query(sql, [status, comment, id], (err) => {
+    if (err) {
+      console.error("Error updating order status:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตสถานะ" });
+    }
+    res.json({ message: "อัปเดตสถานะสำเร็จ" });
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
