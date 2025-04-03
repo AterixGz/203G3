@@ -30,12 +30,12 @@ function Sidebar({ currentPage, showDocViewer, onNavigate, onDocViewer }) {
 
   // Default menu items as fallback
   const defaultMenuItems = [
-    { id: 'requisition', icon: '📝', text: 'ใบขอซื้อ' },
-    { id: 'purchaseOrder', icon: '🛍️', text: 'ใบสั่งซื้อ' },
-    { id: 'poReceipt', icon: '📦', text: 'รับสินค้า' },
-    { id: 'invoice', icon: '📄', text: 'ตั้งหนี้' },
-    { id: 'apBalance', icon: '💰', text: 'ยอดคงเหลือเจ้าหนี้' },
-    { id: 'payment', icon: '💳', text: 'จ่ายเงิน' }
+    { id: 'requisition', icon: '🗒', text: 'ใบขอซื้อ' },
+    { id: 'purchaseOrder', icon: '🗏', text: 'ใบสั่งซื้อ' },
+    { id: 'poReceipt', icon: '🗐', text: 'รับสินค้า' },
+    { id: 'invoice', icon: '🗎', text: 'ตั้งหนี้' },
+    { id: 'apBalance', icon: '☰', text: 'ยอดคงเหลือเจ้าหนี้' },
+    { id: 'payment', icon: '$', text: 'จ่ายเงิน' }
   ];
 
   // Handle navigation with logging
@@ -61,9 +61,6 @@ function Sidebar({ currentPage, showDocViewer, onNavigate, onDocViewer }) {
     <aside className="sidebar">
       {error && <div className="error-message">{error}</div>}
       
-      <div className="logo-container">
-        <h1>📊</h1>
-      </div>
 
       <nav className="nav-menu">
         {menuItems.map(item => (
@@ -82,7 +79,7 @@ function Sidebar({ currentPage, showDocViewer, onNavigate, onDocViewer }) {
           className={`nav-item ${showDocViewer ? 'active' : ''}`}
           onClick={onDocViewer}
         >
-          <span className="icon">📋</span>
+          <span className="icon">⎙</span>
           <span className="text">จัดการเอกสาร</span>
         </button>
       </nav>
