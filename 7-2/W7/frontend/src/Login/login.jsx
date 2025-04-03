@@ -1,18 +1,27 @@
 import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
-const Login = () => {
-  const [email, setEmail] = useState("");
+const Login = ({ onLogin }) => {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [id, setId] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`เข้าสู่ระบบด้วย:
-    ชื่อ: ${name}
-    รหัส: ${id}
-    อีเมล: ${email}`);
+    try {
+      const response = await axios.post("http://localhost:3000/login", {
+        username,
+        password,
+      });
+      alert(`เข้าสู่ระบบสำเร็จ: ${response.data.message}`);
+      onLogin(); // เปลี่ยนสถานะ isLoggedIn ใน App
+      navigate("/requisition"); // นำทางไปยังหน้า Requisition
+    } catch (err) {
+      setError(err.response?.data?.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+    }
   };
 
   return (
@@ -23,30 +32,12 @@ const Login = () => {
         <p>กรอกข้อมูลเพื่อเข้าใช้งานระบบ</p>
 
         <form onSubmit={handleSubmit}>
-          <label>ชื่อ-นามสกุล</label>
+          <label>ชื่อผู้ใช้</label>
           <input
             type="text"
-            placeholder="ชื่อ นามสกุล"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-
-          <label>รหัสประจำตัว</label>
-          <input
-            type="text"
-            placeholder="รหัสประจำตัว"
-            value={id}
-            onChange={(e) => setId(e.target.value)}
-            required
-          />
-
-          <label>อีเมล</label>
-          <input
-            type="email"
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="ชื่อผู้ใช้"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
 
@@ -59,17 +50,26 @@ const Login = () => {
             required
           />
 
+          {error && <p className="error-message">{error}</p>}
+
           <div className="form-buttons">
             <button type="submit">เข้าสู่ระบบ</button>
-            <button type="button" onClick={() => window.location.reload()}>ยกเลิก</button>
+            <button type="button" onClick={() => window.location.reload()}>
+              ยกเลิก
+            </button>
           </div>
-        </form>
-
         <div className="test-credentials">
           <p>🛠 ข้อมูลสำหรับทดสอบ:</p>
-          <p>ชื่อ: Admin User / รหัส: ADM001</p>
-          <p>อีเมล: admin@example.com / รหัสผ่าน: admin123</p>
+          <p>Procurement Officer</p>
+          <p>procurement รหัสผ่าน: password123</p>
+          <p>Finance & Accounting</p>
+          <p>finance  รหัสผ่าน: password123</p>
+          <p>Management & Approvers</p>
+          <p>manager  รหัสผ่าน: password123</p>
+          <p>IT Administrator</p>
+          <p>itadmin  รหัสผ่าน: password123</p>
         </div>
+        </form>
       </div>
     </div>
   );

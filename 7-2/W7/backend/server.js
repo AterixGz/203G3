@@ -589,37 +589,48 @@ app.get('/api/ap-balance', async (req, res) => {
   }
 });
 
-  app.get(
-    '/users',
-    async (req, res) => {
-      try {
-        const [rows] = await db.query('SELECT id, username, role FROM users');
-        res.status(200).json(rows);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    }
-  );
+ // API สำหรับดึงข้อมูลผู้ใช้ทั้งหมด พร้อม role name
+app.get('/users', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        u.id, 
+        u.username, 
+        r.name AS role 
+      FROM users u
+      JOIN roles r ON u.role_id = r.id
+    `);
+    res.status(200).json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-  app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-  
-    try {
-      const [rows] = await db.query(
-        'SELECT id, username, role FROM users WHERE username = ? AND password = ?',
-        [username, password]
-      );
-  
-      if (rows.length > 0) {
-        res.status(200).json({ message: 'เข้าสู่ระบบสำเร็จ', user: rows[0] });
-      } else {
-        res.status(401).json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
-      }
-    } catch (error) {
-      console.error('Error in /login API:', error);
-      res.status(500).json({ error: error.message });
+// API สำหรับการเข้าสู่ระบบ
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        u.id, 
+        u.username, 
+        r.name AS role 
+      FROM users u
+      JOIN roles r ON u.role_id = r.id
+      WHERE u.username = ? AND u.password = ?
+    `, [username, password]);
+
+    if (rows.length > 0) {
+      res.status(200).json({ message: 'เข้าสู่ระบบสำเร็จ', user: rows[0] });
+    } else {
+      res.status(401).json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
     }
-  });
+  } catch (error) {
+    console.error('Error in /login API:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Start server
 app.listen(port, () => {

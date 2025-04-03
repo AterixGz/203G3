@@ -1,8 +1,15 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f9f9f9;
+    height: 100%; /* ให้ html และ body มีความสูงเต็มหน้าจอ */
+    margin: 0; /* ลบ margin ที่อาจมีผล */
+    padding: 0; /* ลบ padding ที่อาจมีผล */
+    display: flex; /* ใช้ flexbox กับ body */
+    justify-content: center; /* จัดให้อยู่ตรงกลางแนวนอน */
+    align-items: center; /* จัดให้อยู่ตรงกลางแนวตั้ง */
   }
   
+
   .login-container {
     display: flex;
     justify-content: center;
