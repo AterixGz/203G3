@@ -4,12 +4,13 @@ import axios from 'axios';
 
 function POReceiptForm() {
   const [receiptNumber, setReceiptNumber] = useState('');
-  const [receiptDate, setReceiptDate] = useState(new Date().toISOString().split('T')[0]); // ตั้งค่าเริ่มต้นเป็นวันที่ปัจจุบัน
+  const [receiptDate, setReceiptDate] = useState(new Date().toISOString().split('T')[0]);
   const [poNumber, setPoNumber] = useState('');
   const [vendor, setVendor] = useState('');
   const [items, setItems] = useState([
-    { id: 1, details: '', orderedQuantity: 0, receivedQuantity: 0, currentReceiveQuantity: 0 },
+    { id: 1, details: '', orderedQuantity: 0, receivedQuantity: 0, currentReceiveQuantity: 0, unit: '' },
   ]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]); // เก็บรายการใบสั่งซื้อ
 
   // ดึง Receipt Number จาก Backend เมื่อโหลดหน้า
   useEffect(() => {
@@ -22,7 +23,17 @@ function POReceiptForm() {
       }
     };
 
+    const fetchPurchaseOrders = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/purchase-orders');
+        setPurchaseOrders(response.data); // เก็บข้อมูลใบสั่งซื้อใน state
+      } catch (error) {
+        console.error('Error fetching purchase orders:', error);
+      }
+    };
+
     fetchReceiptNumber();
+    fetchPurchaseOrders();
   }, []);
 
   const handleItemChange = (index, field, value) => {
@@ -48,12 +59,13 @@ function POReceiptForm() {
       receiptNumber,
       poNumber,
       receiptDate,
-      items: items.map(({ id, details, currentReceiveQuantity }) => ({
+      items: items.map(({ details, currentReceiveQuantity, unit }) => ({
         details,
-        quantity: currentReceiveQuantity || 0, // กำหนดค่าเริ่มต้นเป็น 0 หากไม่มีค่า
+        quantity: currentReceiveQuantity || 0,
+        unit,
       })),
     };
-  
+
     try {
       const response = await axios.post('http://localhost:3000/po-receipt', data);
       alert(`PO Receipt created successfully: ID ${response.data.receiptId}`);
@@ -62,6 +74,7 @@ function POReceiptForm() {
       alert('Failed to create PO Receipt');
     }
   };
+
   return (
     <div className="po-receipt-form">
       <h2>การบันทึกรับสินทรัพย์ถาวร (PO Receipt)</h2>
@@ -69,7 +82,12 @@ function POReceiptForm() {
 
       <div className="form-row">
         <label htmlFor="receiptNumber">เลขที่ใบรับสินทรัพย์</label>
-        <input type="text" id="receiptNumber" value="RR07677"  />
+        <input
+          type="text"
+          id="receiptNumber"
+          value={receiptNumber}
+          onChange={(e) => setReceiptNumber(e.target.value)}
+        />
       </div>
 
       <div className="form-row">
@@ -84,12 +102,18 @@ function POReceiptForm() {
 
       <div className="form-row">
         <label htmlFor="poRef">อ้างอิงใบสั่งซื้อ</label>
-        <input
-          type="text"
+        <select
           id="poRef"
           value={poNumber}
           onChange={(e) => setPoNumber(e.target.value)}
-        />
+        >
+          <option value="">-- เลือกใบสั่งซื้อ --</option>
+          {purchaseOrders.map((po) => (
+            <option key={po.po_number} value={po.po_number}>
+              {po.po_number} - {po.vendor_name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="form-row">
@@ -102,6 +126,7 @@ function POReceiptForm() {
         />
       </div>
 
+      {/* ส่วนรายการสินทรัพย์ */}
       <div className="item-list">
         <h3>รายการสินทรัพย์</h3>
         {items.map((item, index) => (
@@ -130,38 +155,33 @@ function POReceiptForm() {
               value={item.currentReceiveQuantity}
               onChange={(e) => handleItemChange(index, 'currentReceiveQuantity', parseFloat(e.target.value) || 0)}
             />
+            <label>หน่วยนับ</label>
+            <select
+              value={item.unit}
+              onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+            >
+              <option value="">-- เลือกหน่วยนับ --</option>
+              <option value="piece">ชิ้น</option>
+              <option value="unit">หน่วย</option>
+              <option value="set">ชุด</option>
+            </select>
           </div>
         ))}
-        <button type="button" onClick={handleAddItem}>
-          เพิ่มรายการ
-        </button>
-
-        <div className="item-list">
-  {/* <h3>รายการสินทรัพย์</h3>
-  <p>กรุณาเลือกใบสั่งซื้อเพื่อดูรายการสินทรัพย์</p> */}
-
-  <div className="item-row">
-    <div className="input-group">
-      <label htmlFor="itemDetails">รายละเอียด</label>
-      <input type="text" id="itemDetails" />
-    </div>
-    <div className="input-group">
-      <label htmlFor="orderedQuantity">จำนวนตามใบสั่งซื้อ</label>
-      <input type="number" id="orderedQuantity" />
-    </div>
-    <div className="input-group">
-      <label htmlFor="receivedQuantity">จำนวนที่รับแล้ว</label>
-      <input type="number" id="receivedQuantity" />
-    </div>
-    <div className="input-group">
-      <label htmlFor="currentReceiveQuantity">จำนวนที่รับครั้งนี้</label>
-      <input type="number" id="currentReceiveQuantity" />
-    </div>
-  </div>
-  
-  <p>จำนวนรายการที่เลือก: 0 รายการ</p>
-</div>
+        <div className="action-buttons">
+          <button type="button" onClick={handleAddItem}>
+            เพิ่มรายการ
+          </button>
+          &nbsp; &nbsp; &nbsp;
+          <button
+            type="button"
+            onClick={() => handleRemoveItem(items.length - 1)}
+            disabled={items.length === 0}
+          >
+            ลบรายการ
+          </button>
+        </div>
       </div>
+
       <div className="form-actions">
         <button className="cancel-button">ยกเลิก</button>
         <button className="submit-button" onClick={handleSubmit}>

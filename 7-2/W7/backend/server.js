@@ -244,6 +244,16 @@ app.post('/api/purchase-orders', async (req, res) => {
   }
 });
 
+app.get('/api/purchase-orders', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT po_number, vendor_name FROM purchase_orders');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching purchase orders:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // app.get('/next-po-number', async (req, res) => {
 //   try {
@@ -259,37 +269,38 @@ app.post('/api/purchase-orders', async (req, res) => {
 
 // PO Receipt API
 app.post('/po-receipt', async (req, res) => {
-  const { poNumber, receiptDate, items } = req.body;
+  const { receiptNumber, poNumber, receiptDate, items } = req.body;
+
+  // ตรวจสอบข้อมูลที่ส่งมาจาก frontend
+  if (!receiptNumber || !poNumber || !receiptDate || !Array.isArray(items)) {
+    return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน' });
+  }
+
   try {
+    // บันทึกข้อมูล PO Receipt ลงในตาราง `po_receipts`
     const [result] = await db.query(
-      'INSERT INTO po_receipts (po_number, receipt_date) VALUES (?, ?)',
-      [poNumber, receiptDate]
+      'INSERT INTO po_receipts (receipt_number, po_number, receipt_date) VALUES (?, ?, ?)',
+      [receiptNumber, poNumber, receiptDate]
     );
     const receiptId = result.insertId;
 
+    // บันทึกรายการสินค้าในตาราง `po_receipt_items`
     for (const item of items) {
+      const { details, quantity, unit } = item;
+
+      if (!details || typeof quantity !== 'number' || !unit) {
+        return res.status(400).json({ message: 'ข้อมูลรายการสินค้าไม่ถูกต้อง' });
+      }
+
       await db.query(
-        'INSERT INTO po_receipt_items (receipt_id, details, quantity) VALUES (?, ?, ?)',
-        [receiptId, item.details, item.quantity]
+        'INSERT INTO po_receipt_items (receipt_id, details, quantity, unit) VALUES (?, ?, ?, ?)',
+        [receiptId, details, quantity, unit]
       );
     }
 
     res.status(201).json({ message: 'PO Receipt created successfully', receiptId });
   } catch (error) {
     console.error('Error in /po-receipt API:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/next-receipt-number', async (req, res) => {
-  try {
-    // ดึง Receipt Number ล่าสุดจากฐานข้อมูล
-    const [rows] = await db.query('SELECT MAX(id) AS maxId FROM po_receipts');
-    const nextId = (rows[0].maxId || 0) + 1; // หากไม่มีข้อมูล ให้เริ่มจาก 1
-    const receiptNumber = `REC${String(nextId).padStart(5, '0')}`; // เช่น REC00001
-    res.json({ receiptNumber });
-  } catch (error) {
-    console.error('Error fetching next Receipt Number:', error);
     res.status(500).json({ error: error.message });
   }
 });
