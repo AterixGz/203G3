@@ -98,6 +98,39 @@ app.post('/api/invoices', upload.single('invoiceFile'), async (req, res) => {
   }
 });
 
+app.get('/api/invoices', async (req, res) => {
+  const { status, search } = req.query;
+
+  try {
+    let query = `
+      SELECT 
+        id, 
+        invoice_number AS invoiceNumber, 
+        DATE_FORMAT(invoice_date, '%Y-%m-%d') AS invoiceDate, 
+        total_amount AS amount, 
+        vendor AS vendorName 
+      FROM invoices 
+      WHERE (total_amount - paid_amount) > 0
+    `;
+    const params = [];
+
+    if (status === 'pending') {
+      query += ' AND (total_amount - paid_amount) > 0';
+    }
+
+    if (search) {
+      query += ' AND (invoice_number LIKE ? OR vendor LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
+    const [rows] = await db.query(query, params);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching invoices:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/purchase-orders/:id/items', async (req, res) => {
   const { id } = req.params;
 
@@ -411,42 +444,79 @@ app.post('/api/invoices', invoiceUpload.single('invoiceFile'), async (req, res) 
     }
   });
 
+  app.get('/api/invoices', async (req, res) => {
+    const { status, search } = req.query;
+  
+    try {
+      let query = `
+        SELECT 
+          id, 
+          invoice_number AS invoiceNumber, 
+          DATE_FORMAT(invoice_date, '%Y-%m-%d') AS invoiceDate, 
+          total_amount AS amount, 
+          vendor AS vendorName 
+        FROM invoices 
+        WHERE status = "ยังไม่ชำระ"
+      `;
+      const params = [];
+  
+      if (search) {
+        query += ' AND (invoice_number LIKE ? OR vendor LIKE ?)';
+        params.push(`%${search}%`, `%${search}%`);
+      }
+  
+      const [rows] = await db.query(query, params);
+      res.status(200).json(rows);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
 // API สำหรับการบันทึก Payment
-app.post('/payment', paymentUpload.single('attachment'), async (req, res) => {
-  const { paymentNumber, paymentDate, method, bankAccount, notes, invoices } = req.body;
+app.post('/api/payments', paymentUpload.single('attachment'), async (req, res) => {
+  const { paymentNumber, paymentDate, paymentMethod, bankAccount, notes, invoices } = req.body;
   const attachmentPath = req.file ? req.file.path : null;
 
   try {
     const [result] = await db.query(
       'INSERT INTO payments (payment_number, payment_date, method, bank_account, notes, attachment_path) VALUES (?, ?, ?, ?, ?, ?)',
-      [paymentNumber, paymentDate, method, bankAccount, notes, attachmentPath]
+      [paymentNumber, paymentDate, paymentMethod, bankAccount, notes, attachmentPath]
     );
     const paymentId = result.insertId;
 
-    for (const invoice of JSON.parse(invoices)) {
-      console.log('Processing invoice:', invoice); // แสดงข้อมูลใบแจ้งหนี้ใน Console
-    
-      // กำหนดค่าเริ่มต้นให้ amount หากไม่มีการส่งมาจาก Frontend
-      const amount = invoice.amount || invoice.balance;
-    
-      if (!amount || amount <= 0) {
-        throw new Error(`Invalid amount for invoice ${invoice.invoice_number}`);
+    const invoiceList = JSON.parse(invoices); // รับข้อมูล invoices จาก frontend
+    for (const invoiceId of invoiceList) {
+      const [invoice] = await db.query('SELECT invoice_number, total_amount, paid_amount FROM invoices WHERE id = ?', [invoiceId]);
+      if (invoice.length === 0) {
+        throw new Error(`Invoice with ID ${invoiceId} does not exist`);
       }
-    
+
+      const invoiceNumber = invoice[0].invoice_number;
+      const totalAmount = parseFloat(invoice[0].total_amount);
+      const paidAmount = parseFloat(invoice[0].paid_amount);
+
+      if (isNaN(paidAmount) || isNaN(totalAmount)) {
+        throw new Error(`Invalid numeric value for paidAmount (${paidAmount}) or totalAmount (${totalAmount})`);
+      }
+
+      // เพิ่มข้อมูลใน payment_invoices
       await db.query(
-        'INSERT INTO payment_invoices (payment_id, invoice_number, amount) VALUES (?, ?, ?)',
-        [paymentId, invoice.invoice_number, amount]
+        'INSERT INTO payment_invoices (payment_id, invoice_id, invoice_number) VALUES (?, ?, ?)',
+        [paymentId, invoiceId, invoiceNumber]
       );
-    
+
+      // อัปเดตยอดชำระเงินใน invoices
+      const newPaidAmount = paidAmount + totalAmount;
       await db.query(
-        'UPDATE invoices SET paid_amount = (SELECT COALESCE(SUM(amount), 0) FROM payment_invoices WHERE invoice_number = ?) WHERE invoice_number = ?',
-        [invoice.invoice_number, invoice.invoice_number]
+        'UPDATE invoices SET paid_amount = ?, status = ? WHERE id = ?',
+        [newPaidAmount, newPaidAmount >= totalAmount ? 'ชำระแล้ว' : 'ยังไม่ชำระ', invoiceId]
       );
     }
 
     res.status(201).json({ message: 'Payment recorded successfully', paymentId });
   } catch (error) {
-    console.error('Error in /payment API:', error);
+    console.error('Error recording payment:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -480,60 +550,44 @@ app.get('/api/ap-balance', async (req, res) => {
         i.invoice_number, 
         i.po_ref AS po_number,
         i.vendor, 
-        DATE_FORMAT(i.invoice_date, '%d/%m/%Y') AS invoice_date,
-        DATE_FORMAT(i.due_date, '%d/%m/%Y') AS due_date,
+        DATE_FORMAT(i.invoice_date, '%Y-%m-%d') AS invoice_date,
+        DATE_FORMAT(i.due_date, '%Y-%m-%d') AS due_date,
         i.total_amount, 
-        COALESCE(SUM(pi.amount), 0) AS paid_amount, 
-        (i.total_amount - COALESCE(SUM(pi.amount), 0)) AS balance,
+        i.paid_amount, 
+        (i.total_amount - i.paid_amount) AS balance,
         CASE 
-          WHEN (i.total_amount - COALESCE(SUM(pi.amount), 0)) = 0 THEN 'ชำระแล้ว'
+          WHEN (i.total_amount - i.paid_amount) = 0 THEN 'ชำระแล้ว'
           ELSE 'ยังไม่ชำระ'
         END AS status
       FROM invoices i
-      LEFT JOIN payment_invoices pi ON i.invoice_number = pi.invoice_number
+      WHERE 1=1
     `;
 
-    const conditions = [];
     const params = [];
-
     if (vendor) {
-      conditions.push('i.vendor = ?');
-      params.push(vendor);
+      query += ' AND i.vendor LIKE ?';
+      params.push(`%${vendor}%`);
     }
-
     if (status) {
-      if (status === 'ชำระแล้ว') {
-        conditions.push('(i.total_amount - COALESCE(SUM(pi.amount), 0)) = 0');
-      } else if (status === 'ยังไม่ชำระ') {
-        conditions.push('(i.total_amount - COALESCE(SUM(pi.amount), 0)) > 0');
-      }
+      query += ' AND (CASE WHEN (i.total_amount - i.paid_amount) = 0 THEN "ชำระแล้ว" ELSE "ยังไม่ชำระ" END) = ?';
+      params.push(status);
     }
-
     if (startDate) {
-      conditions.push('i.invoice_date >= ?');
+      query += ' AND i.invoice_date >= ?';
       params.push(startDate);
     }
-
     if (endDate) {
-      conditions.push('i.invoice_date <= ?');
+      query += ' AND i.invoice_date <= ?';
       params.push(endDate);
     }
 
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    query += ' GROUP BY i.invoice_number';
-
     const [rows] = await db.query(query, params);
-
     res.status(200).json(rows);
   } catch (error) {
     console.error('Error fetching AP Balance:', error);
     res.status(500).json({ error: error.message });
   }
 });
-
 
   app.get(
     '/users',

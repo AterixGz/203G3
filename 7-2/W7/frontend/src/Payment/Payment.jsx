@@ -5,8 +5,8 @@ import api from '../utils/axios';
 function PaymentForm() {
   // Initial form state
   const initialFormData = {
-    paymentNumber: 'PAY04927',
-    paymentDate: '',
+    paymentNumber: 'PAY-',
+    paymentDate: new Date().toISOString().split('T')[0],
     paymentMethod: 'transfer',
     bankAccount: '',
     notes: '',
@@ -34,7 +34,11 @@ function PaymentForm() {
   const fetchBankAccounts = async () => {
     try {
       const response = await api.get('/api/bank-accounts');
-      setBankAccounts(response.data);
+      const additionalAccounts = [
+        { id: '1', bankName: 'ออมสิน', accountNumber: '123-456-7890' },
+        { id: '2', bankName: 'ไทยพาณิชย์', accountNumber: '987-654-3210' }
+      ];
+      setBankAccounts([...response.data, ...additionalAccounts]); // รวมข้อมูลจาก API กับข้อมูลตัวอย่าง
     } catch (err) {
       setError('Error fetching bank accounts: ' + err.message);
     }
@@ -47,7 +51,7 @@ function PaymentForm() {
       const response = await api.get('/api/invoices', {
         params: { status: 'pending', search: searchTerm }
       });
-      setInvoices(response.data);
+      setInvoices(response.data); // อัปเดตรายการใบแจ้งหนี้
     } catch (err) {
       setError('Error fetching invoices: ' + err.message);
     } finally {
@@ -86,27 +90,29 @@ function PaymentForm() {
     try {
       setLoading(true);
       setError(null);
-
+  
       const formPayload = new FormData();
       Object.keys(formData).forEach(key => {
         formPayload.append(key, formData[key]);
       });
-
+  
       if (attachmentFile) {
         formPayload.append('attachment', attachmentFile);
       }
-
+  
       formPayload.append('invoices', JSON.stringify(selectedInvoices.map(inv => inv.id)));
-
+  
       const response = await api.post('/api/payments', formPayload, {
         headers: {
           'Content-Type': 'multipart/form-data',
         }
       });
-
+  
       if (response.status === 201) {
         console.log('Payment created successfully');
-        // Reset form or redirect
+        fetchInvoices(); // รีเฟรชรายการใบแจ้งหนี้
+        setSelectedInvoices([]); // ล้างการเลือกใบแจ้งหนี้
+        setFormData(initialFormData); // รีเซ็ตฟอร์ม
       }
     } catch (err) {
       setError('Error creating payment: ' + err.message);
@@ -193,7 +199,7 @@ function PaymentForm() {
           type="text" 
           id="paymentNumber" 
           value={formData.paymentNumber}
-          readOnly 
+          onChange={handleInputChange}
         />
       </div>
 
@@ -221,22 +227,25 @@ function PaymentForm() {
         </select>
       </div>
 
-      <div className="form-row">
-        <label htmlFor="bankAccount">บัญชีธนาคารที่ใช้จ่ายเงิน</label>
-        <select 
-          id="bankAccount"
-          value={formData.bankAccount}
-          onChange={handleInputChange}
-          required
-        >
-          <option value="">เลือกบัญชีธนาคาร</option>
-          {bankAccounts.map(account => (
-            <option key={account.id} value={account.id}>
-              {account.bankName} - {account.accountNumber}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* แสดงฟิลด์บัญชีธนาคารเฉพาะเมื่อ paymentMethod ไม่ใช่ "cash" */}
+{formData.paymentMethod !== 'cash' && (
+  <div className="form-row">
+    <label htmlFor="bankAccount">บัญชีธนาคารที่ใช้จ่ายเงิน</label>
+    <select 
+      id="bankAccount"
+      value={formData.bankAccount}
+      onChange={handleInputChange}
+      required
+    >
+      <option value="">เลือกบัญชีธนาคาร</option>
+      {bankAccounts.map(account => (
+        <option key={account.id} value={account.id}>
+          {account.bankName} - {account.accountNumber}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
 
       <div className="invoice-list">
         <h3>รายการใบแจ้งหนี้</h3>

@@ -24,14 +24,29 @@ function ApBalance() {
         console.error('Error fetching AP Balance:', error);
       }
     };
-
+  
     fetchApBalance();
-  }, [filters]);
+  
+    // ฟังอีเวนต์ apBalanceUpdated เพื่อรีเฟรชข้อมูล
+    const handleApBalanceUpdate = () => {
+      fetchApBalance(); // เรียกฟังก์ชันดึงข้อมูลอีกครั้ง
+    };
+  
+    window.addEventListener('apBalanceUpdated', handleApBalanceUpdate);
+  
+    // ลบ event listener เมื่อ component ถูก unmount
+    return () => {
+      window.removeEventListener('apBalanceUpdated', handleApBalanceUpdate);
+    };
+  }, [filters]); // รีเฟรชข้อมูลเมื่อ filters เปลี่ยนแปลง
 
   const handleFilterChange = (e) => {
     const { id, value } = e.target;
     setFilters((prev) => ({ ...prev, [id]: value }));
   };
+  
+  
+  
 
   return (
     <div className="ap-balance">
@@ -73,6 +88,9 @@ function ApBalance() {
         <div className="filter-actions">
           <button onClick={() => setFilters({ vendor: '', status: '', startDate: '', endDate: '' })}>
             ล้างการค้นหา
+          </button>
+          <button onClick={() => setFilters({ ...filters })}>
+          รีเฟรชข้อมูล
           </button>
         </div>
       </div>
