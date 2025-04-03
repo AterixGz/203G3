@@ -125,33 +125,11 @@ const db = mysql.createPool({
   database: process.env.DB_NAME || 'testing',
 });
 
-const mockUser = {
-    username: 'john_doe',
-    role: 'Super Admin', // เปลี่ยนเป็น  Super Admin,'Finance & Accounting', 'Procurement Officer' , 'Management & Approvers', หรือ 'IT Administrator'
-  };
-  
-  // Middleware: ตรวจสอบบทบาทผู้ใช้
-  function authorizeRoles(...allowedRoles) {
-    return (req, res, next) => {
-
-      // หากบทบาทเป็น 'Super Admin' ให้เข้าถึงได้ทุก API
-      if (mockUser.role === 'Super Admin') {
-        return next();
-    }
-
-      if (!allowedRoles.includes(mockUser.role)) {
-        return res.status(403).json({ message: 'Permission Denied' });
-      }
-      next();
-    };
-  }
-
 // Routes
 
 // Requisition API
 app.post(
     '/requisition',
-    authorizeRoles('Procurement Officer'),
     async (req, res) => {
       const { prNumber, requestDate, department, requester, purpose, items } = req.body;
       console.log('Request body:', req.body);
@@ -180,7 +158,6 @@ app.post(
 // Purchase Order API
 app.post(
   '/purchase-order',
-  authorizeRoles('Procurement Officer'),
   async (req, res) => {
     const { orderDate, vendor, items } = req.body;
 
@@ -418,7 +395,6 @@ app.get('/ap-balance', async (req, res) => {
 });
   app.get(
     '/users',
-    authorizeRoles('IT Administrator'),
     async (req, res) => {
       try {
         const [rows] = await db.query('SELECT id, username, role FROM users');
@@ -428,6 +404,26 @@ app.get('/ap-balance', async (req, res) => {
       }
     }
   );
+
+  app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+  
+    try {
+      const [rows] = await db.query(
+        'SELECT id, username, role FROM users WHERE username = ? AND password = ?',
+        [username, password]
+      );
+  
+      if (rows.length > 0) {
+        res.status(200).json({ message: 'เข้าสู่ระบบสำเร็จ', user: rows[0] });
+      } else {
+        res.status(401).json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+      }
+    } catch (error) {
+      console.error('Error in /login API:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 
 // Start server
 app.listen(port, () => {

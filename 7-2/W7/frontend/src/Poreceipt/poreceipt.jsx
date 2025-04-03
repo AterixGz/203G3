@@ -43,7 +43,35 @@ function POReceiptForm() {
     setItems(updatedItems);
   };
 
+  const validateForm = () => {
+    if (!poNumber.trim()) {
+      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+      return false;
+    }
+    if (!vendor.trim()) {
+      alert('กรุณากรอกชื่อผู้ขาย/ผู้ให้บริการ');
+      return false;
+    }
+    if (items.length === 0) {
+      alert('ต้องมีรายการสินค้าขั้นต่ำ 1 รายการ');
+      return false;
+    }
+    for (const item of items) {
+      if (!item.details.trim()) {
+        alert('กรุณากรอกรายละเอียดสินค้าทุกแถว');
+        return false;
+      }
+      if (item.currentReceiveQuantity <= 0) {
+        alert('จำนวนที่รับครั้งนี้ต้องมากกว่า 0');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!validateForm()) return;
+
     const data = {
       receiptNumber,
       poNumber,
@@ -139,7 +167,7 @@ function POReceiptForm() {
           type="date"
           id="receiptDate"
           value={receiptDate}
-          onChange={(e) => setReceiptDate(e.target.value)}
+          readOnly
         />
       </div>
 

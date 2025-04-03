@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Invoice.css';
 import axios from 'axios';
 
@@ -12,6 +12,15 @@ function InvoiceForm() {
     { id: 1, details: '', receivedQuantity: 0, invoicedQuantity: 0, currentInvoiceQuantity: 0, unitPrice: 0, totalAmount: 0 },
   ]);
   const [attachment, setAttachment] = useState(null);
+
+  // ตั้งค่าวันที่ปัจจุบันเมื่อหน้าเว็บโหลด
+  useEffect(() => {
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split('T')[0]; // ใช้เพียงวันที่ (YYYY-MM-DD)
+
+    setInvoiceDate(formattedDate);
+    setDueDate(formattedDate); // สามารถตั้งค่าวันที่ครบกำหนดชำระเป็นวันนี้ก็ได้
+  }, []);
 
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...items];
@@ -29,9 +38,9 @@ function InvoiceForm() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf']; // ประเภทไฟล์ที่อนุญาต
+      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
       if (allowedTypes.includes(file.type)) {
-        setAttachment(file); // บันทึกไฟล์ลงใน state
+        setAttachment(file);
       } else {
         alert('กรุณาอัปโหลดไฟล์รูปภาพ (JPEG, PNG) หรือ PDF เท่านั้น');
         e.target.value = ''; // รีเซ็ต input file
@@ -39,14 +48,24 @@ function InvoiceForm() {
     }
   };
 
+  const isFormValid = () => {
+    if (!invoiceNumber || !invoiceDate || !dueDate || !poRef || !vendor) return false;
+    return items.every(item => item.details && item.currentInvoiceQuantity > 0 && item.unitPrice > 0);
+  };
+
   const handleSubmit = async () => {
+    if (!isFormValid()) {
+      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('invoiceNumber', invoiceNumber);
     formData.append('invoiceDate', invoiceDate);
     formData.append('dueDate', dueDate);
     formData.append('poRef', poRef);
     formData.append('vendor', vendor);
-    formData.append('attachment', attachment); // แนบไฟล์
+    formData.append('attachment', attachment);
     formData.append(
       'items',
       JSON.stringify(
@@ -130,7 +149,9 @@ function InvoiceForm() {
     `);
     printWindow.document.close();
   };
-  
+
+  // วันที่ไม่สามารถเลือกใน `dueDate` ที่ผ่านมา
+  const currentDate = new Date().toISOString().split('T')[0];
 
   return (
     <div className="invoice-form">
@@ -144,12 +165,12 @@ function InvoiceForm() {
 
       <div className="form-row">
         <label htmlFor="invoiceDate">วันที่ใบแจ้งหนี้</label>
-        <input type="date" id="invoiceDate" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
+        <input type="date" id="invoiceDate" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} readOnly />
       </div>
 
       <div className="form-row">
         <label htmlFor="dueDate">วันที่ครบกำหนดชำระ</label>
-        <input type="date" id="dueDate" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+        <input type="date" id="dueDate" value={dueDate} onChange={(e) => setDueDate(e.target.value)} min={currentDate} />
       </div>
 
       <div className="form-row">
@@ -215,7 +236,6 @@ function InvoiceForm() {
         <button className="print-button" onClick={handlePrint}>
          🖨 พิมพ์ใบแจ้งหนี้
         </button>
-
       </div>
     </div>
   );

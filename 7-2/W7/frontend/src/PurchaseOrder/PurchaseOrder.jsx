@@ -37,7 +37,20 @@ const PurchaseOrder = () => {
     setItems(newItems);
   };
 
+  const isFormValid = () => {
+    if (!vendor.trim()) return false; // ตรวจสอบว่ามีชื่อผู้จำหน่าย
+    if (items.length === 0) return false; // ต้องมีอย่างน้อย 1 รายการสินค้า
+    return items.every(item => item.name.trim() && item.quantity > 0 && item.price > 0);
+  };
+  
+
   const handleSubmit = async () => {
+
+    if (!isFormValid()) {
+      alert("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก!");
+      return;
+    }
+
     const data = {
       poNumber,
       orderDate,

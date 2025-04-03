@@ -90,11 +90,6 @@ function ApBalance() {
         </head>
         <body>
           <h2>รายงานยอดคงเหลือเจ้าหนี้ (AP Balance)</h2>
-          <div class="info">
-            <p><strong>ผู้ขาย:</strong> ${vendorFilter || 'ทั้งหมด'}</p>
-            <p><strong>สถานะ:</strong> ${statusFilter || 'ทั้งหมด'}</p>
-            <p><strong>ช่วงวันที่:</strong> ${startDate || 'ไม่ระบุ'} - ${endDate || 'ไม่ระบุ'}</p>
-          </div>
   
           <table>
             <thead>
@@ -106,8 +101,9 @@ function ApBalance() {
                 <th>วันครบกำหนด</th>
                 <th>จำนวนเงิน</th>
                 <th>ชำระแล้ว</th>
-                <th>คงเหลือ</th>
                 <th>สถานะ</th>
+                <th>คงเหลือ</th>
+                
               </tr>
             </thead>
             <tbody>
@@ -120,8 +116,8 @@ function ApBalance() {
                   <td>${new Date(row.due_date).toLocaleDateString()}</td>
                   <td>${row.total_amount.toLocaleString()}</td>
                   <td>${row.paid_amount.toLocaleString()}</td>
-                  <td>${row.balance.toLocaleString()}</td>
                   <td>${row.status}</td>
+                  <td>${row.balance.toLocaleString()}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -185,6 +181,9 @@ function ApBalance() {
           <button className="export-button" onClick={handleFilter}>
             ส่งออกข้อมูล
           </button>
+          <button className="print-button" onClick={handlePrint}>
+             🖨 พิมพ์รายงาน
+          </button>
         </div>
       </div>
 
@@ -199,8 +198,9 @@ function ApBalance() {
               <th>วันครบกำหนด</th>
               <th>จำนวนเงิน</th>
               <th>ชำระแล้ว</th>
-              <th>คงเหลือ</th>
               <th>สถานะ</th>
+              <th>คงเหลือ</th>
+              
             </tr>
           </thead>
           <tbody>
@@ -213,8 +213,9 @@ function ApBalance() {
                 <td>{new Date(row.due_date).toLocaleDateString()}</td>
                 <td>{row.total_amount.toLocaleString()}</td>
                 <td>{row.paid_amount.toLocaleString()}</td>
-                <td>{row.balance.toLocaleString()}</td>
                 <td>{row.status}</td>
+                <td>{row.balance.toLocaleString()}</td>
+                
               </tr>
             ))}
           </tbody>
@@ -231,9 +232,6 @@ function ApBalance() {
             </tr>
             <br />
             <br />
-            <button className="print-button" onClick={handlePrint}>
-             🖨 พิมพ์รายงาน
-            </button>
 
           </tfoot>
         </table>

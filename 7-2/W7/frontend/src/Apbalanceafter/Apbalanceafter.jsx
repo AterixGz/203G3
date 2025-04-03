@@ -134,8 +134,9 @@ function ApBalanceAfterPayment() {
                 <th>วันครบกำหนด</th>
                 <th>จำนวนเงิน</th>
                 <th>ชำระแล้ว</th>
-                <th>คงเหลือ</th>
                 <th>สถานะ</th>
+                <th>คงเหลือ</th>
+                
               </tr>
             </thead>
             <tbody>
@@ -148,8 +149,9 @@ function ApBalanceAfterPayment() {
                   <td>${new Date(row.due_date).toLocaleDateString()}</td>
                   <td>${row.total_amount.toLocaleString()}</td>
                   <td>${row.paid_amount.toLocaleString()}</td>
-                  <td>${row.balance.toLocaleString()}</td>
                   <td>${row.status}</td>
+                  <td>${row.balance.toLocaleString()}</td>
+                  
                 </tr>
               `).join('')}
             </tbody>
@@ -210,11 +212,11 @@ function ApBalanceAfterPayment() {
           <button className="clear-button" onClick={handleClearFilters}>
             ล้างการค้นหา
           </button>
-          <button className="export-button" onClick={handleExport}>
-            ส่งออกข้อมูล
-          </button>
           <button className="filter-button" onClick={handleFilter}>
             กรองข้อมูล
+          </button>
+          <button className="export-button" onClick={handleExport}>
+            ส่งออกข้อมูล
           </button>
           <button className="print-button" onClick={handlePrint}>
           🖨 พิมพ์รายงาน
@@ -234,8 +236,9 @@ function ApBalanceAfterPayment() {
               <th>วันครบกำหนด</th>
               <th>จำนวนเงิน</th>
               <th>ชำระแล้ว</th>
-              <th>คงเหลือ</th>
               <th>สถานะ</th>
+              <th>คงเหลือ</th>
+              
             </tr>
           </thead>
           <tbody>
@@ -248,8 +251,9 @@ function ApBalanceAfterPayment() {
                 <td>{new Date(row.due_date).toLocaleDateString()}</td>
                 <td>{row.total_amount.toLocaleString()}</td>
                 <td>{row.paid_amount.toLocaleString()}</td>
-                <td>{row.balance.toLocaleString()}</td>
                 <td>{row.status}</td>
+                <td>{row.balance.toLocaleString()}</td>
+                
               </tr>
             ))}
           </tbody>

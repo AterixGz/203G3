@@ -4,7 +4,7 @@ import './Payment.css';
 
 function PaymentForm() {
   const [paymentNumber, setPaymentNumber] = useState(''); // เลขที่การจ่ายเงิน
-  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentDate, setPaymentDate] = useState(''); // วันที่จ่ายเงิน
   const [paymentMethod, setPaymentMethod] = useState('transfer');
   const [bankAccount, setBankAccount] = useState('');
   const [attachment, setAttachment] = useState(null);
@@ -29,6 +29,10 @@ function PaymentForm() {
       const timestamp = Date.now();
       setPaymentNumber(`PAY${timestamp}`);
     };
+
+    // กำหนดวันที่ปัจจุบัน
+    const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+    setPaymentDate(currentDate); // กำหนดค่า default เป็นวันที่ปัจจุบัน
 
     fetchInvoices();
     generatePaymentNumber();
@@ -68,6 +72,11 @@ function PaymentForm() {
   };
 
   const handleSubmit = async () => {
+    if (!paymentDate || !bankAccount || selectedInvoices.length === 0) {
+      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('paymentNumber', paymentNumber);
     formData.append('paymentDate', paymentDate);
@@ -145,9 +154,6 @@ function PaymentForm() {
             </tfoot>
           </table>
   
-          <h3>หมายเหตุ</h3>
-          <p>${notes || 'ไม่มีหมายเหตุ'}</p>
-  
           <script>
             window.onload = function() {
               window.print();
@@ -158,7 +164,6 @@ function PaymentForm() {
     `);
     printWindow.document.close();
   };
-  
 
   return (
     <div className="payment-form">
@@ -176,7 +181,7 @@ function PaymentForm() {
           type="date"
           id="paymentDate"
           value={paymentDate}
-          onChange={(e) => setPaymentDate(e.target.value)}
+          readOnly // ทำให้ไม่สามารถแก้ไขได้
         />
       </div>
 
@@ -260,7 +265,7 @@ function PaymentForm() {
           บันทึกการจ่ายเงิน
         </button>
         <button className="print-button" onClick={handlePrint}>
-        🖨 พิมพ์ใบจ่ายเงิน
+          🖨 พิมพ์ใบจ่ายเงิน
         </button>
       </div>
     </div>
