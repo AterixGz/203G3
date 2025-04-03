@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import PurchaseOrder from './PurchaseOrder/PurchaseOrder'
 import Requisition from "./Requisition/Requisition"
-import POReceipt from './Poreceipt/ poreceipt'
+import POReceipt from './Poreceipt/poreceipt'
 import Invoice from './Invoice/Invoice'
 import ApBalance from './Apbalance/Apbalance'
 import Payment from './Payment/Payment'

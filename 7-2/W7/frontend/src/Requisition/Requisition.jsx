@@ -4,7 +4,7 @@ import api from '../utils/axios';
 
 function PurchaseRequisitionForm() {
   const initialFormData = {
-    prNumber: 'PR07677',
+    prNumber: '',
     creator: '',
     requestDate: '',
     vendorName: '',
@@ -107,20 +107,18 @@ function PurchaseRequisitionForm() {
     try {
       setLoading(true);
       setError(null);
-
+  
       const payload = {
         ...formData,
         items,
         totalAmount,
-        submittedAt: new Date().toISOString()
       };
-
-      const response = await api.post('/api/requisitions', payload);
-      
+  
+      const response = await api.post('/requisition', payload);
+  
       if (response.status === 201) {
-        // Handle success
         console.log('Requisition created successfully');
-        // Reset form or redirect
+        handleReset(); // Reset form หลังจากบันทึกสำเร็จ
       }
     } catch (error) {
       setError('Error submitting form: ' + error.message);
@@ -208,7 +206,7 @@ function PurchaseRequisitionForm() {
           type="text" 
           id="prNumber" 
           value={formData.prNumber} 
-          readOnly 
+          onChange={handleInputChange}
         />
       </div>
 

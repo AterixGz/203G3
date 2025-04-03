@@ -122,38 +122,62 @@ const db = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'csi2025eiei',
-  database: process.env.DB_NAME || 'testing',
+  database: process.env.DB_NAME || 'mini',
 });
 
 // Routes
 
 // Requisition API
-app.post(
-    '/requisition',
-    async (req, res) => {
-      const { prNumber, requestDate, department, requester, purpose, items } = req.body;
-      console.log('Request body:', req.body);
-      try {
-        const [result] = await db.query(
-          'INSERT INTO requisitions (pr_number, request_date, department, requester, purpose) VALUES (?, ?, ?, ?, ?)',
-          [prNumber, requestDate, department, requester, purpose]
-        );
-        const requisitionId = result.insertId;
-  
-        for (const item of items) {
-          await db.query(
-            'INSERT INTO requisition_items (requisition_id, details, quantity, unit_price) VALUES (?, ?, ?, ?)',
-            [requisitionId, item.details, item.quantity, item.unitPrice]
-          );
-        }
-  
-        res.status(201).json({ message: 'Requisition created successfully', requisitionId });
-      } catch (error) {
-        console.error('Error in /requisition API:', error);
-        res.status(500).json({ error: error.message });
-      }
+app.get('/requisition/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [requisitionRows] = await db.query(
+      'SELECT * FROM requisitions WHERE id = ?',
+      [id]
+    );
+    const [itemRows] = await db.query(
+      'SELECT * FROM requisition_items WHERE requisition_id = ?',
+      [id]
+    );
+
+    if (requisitionRows.length === 0) {
+      return res.status(404).json({ message: 'Requisition not found' });
     }
-  );
+
+    res.status(200).json({
+      ...requisitionRows[0],
+      items: itemRows,
+    });
+  } catch (error) {
+    console.error('Error fetching requisition:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/requisition', async (req, res) => {
+  const { prNumber, requestDate, creator, vendorName, vendorContact, description, status, paymentTerms, refPR, items } = req.body;
+
+  try {
+    const [result] = await db.query(
+      'INSERT INTO requisitions (pr_number, request_date, creator, vendor_name, vendor_contact, description, status, payment_terms, ref_pr) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [prNumber, requestDate, creator, vendorName, vendorContact, description, status, paymentTerms, refPR]
+    );
+
+    const requisitionId = result.insertId;
+
+    for (const item of items) {
+      await db.query(
+        'INSERT INTO requisition_items (requisition_id, description, unit, required_date, quantity, price) VALUES (?, ?, ?, ?, ?, ?)',
+        [requisitionId, item.description, item.unit, item.requiredDate, item.quantity, item.price]
+      );
+    }
+
+    res.status(201).json({ message: 'Requisition created successfully', requisitionId });
+  } catch (error) {
+    console.error('Error creating requisition:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Purchase Order API
 app.post(
