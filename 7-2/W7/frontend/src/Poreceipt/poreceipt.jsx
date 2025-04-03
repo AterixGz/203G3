@@ -36,6 +36,29 @@ function POReceiptForm() {
     fetchPurchaseOrders();
   }, []);
 
+  const handlePoSelect = async (poId) => {
+  setPoNumber(poId); // อัปเดต PO Number ที่เลือก
+  try {
+    const response = await axios.get(`http://localhost:3000/api/purchase-orders/${poId}/items`);
+    const { vendorName, items } = response.data;
+
+    setVendor(vendorName); // อัปเดตชื่อ Vendor
+    setItems(
+      items.map((item, index) => ({
+        id: index + 1,
+        details: item.description,
+        orderedQuantity: item.quantity,
+        receivedQuantity: item.invoicedQuantity || 0,
+        currentReceiveQuantity: 0,
+        unit: 'piece', // หรือหน่วยที่เหมาะสม
+      }))
+    );
+  } catch (error) {
+    console.error('Error fetching PO details:', error);
+    alert('ไม่สามารถดึงข้อมูลใบสั่งซื้อได้');
+  }
+};
+
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...items];
     updatedItems[index][field] = value;

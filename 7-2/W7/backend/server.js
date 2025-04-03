@@ -64,33 +64,72 @@ const invoiceUpload = multer({
 });
 
 // API สำหรับการสร้าง Invoice
-app.post('/invoice', invoiceUpload.single('attachment'), async (req, res) => {
+app.post('/api/invoices', upload.single('invoiceFile'), async (req, res) => {
   const { invoiceNumber, invoiceDate, dueDate, poRef, vendor, items } = req.body;
   const attachmentPath = req.file ? req.file.path : null;
 
   try {
+    // Insert invoice data
     const [result] = await db.query(
       'INSERT INTO invoices (invoice_number, invoice_date, due_date, po_ref, vendor, attachment_path) VALUES (?, ?, ?, ?, ?, ?)',
       [invoiceNumber, invoiceDate, dueDate, poRef, vendor, attachmentPath]
     );
     const invoiceId = result.insertId;
 
+    // Insert invoice items
     const parsedItems = JSON.parse(items);
     for (const item of parsedItems) {
       await db.query(
-        'INSERT INTO invoice_items (invoice_id, details, quantity, unit_price) VALUES (?, ?, ?, ?)',
-        [invoiceId, item.details, item.quantity, item.unitPrice]
+        'INSERT INTO invoice_items (invoice_id, details, quantity, unit_price, total_amount) VALUES (?, ?, ?, ?, ?)',
+        [invoiceId, item.itemDetails, item.currentInvoiceQuantity, item.unitPrice, item.totalAmount]
       );
     }
 
+    // Update total amount in invoices table
     await db.query(
-      'UPDATE invoices SET total_amount = (SELECT COALESCE(SUM(quantity * unit_price), 0) FROM invoice_items WHERE invoice_id = ?) WHERE id = ?',
+      'UPDATE invoices SET total_amount = (SELECT COALESCE(SUM(total_amount), 0) FROM invoice_items WHERE invoice_id = ?) WHERE id = ?',
       [invoiceId, invoiceId]
     );
 
     res.status(201).json({ message: 'Invoice created successfully', invoiceId });
   } catch (error) {
-    console.error('Error in /invoice API:', error);
+    console.error('Error in /api/invoices API:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/purchase-orders/:id/items', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // ดึงข้อมูลใบสั่งซื้อ
+    const [poRows] = await db.query(
+      'SELECT vendor_name, status FROM purchase_orders WHERE id = ?',
+      [id]
+    );
+
+    if (poRows.length === 0) {
+      return res.status(404).json({ message: 'Purchase Order not found' });
+    }
+
+    // ดึงรายการสินค้าในใบสั่งซื้อ
+    const [itemRows] = await db.query(
+      `SELECT 
+        name AS description, 
+        quantity AS receivedQuantity, 
+        price 
+      FROM purchase_order_items 
+      WHERE purchase_order_id = ?`,
+      [id]
+    );
+
+    res.status(200).json({
+      vendorName: poRows[0].vendor_name,
+      status: poRows[0].status,
+      items: itemRows,
+    });
+  } catch (error) {
+    console.error('Error in /api/purchase-orders/:id/items API:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -246,8 +285,11 @@ app.post('/api/purchase-orders', async (req, res) => {
 
 app.get('/api/purchase-orders', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT po_number, vendor_name FROM purchase_orders');
-    res.status(200).json(rows);
+    // ดึงข้อมูลใบสั่งซื้อที่มีสถานะ "approved"
+    const [rows] = await db.query(
+      'SELECT id, po_number, vendor_name FROM purchase_orders WHERE status = "approved"'
+    );
+    res.status(200).json(rows); // ส่งข้อมูลกลับไปยังฟรอนต์เอนด์
   } catch (error) {
     console.error('Error fetching purchase orders:', error);
     res.status(500).json({ error: error.message });
@@ -306,33 +348,36 @@ app.post('/po-receipt', async (req, res) => {
 });
 
 // API สำหรับการสร้าง Invoice
-app.post('/invoice', invoiceUpload.single('attachment'), async (req, res) => {
+app.post('/api/invoices', invoiceUpload.single('invoiceFile'), async (req, res) => {
   const { invoiceNumber, invoiceDate, dueDate, poRef, vendor, items } = req.body;
   const attachmentPath = req.file ? req.file.path : null;
 
   try {
+    // Insert invoice data
     const [result] = await db.query(
       'INSERT INTO invoices (invoice_number, invoice_date, due_date, po_ref, vendor, attachment_path) VALUES (?, ?, ?, ?, ?, ?)',
       [invoiceNumber, invoiceDate, dueDate, poRef, vendor, attachmentPath]
     );
     const invoiceId = result.insertId;
 
+    // Insert invoice items
     const parsedItems = JSON.parse(items);
     for (const item of parsedItems) {
       await db.query(
-        'INSERT INTO invoice_items (invoice_id, details, quantity, unit_price) VALUES (?, ?, ?, ?)',
-        [invoiceId, item.details, item.quantity, item.unitPrice]
+        'INSERT INTO invoice_items (invoice_id, details, quantity, unit_price, total_amount) VALUES (?, ?, ?, ?, ?)',
+        [invoiceId, item.itemDetails, item.currentInvoiceQuantity, item.unitPrice, item.totalAmount]
       );
     }
 
+    // Update total amount in invoices table
     await db.query(
-      'UPDATE invoices SET total_amount = (SELECT COALESCE(SUM(quantity * unit_price), 0) FROM invoice_items WHERE invoice_id = ?) WHERE id = ?',
+      'UPDATE invoices SET total_amount = (SELECT COALESCE(SUM(total_amount), 0) FROM invoice_items WHERE invoice_id = ?) WHERE id = ?',
       [invoiceId, invoiceId]
     );
 
     res.status(201).json({ message: 'Invoice created successfully', invoiceId });
   } catch (error) {
-    console.error('Error in /invoice API:', error);
+    console.error('Error in /api/invoices API:', error);
     res.status(500).json({ error: error.message });
   }
 });

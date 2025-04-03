@@ -9,7 +9,7 @@ const PurchaseOrder = () => {
     orderDate: new Date().toISOString().split('T')[0], // วันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
     requisitionRef: '',
     vendorName: '',
-    status: 'draft'
+    status: '' // กำหนดค่า status เป็นค่าว่าง
   };
 
   // States
@@ -45,17 +45,18 @@ const fetchRequisitions = async () => {
   };
 
  // Handle requisition selection
-const handleRequisitionSelect = async (requisitionId) => {
+ const handleRequisitionSelect = async (requisitionId) => {
   try {
     setLoading(true);
     const response = await api.get(`/api/requisition/${requisitionId}`);
     const requisitionData = response.data;
 
-    // อัปเดตข้อมูลฟอร์มด้วยข้อมูลใบขอซื้อ
+    // อัปเดตข้อมูลฟอร์มด้วยข้อมูลใบขอซื้อ รวมถึง status
     setFormData(prev => ({
       ...prev,
       requisitionRef: requisitionId,
-      vendorName: requisitionData.vendor_name
+      vendorName: requisitionData.vendor_name,
+      status: requisitionData.status // รับค่า status จาก requisition
     }));
 
     // อัปเดตรายการสินค้าในฟอร์ม
@@ -203,6 +204,14 @@ const handleRequisitionSelect = async (requisitionId) => {
       ))}
     </select>
   </label>
+  <label>
+    สถานะใบขอซื้อ:
+    <input 
+      type="text" 
+      value={formData.status}
+      readOnly
+    />
+  </label>
         <label>
           ผู้จำหน่าย:
           <input 
@@ -213,6 +222,7 @@ const handleRequisitionSelect = async (requisitionId) => {
           />
         </label>
       </div>
+      
 
       <h3>รายการสินค้า</h3>
       <table>
