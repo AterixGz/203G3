@@ -102,8 +102,37 @@ function PurchaseRequisitionForm() {
     calculateTotal(newItems);
   };
 
+  const validateForm = () => {
+    if (!formData.prNumber || formData.prNumber.trim() === '') {
+      alert('กรุณากรอกเลขที่ใบขอซื้อ');
+      return false;
+    }
+    if (!formData.creator || formData.creator.trim() === '') {
+      alert('กรุณากรอกชื่อผู้จัดทำ');
+      return false;
+    }
+    if (!formData.requestDate) {
+      alert('กรุณาเลือกวันที่ขอซื้อ');
+      return false;
+    }
+    if (!formData.vendorName || formData.vendorName.trim() === '') {
+      alert('กรุณากรอกชื่อผู้ขาย');
+      return false;
+    }
+    if (items.length === 0 || items.some(item => !item.description || item.quantity <= 0 || item.price <= 0)) {
+      alert('กรุณากรอกข้อมูลรายการสินค้าให้ครบถ้วน');
+      return false;
+    }
+    return true;
+  };
+
   // Submit form
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      return; // หยุดการทำงานหากข้อมูลไม่ครบถ้วน
+    }
+
+
     try {
       setLoading(true);
       setError(null);

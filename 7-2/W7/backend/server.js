@@ -179,52 +179,83 @@ app.post('/requisition', async (req, res) => {
   }
 });
 
-// Purchase Order API
-app.post(
-  '/purchase-order',
-  async (req, res) => {
-    const { orderDate, vendor, items } = req.body;
-
-    try {
-      // ดึง PO Number ล่าสุดจากฐานข้อมูล
-      const [rows] = await db.query('SELECT MAX(id) AS maxId FROM purchase_orders');
-      const nextId = (rows[0].maxId || 0) + 1; // หากไม่มีข้อมูล ให้เริ่มจาก 1
-      const poNumber = `PO-${String(nextId).padStart(6, '0')}`; // สร้าง PO Number เช่น PO-000001
-
-      // บันทึกข้อมูลใบสั่งซื้อ
-      const [result] = await db.query(
-        'INSERT INTO purchase_orders (po_number, order_date, vendor) VALUES (?, ?, ?)',
-        [poNumber, orderDate, vendor]
-      );
-      const purchaseOrderId = result.insertId;
-
-      // บันทึกรายการสินค้า
-      for (const item of items) {
-        await db.query(
-          'INSERT INTO purchase_order_items (purchase_order_id, name, quantity, price) VALUES (?, ?, ?, ?)',
-          [purchaseOrderId, item.name, item.quantity, item.price]
-        );
-      }
-
-      res.status(201).json({ message: 'Purchase Order created successfully', purchaseOrderId, poNumber });
-    } catch (error) {
-      console.error('Error in /purchase-order API:', error);
-      res.status(500).json({ error: error.message });
-    }
-  }
-);
-
-app.get('/next-po-number', async (req, res) => {
+// API สำหรับดึงข้อมูลใบขอซื้อทั้งหมด
+app.get('/api/requisitions', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT MAX(id) AS maxId FROM purchase_orders');
-    const nextId = (rows[0].maxId || 0) + 1;
-    const poNumber = `PO-${String(nextId).padStart(6, '0')}`; // เช่น PO-000001
-    res.json({ poNumber });
+    const [rows] = await db.query('SELECT id, pr_number AS requisition_number, vendor_name FROM requisitions');
+    res.status(200).json(rows);
   } catch (error) {
-    console.error('Error fetching next PO Number:', error);
+    console.error('Error fetching requisitions:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
+// API สำหรับดึงข้อมูลใบขอซื้อเฉพาะรายการ
+app.get('/api/requisition/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [requisitionRows] = await db.query(
+      'SELECT * FROM requisitions WHERE id = ?',
+      [id]
+    );
+    const [itemRows] = await db.query(
+      'SELECT * FROM requisition_items WHERE requisition_id = ?',
+      [id]
+    );
+
+    if (requisitionRows.length === 0) {
+      return res.status(404).json({ message: 'Requisition not found' });
+    }
+
+    res.status(200).json({
+      ...requisitionRows[0],
+      items: itemRows,
+    });
+  } catch (error) {
+    console.error('Error fetching requisition:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Purchase Order API
+app.post('/api/purchase-orders', async (req, res) => {
+  const { poNumber, orderDate, requisitionRef, vendorName, status, items, totalAmount, submittedAt } = req.body;
+
+  try {
+    // บันทึกข้อมูลใบสั่งซื้อ
+    const [result] = await db.query(
+      'INSERT INTO purchase_orders (po_number, order_date, requisition_ref, vendor_name, status, total_amount, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [poNumber, orderDate, requisitionRef, vendorName, status, totalAmount, submittedAt]
+    );
+    const purchaseOrderId = result.insertId;
+
+    // บันทึกรายการสินค้า
+    for (const item of items) {
+      await db.query(
+        'INSERT INTO purchase_order_items (purchase_order_id, name, quantity, price) VALUES (?, ?, ?, ?)',
+        [purchaseOrderId, item.name, item.quantity, item.price]
+      );
+    }
+
+    res.status(201).json({ message: 'Purchase Order created successfully', purchaseOrderId });
+  } catch (error) {
+    console.error('Error creating purchase order:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// app.get('/next-po-number', async (req, res) => {
+//   try {
+//     const [rows] = await db.query('SELECT MAX(id) AS maxId FROM purchase_orders');
+//     const nextId = (rows[0].maxId || 0) + 1;
+//     const poNumber = `PO-${String(nextId).padStart(6, '0')}`; // เช่น PO-000001
+//     res.json({ poNumber });
+//   } catch (error) {
+//     console.error('Error fetching next PO Number:', error);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 // PO Receipt API
 app.post('/po-receipt', async (req, res) => {

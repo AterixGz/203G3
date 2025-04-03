@@ -3,9 +3,10 @@ import "./PurchaseOrder.css";
 import api from '../utils/axios';
 
 const PurchaseOrder = () => {
+  // ตั้งค่า initialFormData โดยใช้วันที่ปัจจุบัน
   const initialFormData = {
-    poNumber: 'PO-047690',
-    orderDate: '2025-03-27',
+    poNumber: 'PO-', // ให้ผู้ใช้กรอกเอง
+    orderDate: new Date().toISOString().split('T')[0], // วันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
     requisitionRef: '',
     vendorName: '',
     status: 'draft'
@@ -24,15 +25,16 @@ const PurchaseOrder = () => {
   }, []);
 
   // Fetch available requisitions
-  const fetchRequisitions = async () => {
-    try {
-      const response = await api.get('/api/requisitions');
-      setRequisitions(response.data);
-    } catch (error) {
-      setError('Error fetching requisitions: ' + error.message);
-      console.error('Error:', error);
-    }
-  };
+// Fetch available requisitions
+const fetchRequisitions = async () => {
+  try {
+    const response = await api.get('/api/requisitions');
+    setRequisitions(response.data); // เก็บข้อมูลใบขอซื้อใน state
+  } catch (error) {
+    setError('Error fetching requisitions: ' + error.message);
+    console.error('Error:', error);
+  }
+};
 
   // Handle form input changes
   const handleFormChange = (field, value) => {
@@ -42,33 +44,34 @@ const PurchaseOrder = () => {
     }));
   };
 
-  // Handle requisition selection
-  const handleRequisitionSelect = async (requisitionId) => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/api/requisitions/${requisitionId}`);
-      const requisitionData = response.data;
-      
-      // Update form with requisition data
-      setFormData(prev => ({
-        ...prev,
-        requisitionRef: requisitionId,
-        vendorName: requisitionData.vendorName
-      }));
-      
-      // Update items from requisition
-      setItems(requisitionData.items.map(item => ({
-        id: item.id,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      })));
-    } catch (error) {
-      setError('Error loading requisition: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+ // Handle requisition selection
+const handleRequisitionSelect = async (requisitionId) => {
+  try {
+    setLoading(true);
+    const response = await api.get(`/api/requisition/${requisitionId}`);
+    const requisitionData = response.data;
+
+    // อัปเดตข้อมูลฟอร์มด้วยข้อมูลใบขอซื้อ
+    setFormData(prev => ({
+      ...prev,
+      requisitionRef: requisitionId,
+      vendorName: requisitionData.vendor_name
+    }));
+
+    // อัปเดตรายการสินค้าในฟอร์ม
+    setItems(requisitionData.items.map(item => ({
+      id: item.id,
+      name: item.description,
+      quantity: item.quantity,
+      price: item.price
+    })));
+  } catch (error) {
+    setError('Error loading requisition: ' + error.message);
+    console.error('Error:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Handle item changes
   const handleChange = (index, field, value) => {
@@ -96,24 +99,49 @@ const PurchaseOrder = () => {
     return items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
   };
 
+  const validateForm = () => {
+    if (!formData.poNumber || formData.poNumber.trim() === '') {
+      alert('กรุณากรอกเลขที่ใบสั่งซื้อ');
+      return false;
+    }
+    if (!formData.orderDate) {
+      alert('กรุณาเลือกวันที่');
+      return false;
+    }
+    if (!formData.vendorName || formData.vendorName.trim() === '') {
+      alert('กรุณากรอกชื่อผู้จำหน่าย');
+      return false;
+    }
+    if (items.length === 0 || items.some(item => !item.name || item.quantity <= 0 || item.price <= 0)) {
+      alert('กรุณากรอกข้อมูลรายการสินค้าให้ครบถ้วน');
+      return false;
+    }
+    return true;
+  };
+
   // Submit form
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      return; // หยุดการทำงานหากข้อมูลไม่ครบถ้วน
+    }
+  
+
     try {
       setLoading(true);
       setError(null);
-
+  
       const payload = {
         ...formData,
         items,
         totalAmount: calculateTotal(),
-        submittedAt: new Date().toISOString()
+        submittedAt: new Date().toISOString().replace("T", " ").replace("Z", "") // ใช้ค่าที่แปลงรูปแบบตรงนี้
       };
-
+  
       const response = await api.post('/api/purchase-orders', payload);
-      
+  
       if (response.status === 201) {
-        // Handle success - could redirect or show message
         console.log('Purchase order created successfully');
+        handleReset(); // รีเซ็ตฟอร์มหลังจากบันทึกสำเร็จ
       }
     } catch (error) {
       setError('Error submitting purchase order: ' + error.message);
@@ -143,7 +171,12 @@ const PurchaseOrder = () => {
       <div className="order-info">
         <label>
           เลขที่ใบสั่งซื้อ:
-          <input type="text" value={formData.poNumber} readOnly />
+          <input 
+            type="text" 
+            value={formData.poNumber} 
+            onChange={(e) => handleFormChange('poNumber', e.target.value)} 
+            placeholder="กรอกเลขที่ใบสั่งซื้อ"
+          />
         </label>
         <label>
           วันที่:
@@ -156,20 +189,20 @@ const PurchaseOrder = () => {
       </div>
 
       <div className="supplier-info">
-        <label>
-          อ้างถึงใบขอซื้อ:
-          <select 
-            value={formData.requisitionRef}
-            onChange={(e) => handleRequisitionSelect(e.target.value)}
-          >
-            <option value="">เลือกใบขอซื้อ</option>
-            {requisitions.map(req => (
-              <option key={req.id} value={req.id}>
-                {req.requisitionNumber}
-              </option>
-            ))}
-          </select>
-        </label>
+      <label>
+    อ้างถึงใบขอซื้อ:
+    <select 
+      value={formData.requisitionRef}
+      onChange={(e) => handleRequisitionSelect(e.target.value)}
+    >
+      <option value="">เลือกใบขอซื้อ</option>
+      {requisitions.map(req => (
+        <option key={req.id} value={req.id}>
+          {req.requisition_number} - {req.vendor_name}
+        </option>
+      ))}
+    </select>
+  </label>
         <label>
           ผู้จำหน่าย:
           <input 
