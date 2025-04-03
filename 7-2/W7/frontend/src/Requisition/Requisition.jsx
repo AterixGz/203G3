@@ -163,7 +163,14 @@ function PurchaseRequisitionForm() {
       </div>
 
       <div className="item-list">
-        <h3>รายการสินค้า/บริการ</h3>
+        <div className="item-controls">
+          <button type="button" className="add-item" onClick={addItem}>
+            + เพิ่มรายการ
+          </button>
+          <button type="button" className="remove-item" onClick={() => removeItem(formData.items.length - 1)}>
+            - ลบรายการ
+          </button>
+        </div>
         {formData.items.map((item, index) => (
           <div className="item-row" key={index}>
             <label>รายละเอียด</label>
@@ -176,9 +183,6 @@ function PurchaseRequisitionForm() {
             <input type="text" value={item.total.toFixed(2)} readOnly />
           </div>
         ))}
-        <button type="button" onClick={addItem}>เพิ่มรายการ</button>
-        &nbsp; &nbsp;
-        <button type="button" onClick={() => removeItem(formData.items.length - 1)}>ลบรายการ</button>
       </div>
 
       <div className="total">
@@ -187,12 +191,20 @@ function PurchaseRequisitionForm() {
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="submit-button">บันทึกใบขอซื้อ</button>
+        <div className="print-buttons">
+          <button type="button" className="print-button" onClick={handlePrint}>
+            พิมพ์ใบขอซื้อ
+          </button>
+        </div>
+        <div className="action-buttons">
+          <button type="button" className="cancel-button">
+            ยกเลิก
+          </button>
+          <button type="submit" className="submit-button">
+            บันทึก
+          </button>
+        </div>
       </div>
-      <br />
-      <button type="button" className="print-button" onClick={handlePrint}>
-      พิมพ์ใบขอซื้อ
-      </button>
     </form>
   );
 }
