@@ -3,17 +3,14 @@ import './bar.css';
 import api from '../utils/axios';
 
 function Sidebar({ currentPage, showDocViewer, onNavigate, onDocViewer }) {
-  // States for menu items and loading
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch menu configuration on component mount
   useEffect(() => {
     fetchMenuConfig();
   }, []);
 
-  // Fetch menu configuration from backend
   const fetchMenuConfig = async () => {
     try {
       setLoading(true);
@@ -21,14 +18,12 @@ function Sidebar({ currentPage, showDocViewer, onNavigate, onDocViewer }) {
       setMenuItems(response.data);
     } catch (err) {
       setError('Error loading menu: ' + err.message);
-      // Fallback to default menu items if API fails
       setMenuItems(defaultMenuItems);
     } finally {
       setLoading(false);
     }
   };
 
-  // Default menu items as fallback
   const defaultMenuItems = [
     { id: 'requisition', icon: '🗒', text: 'ใบขอซื้อ' },
     { id: 'purchaseOrder', icon: '🗏', text: 'ใบสั่งซื้อ' },
@@ -38,7 +33,6 @@ function Sidebar({ currentPage, showDocViewer, onNavigate, onDocViewer }) {
     { id: 'payment', icon: '$', text: 'จ่ายเงิน' }
   ];
 
-  // Handle navigation with logging
   const handleNavigate = async (page) => {
     try {
       await api.post('/api/navigation/log', {
@@ -48,8 +42,17 @@ function Sidebar({ currentPage, showDocViewer, onNavigate, onDocViewer }) {
       onNavigate(page);
     } catch (err) {
       console.error('Navigation logging failed:', err);
-      // Still navigate even if logging fails
       onNavigate(page);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/api/logout'); // เรียก API สำหรับ Logout
+      localStorage.removeItem('token'); // ลบ token ออกจาก localStorage
+      window.location.href = '/login'; // เปลี่ยนเส้นทางไปยังหน้า Login
+    } catch (err) {
+      console.error('Logout failed:', err);
     }
   };
 
@@ -60,7 +63,6 @@ function Sidebar({ currentPage, showDocViewer, onNavigate, onDocViewer }) {
   return (
     <aside className="sidebar">
       {error && <div className="error-message">{error}</div>}
-      
 
       <nav className="nav-menu">
         {menuItems.map(item => (
@@ -73,14 +75,22 @@ function Sidebar({ currentPage, showDocViewer, onNavigate, onDocViewer }) {
             <span className="text">{item.text}</span>
           </button>
         ))}
-        
-        {/* Document viewer button is always present */}
+
         <button 
           className={`nav-item ${showDocViewer ? 'active' : ''}`}
           onClick={onDocViewer}
         >
           <span className="icon">⎙</span>
           <span className="text">จัดการเอกสาร</span>
+        </button>
+
+        {/* ปุ่ม Logout */}
+        <button 
+          className="nav-item logout"
+          onClick={handleLogout}
+        >
+          <span className="icon">🚪</span>
+          <span className="text">ออกจากระบบ</span>
         </button>
       </nav>
     </aside>

@@ -17,6 +17,16 @@ app.use(cors({
   origin: 'http://localhost:5173', // ระบุโดเมนที่อนุญาต
 }));
 
+const authorize = (roles) => {
+  return (req, res, next) => {
+    const userRole = req.user?.role; // role ของผู้ใช้ที่เข้าสู่ระบบ
+    if (!roles.includes(userRole)) {
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงทรัพยากรนี้' });
+    }
+    next();
+  };
+};
+
 // กำหนดโฟลเดอร์สำหรับเก็บไฟล์
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -167,6 +177,26 @@ app.get('/api/purchase-orders/:id/items', async (req, res) => {
   }
 });
 
+app.put('/api/purchase-orders/:id/approve', authorize(['Management & Approvers']), async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [result] = await db.query(
+      'UPDATE purchase_orders SET status = "approved" WHERE id = ?',
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Purchase Order not found' });
+    }
+
+    res.status(200).json({ message: 'Purchase Order approved successfully' });
+  } catch (error) {
+    console.error('Error approving Purchase Order:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const paymentStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, 'uploads/payments')); // โฟลเดอร์สำหรับ Payment
@@ -252,7 +282,7 @@ app.post('/requisition', async (req, res) => {
 });
 
 // API สำหรับดึงข้อมูลใบขอซื้อทั้งหมด
-app.get('/api/requisitions', async (req, res) => {
+app.get('/api/requisitions', authorize(['Procurement Officer']), async (req, res) => {
   try {
     const [rows] = await db.query('SELECT id, pr_number AS requisition_number, vendor_name FROM requisitions');
     res.status(200).json(rows);
@@ -444,7 +474,7 @@ app.post('/api/invoices', invoiceUpload.single('invoiceFile'), async (req, res) 
     }
   });
 
-  app.get('/api/invoices', async (req, res) => {
+  app.get('/api/invoices', authorize(['Finance & Accounting','Management & Approvers']), async (req, res) => {
     const { status, search } = req.query;
   
     try {
@@ -474,7 +504,7 @@ app.post('/api/invoices', invoiceUpload.single('invoiceFile'), async (req, res) 
   });
 
 // API สำหรับการบันทึก Payment
-app.post('/api/payments', paymentUpload.single('attachment'), async (req, res) => {
+app.post('/api/payments', authorize(['Finance & Accounting']), paymentUpload.single('attachment'), async (req, res) => {
   const { paymentNumber, paymentDate, paymentMethod, bankAccount, notes, invoices } = req.body;
   const attachmentPath = req.file ? req.file.path : null;
 
@@ -521,7 +551,7 @@ app.post('/api/payments', paymentUpload.single('attachment'), async (req, res) =
   }
 });
 
-app.get('/invoices', async (req, res) => {
+app.get('/invoices', authorize(['Finance & Accounting']) ,async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT 
@@ -540,8 +570,24 @@ app.get('/invoices', async (req, res) => {
   }
 });
 
+app.post('/api/budget', authorize(['Management & Approvers']), async (req, res) => {
+  const { department, amount, startDate, endDate } = req.body;
+
+  try {
+    const [result] = await db.query(
+      'INSERT INTO budgets (department, amount, start_date, end_date) VALUES (?, ?, ?, ?)',
+      [department, amount, startDate, endDate]
+    );
+
+    res.status(201).json({ message: 'Budget created successfully', budgetId: result.insertId });
+  } catch (error) {
+    console.error('Error creating budget:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // AP Balance API
-app.get('/api/ap-balance', async (req, res) => {
+app.get('/api/ap-balance', authorize(['Finance & Accounting' , 'Management & Approvers']), async (req, res) => {
   try {
     const { vendor, status, startDate, endDate } = req.query;
 
@@ -590,7 +636,7 @@ app.get('/api/ap-balance', async (req, res) => {
 });
 
  // API สำหรับดึงข้อมูลผู้ใช้ทั้งหมด พร้อม role name
-app.get('/users', async (req, res) => {
+app.get('/users', authorize(['IT Administrator']), async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT 
@@ -607,7 +653,7 @@ app.get('/users', async (req, res) => {
 });
 
 // API สำหรับการเข้าสู่ระบบ
-app.post('/login', async (req, res) => {
+app.post('/login',  async (req, res) => {
   const { username, password } = req.body;
 
   try {
@@ -622,13 +668,65 @@ app.post('/login', async (req, res) => {
     `, [username, password]);
 
     if (rows.length > 0) {
-      res.status(200).json({ message: 'เข้าสู่ระบบสำเร็จ', user: rows[0] });
+      const user = rows[0];
+      res.status(200).json({ message: 'เข้าสู่ระบบสำเร็จ', user });
     } else {
       res.status(401).json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
     }
   } catch (error) {
     console.error('Error in /login API:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/users/:id', authorize(['Management & Approvers','IT Administrator']), async (req, res) => {
+  const { id } = req.params;
+  const { roleId } = req.body;
+
+  try {
+    const [result] = await db.query(
+      'UPDATE users SET role_id = ? WHERE id = ?',
+      [roleId, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'User role updated successfully' });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API สำหรับดึงข้อมูลบันทึกการเข้าสู่ระบบ
+app.get('/audit-logs', authorize(['IT Administrator']), async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        id, 
+        username, 
+        action, 
+        timestamp 
+      FROM audit_logs
+      ORDER BY timestamp DESC
+    `);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching audit logs:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/logout', (req, res) => {
+  try {
+    // ลบข้อมูล session หรือ token ที่เกี่ยวข้องกับผู้ใช้
+    // ตัวอย่าง: req.session.destroy() หรือการลบ token จากฐานข้อมูล
+    res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    console.error('Error in /api/logout:', error);
+    res.status(500).json({ error: 'Logout failed' });
   }
 });
 
