@@ -66,11 +66,11 @@ function App() {
         user={user}  // Pass user data to Sidebar
       />
       <main className="content">
-        {activeTab === "purchase-order" && <PurchaseOrder />}
-        {activeTab === "receiving" && <InventoryReceiving />}
-        {activeTab === "unit-cost" && <UnitCostViewer />}
-        {activeTab === "disbursement" && <InventoryDisbursement />}
-        {activeTab === "auto-requisition" && <AutoRequisition />}
+        {activeTab === "purchase-order" && user?.role == 'purchasing' && <PurchaseOrder />}
+        {activeTab === "receiving" && user?.role == 'purchasing' && <InventoryReceiving />}
+        {activeTab === "unit-cost" && user?.role == 'finance' && <UnitCostViewer />}
+        {activeTab === "disbursement" && user?.role == 'finance' && <InventoryDisbursement />}
+        {activeTab === "auto-requisition" && user?.role == 'purchasing' && <AutoRequisition />}
         {activeTab === "approve" && user?.role === 'management' && <Approve />}
         {activeTab === "list" && user?.role === 'management' && <List />}
       </main>
