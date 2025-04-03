@@ -14,7 +14,7 @@ const PurchaseOrder = () => {
 
   // States
   const [formData, setFormData] = useState(initialFormData);
-  const [items, setItems] = useState([{ id: 1, name: "", quantity: 0, price: 0 }]);
+  const [items, setItems] = useState([{ id: 1, name: "", quantity: 0, price: 0}]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [requisitions, setRequisitions] = useState([]);
