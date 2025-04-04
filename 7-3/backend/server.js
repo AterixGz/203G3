@@ -5,6 +5,7 @@ import express from "express";
 import { fileURLToPath } from "url"; // ใช้สำหรับหา __dirname ใน ES Module
 import mysql from "mysql2";
 import { readFileSync, writeFileSync } from 'fs';
+import { WebSocketServer } from 'ws';
 
 // ตั้งค่าการเชื่อมต่อฐานข้อมูล
 const connection = mysql.createConnection({
@@ -35,6 +36,45 @@ connection.connect((err) => {
     return;
   }
   console.log("Connected to MySQL database");
+});
+
+// Move WebSocket server creation before routes
+const wss = new WebSocketServer({ port: 8080 });
+
+wss.on('connection', (ws) => {
+  console.log('New client connected');
+  
+  // Send initial budget to new connections
+  const sql = "SELECT amount FROM management_budget ORDER BY updated_at DESC LIMIT 1";
+  connection.query(sql, (err, results) => {
+    if (!err && results.length > 0) {
+      ws.send(JSON.stringify({
+        type: 'budget-update',
+        budget: results[0].amount
+      }));
+    }
+  });
+
+  ws.on('message', (message) => {
+    wss.clients.forEach((client) => {
+      if (client !== ws && client.readyState === WebSocketServer.OPEN) {
+        client.send(message);
+      }
+    });
+  });
+
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+});
+
+// Add error handling for the WebSocket server
+wss.on('error', (error) => {
+  console.error('WebSocket server error:', error);
 });
 
 app.post("/purchase-orders", (req, res) => {
@@ -351,84 +391,135 @@ app.get("/pending-orders", (req, res) => {
 
 app.post("/approve-order/:id", (req, res) => {
   const { id } = req.params;
-  const { status, comment } = req.body;
-  console.log("body:", req.body);
+  const { status, comment, userRole } = req.body;
 
-  connection.beginTransaction((err) => {
+  // Check if management_budget table exists first
+  const checkTableSQL = `
+    SELECT COUNT(*) as count 
+    FROM information_schema.tables 
+    WHERE table_schema = 'railway' 
+    AND table_name = 'management_budget'
+  `;
+
+  connection.query(checkTableSQL, (err, results) => {
     if (err) {
-      console.error("Error starting transaction:", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดำเนินการ" });
+      console.error("Error checking table:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการตรวจสอบระบบ" });
     }
 
-    // Get order total
-    const getOrderSQL = "SELECT total FROM purchase_orders WHERE id = ?";
-    connection.query(getOrderSQL, [id], (err, orderResults) => {
-      if (err || orderResults.length === 0) {
-        connection.rollback();
-        return res.status(500).json({ message: "ไม่พบข้อมูลคำสั่งซื้อ" });
+    const tableExists = results[0].count > 0;
+
+    // If table doesn't exist and this is a management approval, create it
+    if (!tableExists && userRole === 'management' && status === 'approved') {
+      const createTableSQL = `
+        CREATE TABLE management_budget (
+          id INT PRIMARY KEY AUTO_INCREMENT,
+          amount DECIMAL(15,2) NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+      `;
+
+      connection.query(createTableSQL, (err) => {
+        if (err) {
+          console.error("Error creating table:", err);
+          return res.status(500).json({ message: "เกิดข้อผิดพลาดในการสร้างตาราง" });
+        }
+
+        // Insert initial budget
+        connection.query(
+          "INSERT INTO management_budget (amount) VALUES (?)",
+          [1000000],
+          (err) => {
+            if (err) {
+              console.error("Error inserting initial budget:", err);
+              return res.status(500).json({ message: "เกิดข้อผิดพลาดในการตั้งค่าวงเงิน" });
+            }
+            
+            // Continue with approval process
+            processApproval();
+          }
+        );
+      });
+    } else {
+      // Continue with approval process
+      processApproval();
+    }
+  });
+
+  // Update function processApproval()
+  function processApproval() {
+    connection.beginTransaction((err) => {
+      if (err) {
+        console.error("Error starting transaction:", err);
+        return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดำเนินการ" });
       }
 
-      const orderTotal = orderResults[0].total;
-      console.log("Order Total:", orderTotal);
-
-      // Get current budget
-      const getBudgetSQL = "SELECT amount FROM management_budget ORDER BY updated_at DESC LIMIT 1";
-      
-      connection.query(getBudgetSQL, (err, budgetResults) => {
+      const updateOrderSQL = "UPDATE purchase_orders SET status = ?, comment = ?, approval_date = NOW() WHERE id = ?";
+      connection.query(updateOrderSQL, [status, comment, id], (err) => {
         if (err) {
           connection.rollback();
-          return res.status(500).json({ message: "เกิดข้อผิดพลาดในการตรวจสอบวงเงิน" });
-        }
-        console.log("Budget Results:", budgetResults);
-        const currentBudget = budgetResults.length > 0 ? budgetResults[0].amount : 1000000;
-
-        if (status === 'approved' && orderTotal > currentBudget) {
-          connection.rollback();
-          return res.status(400).json({ message: "วงเงินไม่เพียงพอ" });
+          console.error("Error updating order:", err);
+          return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตสถานะ" });
         }
 
-        // Update order status
-        const updateOrderSQL = "UPDATE purchase_orders SET status = ?, comment = ?, approval_date = NOW() WHERE id = ?";
-        connection.query(updateOrderSQL, [status, comment, id], (err) => {
-          if (err) {
-            connection.rollback();
-            return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตสถานะ" });
-          }
+        // Change condition to include both management and finance approvals
+        if (status === 'approved' && (userRole === 'management' || userRole === 'finance')) {
+          const getOrderSQL = "SELECT total FROM purchase_orders WHERE id = ?";
+          connection.query(getOrderSQL, [id], (err, orderResults) => {
+            if (err || !orderResults.length) {
+              connection.rollback();
+              console.error("Error getting order:", err);
+              return res.status(500).json({ message: "เกิดข้อผิดพลาดในการตรวจสอบยอดเงิน" });
+            }
 
-          // If approved, update budget
-          if (status === 'approved') {
-            const newBudget = currentBudget - orderTotal;
-            const updateBudgetSQL = "INSERT INTO management_budget (amount) VALUES (?)";
-            connection.query(updateBudgetSQL, [newBudget], (err) => {
+            const orderTotal = orderResults[0].total;
+            const getBudgetSQL = "SELECT amount FROM management_budget ORDER BY updated_at DESC LIMIT 1";
+            
+            connection.query(getBudgetSQL, (err, budgetResults) => {
               if (err) {
                 connection.rollback();
-                return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตวงเงิน" });
+                return res.status(500).json({ message: "เกิดข้อผิดพลาดในการตรวจสอบวงเงิน" });
               }
 
-              // Commit transaction
-              connection.commit((err) => {
+              const currentBudget = budgetResults[0]?.amount || 1000000;
+              const newBudget = currentBudget - orderTotal;
+
+              if (newBudget < 0) {
+                connection.rollback();
+                return res.status(400).json({ message: "วงเงินไม่เพียงพอ" });
+              }
+
+              const updateBudgetSQL = "INSERT INTO management_budget (amount) VALUES (?)";
+              connection.query(updateBudgetSQL, [newBudget], (err) => {
                 if (err) {
                   connection.rollback();
-                  return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+                  return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตวงเงิน" });
                 }
-                res.json({ message: "อัปเดตสถานะสำเร็จ", newBudget });
+
+                connection.commit((err) => {
+                  if (err) {
+                    connection.rollback();
+                    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+                  }
+                  res.json({ message: "อัปเดตสถานะสำเร็จ", newBudget });
+                });
               });
             });
-          } else {
-            // If rejected, just commit the status change
-            connection.commit((err) => {
-              if (err) {
-                connection.rollback();
-                return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
-              }
-              res.json({ message: "อัปเดตสถานะสำเร็จ" });
-            });
-          }
-        });
+          });
+        } else {
+          connection.commit((err) => {
+            if (err) {
+              connection.rollback();
+              return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+            }
+            res.json({ message: "อัปเดตสถานะสำเร็จ" });
+          });
+        }
       });
     });
-  });
+  }
 });
+
 // Get all users
 app.get("/users", (req, res) => {
   try {
@@ -557,12 +648,21 @@ app.get("/management-budget", (req, res) => {
 app.post("/management-budget", (req, res) => {
   const { amount } = req.body;
   const sql = "INSERT INTO management_budget (amount) VALUES (?)";
+  
   connection.query(sql, [amount], (err) => {
     if (err) {
       console.error("Error updating budget:", err);
       return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตวงเงิน" });
     }
-    res.json({ message: "อัปเดตวงเงินสำเร็จ" });
+
+    // Broadcast the update
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocketServer.OPEN) {
+        client.send(JSON.stringify({ type: 'budget-update', budget: amount }));
+      }
+    });
+
+    res.json({ message: "อัปเดตวงเงินสำเร็จ", budget: amount });
   });
 });
 

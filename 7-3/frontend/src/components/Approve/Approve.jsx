@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './Approve.css'
 import { Check, AlertCircle, Clock, Edit2, Save } from 'react-feather'
 
@@ -13,17 +13,30 @@ const Approve = ({ userRole }) => {
   })
   const [isEditingBudget, setIsEditingBudget] = useState(false)
   const [tempBudget, setTempBudget] = useState(budget)
+  const [refreshInterval, setRefreshInterval] = useState(5000) // 5 seconds
+  const refreshTimer = useRef(null)
 
   // Split permissions for viewing and editing
   const canEdit = userRole === 'management'
   const canApprove = userRole === 'management' || userRole === 'finance'
-
-  // Add budget display for finance
   const showBudget = userRole === 'management' || userRole === 'finance'
 
+  // Add useEffect to fetch budget from server
   useEffect(() => {
+    fetchBudget()
     fetchPendingOrders()
   }, [])
+
+  // Add budget fetching function
+  const fetchBudget = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/management-budget')
+      const data = await response.json()
+      setBudget(data.budget || 1000000)
+    } catch (error) {
+      console.error('Error fetching budget:', error)
+    }
+  }
 
   useEffect(() => {
     localStorage.setItem('managementBudget', budget.toString())
@@ -34,11 +47,29 @@ const Approve = ({ userRole }) => {
     setTempBudget(budget)
   }
 
-  const handleBudgetSave = () => {
+  // Update handleBudgetSave to sync with server
+  const handleBudgetSave = async () => {
     const newBudget = parseFloat(tempBudget)
     if (!isNaN(newBudget) && newBudget >= 0) {
-      setBudget(newBudget)
-      setIsEditingBudget(false)
+      try {
+        const response = await fetch('http://localhost:3000/management-budget', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ amount: newBudget })
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to update budget')
+        }
+
+        setBudget(newBudget)
+        setIsEditingBudget(false)
+      } catch (error) {
+        console.error('Error updating budget:', error)
+        alert('เกิดข้อผิดพลาดในการอัปเดตวงเงิน')
+      }
     }
   }
 
@@ -59,7 +90,8 @@ const Approve = ({ userRole }) => {
     const order = pendingOrders.find(o => o.id === orderId)
     if (!order) return
 
-    if (order.total > budget) {
+    // Only check budget for management users
+    if (userRole === 'management' && order.total > budget) {
       alert('วงเงินไม่เพียงพอสำหรับการอนุมัติรายการนี้')
       return
     }
@@ -72,18 +104,30 @@ const Approve = ({ userRole }) => {
         },
         body: JSON.stringify({
           status: 'approved',
-          comment: comment
+          comment: comment,
+          userRole: userRole
         })
       })
-      if (response.ok) {
-        // Update budget after successful approval
-        setBudget(prevBudget => prevBudget - order.total)
-        fetchPendingOrders()
-        setSelectedOrder(null)
-        setComment('')
+
+      if (!response.ok) {
+        const error = await response.json()
+        alert(error.message || 'เกิดข้อผิดพลาดในการอนุมัติรายการ')
+        return
       }
+
+      const data = await response.json()
+      
+      // Update budget only for management users
+      if (userRole === 'management' && data.newBudget !== undefined) {
+        setBudget(data.newBudget)
+      }
+      
+      fetchPendingOrders()
+      setSelectedOrder(null)
+      setComment('')
     } catch (error) {
       console.error('Error approving order:', error)
+      alert('เกิดข้อผิดพลาดในการอนุมัติรายการ')
     }
   }
 
@@ -109,11 +153,92 @@ const Approve = ({ userRole }) => {
     }
   }
 
+  useEffect(() => {
+    let ws = null;
+    let reconnectTimer = null;
+
+    const connectWebSocket = () => {
+      ws = new WebSocket('ws://localhost:8080');
+      
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'budget-update') {
+            setBudget(data.budget);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket disconnected. Reconnecting...');
+        // Try to reconnect after 3 seconds
+        reconnectTimer = setTimeout(connectWebSocket, 3000);
+      };
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Only set up auto-refresh for finance users
+    if (userRole === 'finance') {
+      console.log('Setting up 5-second refresh interval for finance user')
+      
+      const autoRefresh = () => {
+        fetchBudget()
+        fetchPendingOrders()
+      }
+  
+      // Initial fetch
+      autoRefresh()
+  
+      // Set up 5-second interval
+      const intervalId = setInterval(autoRefresh, 5000)
+  
+      // Cleanup on unmount or when dependencies change
+      return () => {
+        console.log('Cleaning up refresh interval')
+        clearInterval(intervalId)
+      }
+    }
+  }, [userRole]) // Remove refreshInterval from dependencies since it's now fixed
+
+  const handleManualRefresh = () => {
+    fetchBudget()
+    fetchPendingOrders()
+  }
+
   return (
     <div className="approve-container">
       <div className="approve-card">
         <div className="approve-header">
-          <h2>รายการรออนุมัติ</h2>
+          <div className="header-left">
+            <h2>รายการรออนุมัติ</h2>
+            {userRole === 'finance' && (
+              <span className="refresh-info">
+                รีเฟรชอัตโนมัติทุก {refreshInterval / 1000} วินาที
+              </span>
+            )}
+          </div>
           {showBudget && (
             <div className="budget-display">
               <span>วงเงินคงเหลือ: </span>
