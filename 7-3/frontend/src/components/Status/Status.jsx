@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Check, AlertCircle, Clock } from 'react-feather'
-import './List.css'
+import './Status.css'
 
-const List = ({ user }) => {
+const Status = ({ user }) => {
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -12,10 +12,7 @@ const List = ({ user }) => {
 
   const fetchOrders = async () => {
     try {
-      const endpoint = user?.role === 'purchasing' 
-        ? 'http://localhost:3000/my-orders' 
-        : 'http://localhost:3000/approved-orders'
-      
+      const endpoint = 'http://localhost:3000/my-orders'
       const response = await fetch(endpoint)
       const data = await response.json()
       setOrders(data)
@@ -55,11 +52,11 @@ const List = ({ user }) => {
   }
 
   return (
-    <div className="list-container">
-      <div className="list-header">
-        <h2>{user?.role === 'purchasing' ? 'สถานะคำสั่งซื้อ' : 'รายการที่อนุมัติแล้ว'}</h2>
+    <div className="status-container">
+      <div className="status-header">
+        <h2>สถานะคำสั่งซื้อ</h2>
       </div>
-      <div className="list-content">
+      <div className="status-content">
         {isLoading ? (
           <div className="loading">กำลังโหลดข้อมูล...</div>
         ) : (
@@ -71,7 +68,7 @@ const List = ({ user }) => {
                 <th>ผู้จำหน่าย</th>
                 <th>ยอดรวม</th>
                 <th>สถานะ</th>
-                {user?.role === 'purchasing' && <th>หมายเหตุ</th>}
+                <th>หมายเหตุ</th>
               </tr>
             </thead>
             <tbody>
@@ -82,9 +79,7 @@ const List = ({ user }) => {
                   <td>{order.supplier_name}</td>
                   <td className="text-right">{order.total.toLocaleString('th-TH')} บาท</td>
                   <td>{getStatusDisplay(order.status)}</td>
-                  {user?.role === 'purchasing' && (
-                    <td>{order.comment || '-'}</td>
-                  )}
+                  <td>{order.comment || '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -95,4 +90,4 @@ const List = ({ user }) => {
   )
 }
 
-export default List
+export default Status

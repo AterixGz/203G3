@@ -1,0 +1,69 @@
+.role-setting-container {
+  padding: 1.5rem;
+}
+
+.role-setting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.role-setting-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.role-setting-content {
+  background-color: var(--card-background);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.role-setting-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.role-setting-content th,
+.role-setting-content td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.role-setting-content th {
+  background-color: var(--background-color);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-buttons button {
+  padding: 0.25rem;
+}
+
+.new-user-row {
+  background-color: var(--background-color);
+}
+
+.new-user-row input,
+.new-user-row select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--card-background);
+}
+
+.new-user-row input:focus,
+.new-user-row select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}

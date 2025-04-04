@@ -5,7 +5,7 @@
       "username": "admin",
       "password": "123456",
       "role": "admin",
-      "name": "admin นะจ๊ะ"
+      "name": "admin"
     },
     {
       "id": 2,
@@ -27,6 +27,20 @@
       "password": "management123",
       "role": "management",
       "name": "Management Staff"
+    },
+    {
+      "username": "momo",
+      "password": "momo",
+      "role": "purchasing",
+      "name": "momo",
+      "id": 5
+    },
+    {
+      "username": "kk",
+      "password": "kk",
+      "role": "management",
+      "name": "kk",
+      "id": 6
     }
   ]
 }

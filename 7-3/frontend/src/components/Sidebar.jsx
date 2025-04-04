@@ -1,29 +1,63 @@
 "use client"
 import { useState } from "react"
-import { ShoppingCart, Package, DollarSign, LogOut, RefreshCw, User, Edit, LogOut as LogOutIcon, CheckSquare, List as ListIcon } from "react-feather"
+import { ShoppingCart, Package, DollarSign, LogOut, RefreshCw, User, Edit, LogOut as LogOutIcon, CheckSquare, List as ListIcon, Settings } from "react-feather"
 
 function Sidebar({ activeTab, setActiveTab, onLogout, user }) {
   const [showDropup, setShowDropup] = useState(false)
 
-  // Base menu items for all roles
-  const baseMenuItems = [
-    { id: "purchase-order", label: "ใบสั่งซื้อ", icon: <ShoppingCart size={18} /> },
+  // Define base menu items for purchasing
+  const purchasingBaseItems = [
     { id: "receiving", label: "รับพัสดุเข้าคลัง", icon: <Package size={18} /> },
-    { id: "unit-cost", label: "ต้นทุนต่อหน่วย", icon: <DollarSign size={18} /> },
     { id: "disbursement", label: "เบิกจ่ายพัสดุ", icon: <LogOut size={18} /> },
-    { id: "auto-requisition", label: "ขอซื้ออัตโนมัติ", icon: <RefreshCw size={18} /> },
   ]
 
-  // Add management-specific menu items
+  // Define items that only appear for certain roles
+  const commonItems = [
+    { id: "unit-cost", label: "ต้นทุนต่อหน่วย", icon: <DollarSign size={18} /> },
+  ]
+
+  // Update getPurchasingMenuItems function to remove commonItems
+  const getPurchasingMenuItems = () => [
+    ...purchasingBaseItems,
+    { id: "approve", label: "รายการรออนุมัติ", icon: <CheckSquare size={18} /> },
+    { id: "auto-requisition", label: "ขอซื้ออัตโนมัติ", icon: <RefreshCw size={18} /> },
+    { id: "status", label: "สถานะคำสั่งซื้อ", icon: <ListIcon size={18} /> }
+  ]
+
+  // Update getFinanceMenuItems function to remove receiving and disbursement
+  const getFinanceMenuItems = () => [
+    ...commonItems,
+    { id: "approve", label: "รายการรออนุมัติ", icon: <CheckSquare size={18} /> },
+    { id: "status", label: "สถานะคำสั่งซื้อ", icon: <ListIcon size={18} /> }
+  ]
+
+  // Update getManagementMenuItems function to remove purchasingBaseItems
+  const getManagementMenuItems = () => [
+    ...commonItems,
+    { id: "approve", label: "รายการรออนุมัติ", icon: <CheckSquare size={18} /> },
+    { id: "list", label: "รายการที่อนุมัติแล้ว", icon: <ListIcon size={18} /> },
+    { id: "status", label: "สถานะคำสั่งซื้อ", icon: <ListIcon size={18} /> }
+  ]
+
+  // Update getAdminMenuItems function
+  const getAdminMenuItems = () => [
+    { id: "role-setting", label: "จัดการสิทธิ์", icon: <Settings size={18} /> }
+  ]
+
+  // Get menu items based on user role
   const getMenuItems = () => {
-    if (user?.role === 'management') {
-      return [
-        ...baseMenuItems,
-        { id: "approve", label: "รายการรออนุมัติ", icon: <CheckSquare size={18} /> },
-        { id: "list", label: "รายการที่อนุมัติแล้ว", icon: <ListIcon size={18} /> }
-      ]
+    switch (user?.role) {
+      case 'purchasing':
+        return getPurchasingMenuItems()
+      case 'management':
+        return getManagementMenuItems()
+      case 'finance':
+        return getFinanceMenuItems()
+      case 'admin':
+        return getAdminMenuItems()
+      default:
+        return [...purchasingBaseItems, ...commonItems]
     }
-    return baseMenuItems
   }
 
   const menuItems = getMenuItems()
@@ -79,10 +113,6 @@ function Sidebar({ activeTab, setActiveTab, onLogout, user }) {
         </div>
         {showDropup && (
           <div className="user-dropup">
-            <div className="dropup-item" onClick={() => console.log('Edit profile')}>
-              <Edit size={14} />
-              <span>แก้ไขโปรไฟล์</span>
-            </div>
             <div className="dropup-item" onClick={onLogout}>
               <LogOutIcon size={14} />
               <span>ออกจากระบบ</span>

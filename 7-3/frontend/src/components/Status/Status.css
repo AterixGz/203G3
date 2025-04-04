@@ -1,0 +1,69 @@
+.status-container {
+  padding: 1.5rem;
+}
+
+.status-header {
+  margin-bottom: 1.5rem;
+}
+
+.status-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.status-content {
+  background-color: var(--card-background);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.status-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.status-content th,
+.status-content td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.status-content th {
+  background-color: var(--background-color);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.text-right {
+  text-align: right;
+}
+
+.status-pending {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--warning-color);
+}
+
+.status-approved {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--success-color);
+}
+
+.status-rejected {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--danger-color);
+}
+
+.loading {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
