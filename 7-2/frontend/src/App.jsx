@@ -43,15 +43,37 @@ const SidebarNav = () => {
 function App() {
   return (  
     <Router>
-      <div className="min-h-screen bg-gray-100">
-        <div className="flex">
-          {/* Fixed Sidebar */}
-          <aside className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 text-center">
-            <div className="p-4 border-b border-gray-200 ">
-              <h2 className="text-2xl font-bold">PMS 7-2</h2>
-            </div>
+    <div className="min-h-screen bg-gray-100">
+      <div className="flex">
+        {/* Fixed Sidebar - เพิ่ม flex flex-col เพื่อจัดการ layout แนวตั้ง */}
+        <aside className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-center">PMS 7-2</h2>
+          </div>
+
+          {/* Navigation - ใส่ flex-1 เพื่อให้ขยายพื้นที่ที่เหลือ */}
+          <div className="flex-1 overflow-y-auto">
             <SidebarNav />
-          </aside>
+          </div>
+          
+          {/* Profile Section - จะอยู่ล่างสุดเสมอ */}
+          <div className="border-t border-gray-200 bg-white">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">ชื่อ User</p>
+                  <p className="text-sm text-gray-500">ตำแหน่ง</p>
+                </div>
+                <button
+                  className="text-sm text-red-600 hover:text-red-800"
+                >
+                  ออกจากระบบ
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
 
           {/* Main Content with left margin to prevent sidebar overlap */}
           <main className="flex-1 ml-64">
