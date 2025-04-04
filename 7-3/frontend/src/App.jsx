@@ -11,7 +11,6 @@ import AutoRequisition from "./components/AutoRequisition"
 import NotificationBell from './components/NotificationBell'
 import Login from './components/Login/Login'
 import Approve from './components/Approve/Approve'
-import List from './components/List/List'
 import RoleSetting from './components/roleSetting/roleSetting'
 import Status from './components/Status/Status'
 
@@ -79,7 +78,7 @@ function App() {
       />
       <main className="content">
         {activeTab === "purchase-order" && 
-          (user?.role !== 'purchasing' && user?.role !== 'admin') && 
+          (user?.role === 'purchasing' || user?.role !== 'admin') && 
           <PurchaseOrder />}
         {activeTab === "receiving" && 
           (user?.role === 'purchasing') && 
@@ -96,9 +95,6 @@ function App() {
         {activeTab === "approve" && 
           ['management', 'finance', 'purchasing'].includes(user?.role) && 
           <Approve userRole={user?.role} />}
-        {activeTab === "list" && 
-          user?.role === 'management' && 
-          <List />}
         {activeTab === "role-setting" && 
           user?.role === 'admin' && 
           <RoleSetting />}
