@@ -12,6 +12,8 @@ import NotificationBell from './components/NotificationBell'
 import Login from './components/Login/Login'
 import Approve from './components/Approve/Approve'
 import List from './components/List/List'
+import RoleSetting from './components/roleSetting/roleSetting'
+import Status from './components/Status/Status'
 
 function App() {
   const [activeTab, setActiveTab] = useState("purchase-order")
@@ -40,7 +42,17 @@ function App() {
 
   // Redirect non-management users if they try to access approve tab
   useEffect(() => {
-    if (activeTab === 'approve' && user?.role !== 'management') {
+    if (activeTab === 'approve' && 
+        !['management', 'finance', 'purchasing'].includes(user?.role)) {
+      setActiveTab('purchase-order')
+    }
+  }, [activeTab, user])
+
+  // Redirect non-management users if they try to access approve tab or non-admin users if they try to access role-setting tab
+  useEffect(() => {
+    if ((activeTab === 'approve' && 
+         !['management', 'finance', 'purchasing'].includes(user?.role)) ||
+        (activeTab === 'role-setting' && user?.role !== 'admin')) {
       setActiveTab('purchase-order')
     }
   }, [activeTab, user])
@@ -63,16 +75,36 @@ function App() {
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
         onLogout={handleLogout}
-        user={user}  // Pass user data to Sidebar
+        user={user}
       />
       <main className="content">
-        {activeTab === "purchase-order" && user?.role == 'purchasing' && <PurchaseOrder />}
-        {activeTab === "receiving" && user?.role == 'purchasing' && <InventoryReceiving />}
-        {activeTab === "unit-cost" && user?.role == 'finance' && <UnitCostViewer />}
-        {activeTab === "disbursement" && user?.role == 'finance' && <InventoryDisbursement />}
-        {activeTab === "auto-requisition" && user?.role == 'purchasing' && <AutoRequisition />}
-        {activeTab === "approve" && user?.role === 'management' && <Approve />}
-        {activeTab === "list" && user?.role === 'management' && <List />}
+        {activeTab === "purchase-order" && 
+          (user?.role !== 'purchasing' && user?.role !== 'admin') && 
+          <PurchaseOrder />}
+        {activeTab === "receiving" && 
+          (user?.role === 'purchasing') && 
+          <InventoryReceiving />}
+        {activeTab === "unit-cost" && 
+          (user?.role !== 'purchasing' && user?.role !== 'admin') && 
+          <UnitCostViewer />}
+        {activeTab === "disbursement" && 
+          (user?.role === 'purchasing') && 
+          <InventoryDisbursement />}
+        {activeTab === "auto-requisition" && 
+          (user?.role !== 'admin') && 
+          <AutoRequisition />}
+        {activeTab === "approve" && 
+          ['management', 'finance', 'purchasing'].includes(user?.role) && 
+          <Approve userRole={user?.role} />}
+        {activeTab === "list" && 
+          user?.role === 'management' && 
+          <List />}
+        {activeTab === "role-setting" && 
+          user?.role === 'admin' && 
+          <RoleSetting />}
+        {activeTab === "status" && 
+          ['purchasing', 'management', 'finance'].includes(user?.role) && 
+          <Status user={user} />}
       </main>
     </div>
   )

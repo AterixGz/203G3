@@ -1,31 +1,63 @@
 import { useState, useEffect } from 'react'
-import './List.css'
 import { Check, AlertCircle, Clock } from 'react-feather'
+import './List.css'
 
-const List = () => {
-  const [approvedOrders, setApprovedOrders] = useState([])
+const List = ({ user }) => {
+  const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetchApprovedOrders()
+    fetchOrders()
   }, [])
 
-  const fetchApprovedOrders = async () => {
+  const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:3000/approved-orders')
+      const endpoint = user?.role === 'purchasing' 
+        ? 'http://localhost:3000/my-orders' 
+        : 'http://localhost:3000/approved-orders'
+      
+      const response = await fetch(endpoint)
       const data = await response.json()
-      setApprovedOrders(data)
+      setOrders(data)
     } catch (error) {
-      console.error('Error fetching approved orders:', error)
+      console.error('Error fetching orders:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'pending':
+        return (
+          <span className="status-pending">
+            <Clock size={14} />
+            รออนุมัติ
+          </span>
+        )
+      case 'approved':
+        return (
+          <span className="status-approved">
+            <Check size={14} />
+            อนุมัติแล้ว
+          </span>
+        )
+      case 'rejected':
+        return (
+          <span className="status-rejected">
+            <AlertCircle size={14} />
+            ไม่อนุมัติ
+          </span>
+        )
+      default:
+        return status
     }
   }
 
   return (
     <div className="list-container">
       <div className="list-header">
-        <h2>รายการคำสั่งซื้อที่อนุมัติแล้ว</h2>
+        <h2>{user?.role === 'purchasing' ? 'สถานะคำสั่งซื้อ' : 'รายการที่อนุมัติแล้ว'}</h2>
       </div>
       <div className="list-content">
         {isLoading ? (
@@ -39,21 +71,20 @@ const List = () => {
                 <th>ผู้จำหน่าย</th>
                 <th>ยอดรวม</th>
                 <th>สถานะ</th>
+                {user?.role === 'purchasing' && <th>หมายเหตุ</th>}
               </tr>
             </thead>
             <tbody>
-              {approvedOrders.map((order) => (
+              {orders.map((order) => (
                 <tr key={order.id}>
                   <td>{order.po_number}</td>
                   <td>{new Date(order.date).toLocaleDateString('th-TH')}</td>
                   <td>{order.supplier_name}</td>
                   <td className="text-right">{order.total.toLocaleString('th-TH')} บาท</td>
-                  <td className="status-cell">
-                    <span className="status-approved">
-                      <Check size={14} />
-                      อนุมัติแล้ว
-                    </span>
-                  </td>
+                  <td>{getStatusDisplay(order.status)}</td>
+                  {user?.role === 'purchasing' && (
+                    <td>{order.comment || '-'}</td>
+                  )}
                 </tr>
               ))}
             </tbody>

@@ -4,7 +4,7 @@ import cors from "cors";
 import express from "express";
 import { fileURLToPath } from "url"; // ใช้สำหรับหา __dirname ใน ES Module
 import mysql from "mysql2";
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
 // ตั้งค่าการเชื่อมต่อฐานข้อมูล
 const connection = mysql.createConnection({
@@ -351,7 +351,7 @@ app.get("/pending-orders", (req, res) => {
 
 // Get approved orders
 app.get("/approved-orders", (req, res) => {
-  const sql = "SELECT * FROM purchase_orders WHERE status = 'approved'";
+  const sql = "SELECT * FROM purchase_orders WHERE status = 'approved' ORDER BY date DESC";
   connection.query(sql, (err, results) => {
     if (err) {
       console.error("Error fetching approved orders:", err);
@@ -366,13 +366,215 @@ app.post("/approve-order/:id", (req, res) => {
   const { id } = req.params;
   const { status, comment } = req.body;
 
-  const sql = "UPDATE purchase_orders SET status = ?, comment = ? WHERE id = ?";
-  connection.query(sql, [status, comment, id], (err) => {
+  // Start transaction
+  connection.beginTransaction(err => {
     if (err) {
-      console.error("Error updating order status:", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตสถานะ" });
+      console.error("Error starting transaction:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดำเนินการ" });
     }
-    res.json({ message: "อัปเดตสถานะสำเร็จ" });
+
+    // Get order total
+    const getOrderSQL = "SELECT total FROM purchase_orders WHERE id = ?";
+    connection.query(getOrderSQL, [id], (err, orderResults) => {
+      if (err || orderResults.length === 0) {
+        connection.rollback();
+        return res.status(500).json({ message: "ไม่พบข้อมูลคำสั่งซื้อ" });
+      }
+
+      const orderTotal = orderResults[0].total;
+
+      // Get current budget
+      const getBudgetSQL = "SELECT amount FROM management_budget ORDER BY updated_at DESC LIMIT 1";
+      connection.query(getBudgetSQL, (err, budgetResults) => {
+        if (err) {
+          connection.rollback();
+          return res.status(500).json({ message: "เกิดข้อผิดพลาดในการตรวจสอบวงเงิน" });
+        }
+
+        const currentBudget = budgetResults.length > 0 ? budgetResults[0].amount : 1000000;
+
+        if (status === 'approved' && orderTotal > currentBudget) {
+          connection.rollback();
+          return res.status(400).json({ message: "วงเงินไม่เพียงพอ" });
+        }
+
+        // Update order status
+        const updateOrderSQL = "UPDATE purchase_orders SET status = ?, comment = ?, approval_date = NOW() WHERE id = ?";
+        connection.query(updateOrderSQL, [status, comment, id], (err) => {
+          if (err) {
+            connection.rollback();
+            return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตสถานะ" });
+          }
+
+          // If approved, update budget
+          if (status === 'approved') {
+            const newBudget = currentBudget - orderTotal;
+            const updateBudgetSQL = "INSERT INTO management_budget (amount) VALUES (?)";
+            connection.query(updateBudgetSQL, [newBudget], (err) => {
+              if (err) {
+                connection.rollback();
+                return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตวงเงิน" });
+              }
+
+              // Commit transaction
+              connection.commit(err => {
+                if (err) {
+                  connection.rollback();
+                  return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+                }
+                res.json({ message: "อัปเดตสถานะสำเร็จ", newBudget });
+              });
+            });
+          } else {
+            // If rejected, just commit the status change
+            connection.commit(err => {
+              if (err) {
+                connection.rollback();
+                return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+              }
+              res.json({ message: "อัปเดตสถานะสำเร็จ" });
+            });
+          }
+        });
+      });
+    });
+  });
+});
+
+// Get all users
+app.get("/users", (req, res) => {
+  try {
+    const userData = JSON.parse(
+      readFileSync(path.join(__dirname, "data", "userRole.json"), "utf8")
+    )
+    res.json(userData.users)
+  } catch (error) {
+    console.error("Error reading users:", error)
+    res.status(500).json({ message: "Error fetching users" })
+  }
+})
+
+// Update user
+app.put("/users/:id", (req, res) => {
+  try {
+    const { id } = req.params
+    const updatedUser = req.body
+    const userData = JSON.parse(
+      readFileSync(path.join(__dirname, "data", "userRole.json"), "utf8")
+    )
+    
+    userData.users = userData.users.map(user => 
+      user.id === parseInt(id) ? { ...user, ...updatedUser } : user
+    )
+    
+    writeFileSync(
+      path.join(__dirname, "data", "userRole.json"),
+      JSON.stringify(userData, null, 2)
+    )
+    
+    res.json({ message: "User updated successfully" })
+  } catch (error) {
+    console.error("Error updating user:", error)
+    res.status(500).json({ message: "Error updating user" })
+  }
+})
+
+// Add new user
+app.post("/users", (req, res) => {
+  try {
+    const newUser = req.body
+    const userData = JSON.parse(
+      readFileSync(path.join(__dirname, "data", "userRole.json"), "utf8")
+    )
+    
+    const maxId = Math.max(...userData.users.map(u => u.id))
+    newUser.id = maxId + 1
+    
+    userData.users.push(newUser)
+    
+    writeFileSync(
+      path.join(__dirname, "data", "userRole.json"),
+      JSON.stringify(userData, null, 2)
+    )
+    
+    res.json({ message: "User added successfully", user: newUser })
+  } catch (error) {
+    console.error("Error adding user:", error)
+    res.status(500).json({ message: "Error adding user" })
+  }
+})
+
+// Delete user
+app.delete("/users/:id", (req, res) => {
+  try {
+    const { id } = req.params
+    const userData = JSON.parse(
+      readFileSync(path.join(__dirname, "data", "userRole.json"), "utf8")
+    )
+    
+    userData.users = userData.users.filter(user => user.id !== parseInt(id))
+    
+    writeFileSync(
+      path.join(__dirname, "data", "userRole.json"),
+      JSON.stringify(userData, null, 2)
+    )
+    
+    res.json({ message: "User deleted successfully" })
+  } catch (error) {
+    console.error("Error deleting user:", error)
+    res.status(500).json({ message: "Error deleting user" })
+  }
+})
+
+// Add new endpoint for fetching user-specific orders
+app.get("/my-orders", (req, res) => {
+  const sql = "SELECT * FROM purchase_orders ORDER BY date DESC";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching orders:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+    }
+    res.json(results);
+  });
+});
+
+// Add budget tracking table
+const createBudgetTableSQL = `
+CREATE TABLE IF NOT EXISTS management_budget (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  amount DECIMAL(15,2) NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)`;
+
+connection.query(createBudgetTableSQL, (err) => {
+  if (err) {
+    console.error("Error creating budget table:", err);
+  }
+});
+
+// Get current budget
+app.get("/management-budget", (req, res) => {
+  const sql = "SELECT amount FROM management_budget ORDER BY updated_at DESC LIMIT 1";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching budget:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลวงเงิน" });
+    }
+    const budget = results.length > 0 ? results[0].amount : 1000000;
+    res.json({ budget });
+  });
+});
+
+// Update budget
+app.post("/management-budget", (req, res) => {
+  const { amount } = req.body;
+  const sql = "INSERT INTO management_budget (amount) VALUES (?)";
+  connection.query(sql, [amount], (err) => {
+    if (err) {
+      console.error("Error updating budget:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตวงเงิน" });
+    }
+    res.json({ message: "อัปเดตวงเงินสำเร็จ" });
   });
 });
 

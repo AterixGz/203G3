@@ -10,11 +10,11 @@
 }
 
 .approve-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .approve-header h2 {
@@ -84,4 +84,55 @@
 .approve-actions button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.budget-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.budget-value {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--success-color);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.budget-value:hover {
+  background-color: var(--hover-color);
+}
+
+.budget-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.budget-edit input {
+  width: 150px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.edit-icon {
+  color: var(--text-muted);
+}
+
+.insufficient-budget {
+  color: var(--danger-color);
+}
+
+.view-only {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.875rem;
 }
