@@ -1,37 +1,20 @@
-import React, { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 
 const PurchaseOrderForm = () => {
+  const [approvedPRs, setApprovedPRs] = useState([]);
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    poNumber: "PO-00001",
+  const [formData, setFormData,] = useState({
+    poNumber: "",
     poDate: "",
-    prReference: "PR-00001",
+    prReference: "",
     prDate: "",
     vendorName: "",
     taxId: "",
     address: "",
     contact: "",
     phone: "",
-    items: [
-      {
-        id: 1,
-        description: "คอมพิวเตอร์โน้ตบุ๊ค Dell XPS 13",
-        quantity: 2,
-        unitPrice: 45000,
-        totalPrice: 90000,
-      },
-      {
-        id: 2,
-        description: "จอมอนิเตอร์ Dell 27 นิ้ว",
-        quantity: 2,
-        unitPrice: 8500,
-        totalPrice: 17000,
-      },
-    ],
-    subtotal: 107000,
-    vat: 7490,
-    grandTotal: 114490,
     paymentMethod: "",
     deliveryDate: "",
     deliveryLocation: "",
@@ -103,6 +86,39 @@ const PurchaseOrderForm = () => {
       navigate("/purchase-orders");
     }
   };
+
+  const calculateTotalPrice = (items) => {
+    return items.reduce((total, item) => total + item.quantity * item.price, 0);
+  };
+  const [totalPrice, setTotalPrice] = useState(0);
+
+useEffect(() => {
+  const total = approvedPRs.reduce(
+    (sum, pr) => sum + calculateTotalPrice(pr.items),
+    0
+  );
+  setTotalPrice(total);
+}, [approvedPRs]);
+    // ดึงข้อมูล PR ที่อนุมัติแล้วเมื่อโหลดหน้า
+    useEffect(() => {
+      const fetchApprovedPRs = async () => {
+        try {
+          const response = await fetch("http://localhost:3000/api/pr/approved");
+          if (response.ok) {
+            const data = await response.json();
+            setApprovedPRs(data);
+          } else {
+            console.error("Failed to fetch approved PRs");
+          }
+        } catch (error) {
+          console.error("Error fetching approved PRs:", error);
+        }
+      };
+  
+      fetchApprovedPRs();
+    }, []);
+
+
 
   return (
     <div className="max-w-7xl mx-auto bg-white p-6 rounded-md shadow">
@@ -339,57 +355,90 @@ const PurchaseOrderForm = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-200 pt-6 mb-6">
-          <h2 className="text-lg font-medium mb-4">รายการสินค้า</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-gray-300">
-                  <th className="py-2 px-4 text-left w-16">ลำดับ</th>
-                  <th className="py-2 px-4 text-left">รายละเอียด</th>
-                  <th className="py-2 px-4 text-center w-24">จำนวนหน่วย</th>
-                  <th className="py-2 px-4 text-right w-32">ราคาต่อหน่วย</th>
-                  <th className="py-2 px-4 text-right w-32">ราคารวม</th>
-                </tr>
-              </thead>
-              <tbody>
-                {formData.items.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-200">
-                    <td className="py-3 px-4">{item.id}</td>
-                    <td className="py-3 px-4">{item.description}</td>
-                    <td className="py-3 px-4 text-center">
-                      {item.quantity} เครื่อง
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      {item.unitPrice.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      {item.totalPrice.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="max-w-7xl mx-auto bg-white p-6 rounded-md shadow">
+      <h1 className="text-xl font-medium mb-6">รายการสินค้า (อนุมัติแล้ว)</h1>
 
-          <div className="mt-4 flex justify-end">
-            <div className="w-64">
-              <div className="flex justify-between py-2">
-                <span>ราคารวม:</span>
-                <span>{formData.subtotal.toLocaleString()} บาท</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span>ภาษีมูลค่าเพิ่ม (7%):</span>
-                <span>{formData.vat.toLocaleString()} บาท</span>
-              </div>
-              <div className="flex justify-between py-2 font-medium">
-                <span>ยอดรวมทั้งสิ้น:</span>
-                <span>{formData.grandTotal.toLocaleString()} บาท</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-gray-300">
+              <th className="py-2 px-4 text-left">เลขที่ PR</th>
+              <th className="py-2 px-4 text-left">วันที่</th>
+              <th className="py-2 px-4 text-left">ผู้ขอ</th>
+              <th className="py-2 px-4 text-left">วัตถุประสงค์</th>
+              <th className="py-2 px-4 text-left">รายการสินค้า</th>
+              <th className="py-2 px-4 text-left">หน่วยละ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {approvedPRs.map((pr) => (
+              <tr key={pr.prNumber} className="border-b border-gray-200">
+                <td className="py-3 px-4">{pr.prNumber}</td>
+                <td className="py-3 px-4">{pr.date}</td>
+                <td className="py-3 px-4">{pr.requester}</td>
+                <td className="py-3 px-4">{pr.purpose}</td>
+                <td className="py-3 px-4">
+                  <ul>
+                    {pr.items.map((item, index) => (
+                      <li key={index}>
+                        {item.name} - {item.quantity} {item.unit}
+                      </li>
+                    ))}
+                  </ul>
+                </td>
+                <td className="py-3 px-4">
+                  <ul>
+                    {pr.items.map((item, index) => (
+                      <li key={index}>
+                        {item.price} บาท
+                      </li>
+                    ))}
+                  </ul>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div className="border-t border-gray-200 pt-6 mb-6">
+  <h2 className="text-lg font-medium mb-4">สรุปราคาทั้งหมด</h2>
+  <div className="grid grid-cols-3 gap-6">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        ราคาทั้งหมด (Subtotal)
+      </label>
+      <input
+        type="text"
+        className="w-full p-2 border border-gray-300 rounded"
+        value={totalPrice.toLocaleString()} // แปลงเป็นรูปแบบตัวเลข
+        readOnly
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        ภาษีมูลค่าเพิ่ม (VAT 7%)
+      </label>
+      <input
+        type="text"
+        className="w-full p-2 border border-gray-300 rounded"
+        value={(totalPrice * 0.07).toLocaleString()} // คำนวณ VAT
+        readOnly
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        ราคาสุทธิ (Grand Total)
+      </label>
+      <input
+        type="text"
+        className="w-full p-2 border border-gray-300 rounded"
+        value={(totalPrice * 1.07).toLocaleString()} // คำนวณราคาสุทธิ
+        readOnly
+      />
+    </div>
+  </div>
+</div>        
         <div className="border-t border-gray-200 pt-6 mb-6">
           <h2 className="text-lg font-medium mb-4">เงื่อนไขการชำระเงิน</h2>
           <div className="grid grid-cols-2 gap-6 mb-4">

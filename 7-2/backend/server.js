@@ -38,11 +38,9 @@ app.post("/api/pr", (req, res) => {
     return res.status(400).json({ message: "ไม่มีข้อมูลที่ส่งมา" });
   }
 
-  // ตัวอย่าง: บันทึกข้อมูลลงในไฟล์ JSON
+  // อ่านข้อมูลเดิมจาก Pr.json
   const PR_FILE = path.join(__dirname, "data", "Pr.json");
   let prData = [];
-
-  // อ่านข้อมูลเดิมจาก Pr.json
   if (fs.existsSync(PR_FILE)) {
     const fileData = fs.readFileSync(PR_FILE, "utf-8");
     prData = JSON.parse(fileData);
@@ -73,7 +71,9 @@ app.get("/api/pr", (req, res) => {
   res.json(prList);
 });
 
-//      Login
+
+//                                            Login
+
 // Path ของไฟล์ userRole.json
 const USER_ROLE_FILE = path.join(__dirname, "data", "userRole.json");
 
@@ -96,6 +96,55 @@ app.post("/login", (req, res) => {
   }
 });
 
+//                                            Login
+// Endpoint สำหรับอัปเดตสถานะ PR
+app.put("/api/pr/:prNumber", (req, res) => {
+  const { prNumber } = req.params;
+  const { status } = req.body;
+
+  // ตรวจสอบว่าไฟล์ Pr.json มีอยู่หรือไม่
+  const PR_FILE = path.join(__dirname, "data", "Pr.json");
+  if (!fs.existsSync(PR_FILE)) {
+    return res.status(404).json({ message: "ไม่พบไฟล์ Pr.json" });
+  }
+
+  // อ่านข้อมูลจากไฟล์ Pr.json
+  const data = fs.readFileSync(PR_FILE, "utf-8");
+  let prList = JSON.parse(data);
+
+  // ค้นหา PR ที่ต้องการอัปเดต
+  const prIndex = prList.findIndex((pr) => pr.prNumber === prNumber);
+  if (prIndex === -1) {
+    return res.status(404).json({ message: "ไม่พบ PR ที่ระบุ" });
+  }
+
+  // อัปเดตสถานะ
+  prList[prIndex].status = status;
+
+  // เขียนข้อมูลกลับไปที่ Pr.json
+  fs.writeFileSync(PR_FILE, JSON.stringify(prList, null, 2));
+
+  res.status(200).json({ message: "อัปเดตสถานะสำเร็จ", pr: prList[prIndex] });
+});
+
+// Endpoint สำหรับดึงข้อมูล PR ที่มีสถานะ "approved"
+app.get("/api/pr/approved", (req, res) => {
+  const PR_FILE = path.join(__dirname, "data", "Pr.json");
+
+  // ตรวจสอบว่าไฟล์ Pr.json มีอยู่หรือไม่
+  if (!fs.existsSync(PR_FILE)) {
+    return res.status(404).json({ message: "ไม่พบไฟล์ Pr.json" });
+  }
+
+  // อ่านข้อมูลจากไฟล์ Pr.json
+  const data = fs.readFileSync(PR_FILE, "utf-8");
+  const prList = JSON.parse(data);
+
+  // กรองเฉพาะ PR ที่มีสถานะ "approved"
+  const approvedPRs = prList.filter((pr) => pr.status === "approved");
+
+  res.json(approvedPRs);
+});
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
