@@ -218,37 +218,44 @@ const PurchaseApprovalInterface = () => {
                 </p>
 
                 {/* Product List */}
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="border px-4 py-2">รายการ</th>
-                      <th className="border px-4 py-2">จำนวน</th>
-                      <th className="border px-4 py-2">หน่วย</th>
-                      <th className="border px-4 py-2">ราคา</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedPRData.items.map((item, index) => (
-                      <tr key={index}>
-                        <td className="border px-4 py-2">{item.name}</td>
-                        <td className="border px-4 py-2">{item.quantity}</td>
-                        <td className="border px-4 py-2">{item.unit}</td>
-                        <td className="border px-4 py-2">{item.price}</td>
+                <div className="overflow-hidden rounded-lg border border-gray-200 mt-6">
+                  <table className="w-full border-collapse bg-white text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">รายการ</th>
+                        <th className="px-6 py-4 text-center text-sm font-medium text-gray-900">จำนวน</th>
+                        <th className="px-6 py-4 text-center text-sm font-medium text-gray-900">หน่วย</th>
+                        <th className="px-6 py-4 text-right text-sm font-medium text-gray-900">ราคา</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {selectedPRData.items.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 text-left text-gray-900">{item.name}</td>
+                          <td className="px-6 py-4 text-center text-gray-600">{item.quantity}</td>
+                          <td className="px-6 py-4 text-center text-gray-600">{item.unit}</td>
+                          <td className="px-6 py-4 text-right text-gray-900">
+                            {Number(item.price).toLocaleString('th-TH', {
+                              style: 'currency',
+                              currency: 'THB'
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
                 {/* Approve/Reject Buttons */}
                 <div className="mt-6 flex space-x-4">
                   <button
-                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                    className="w-24 bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transform transition-all duration-200 ease-in-out hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
                     onClick={handleApprove}
                   >
                     อนุมัติ
                   </button>
                   <button
-                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                    className="w-24 bg-white text-gray-900 px-4 py-2 rounded-md border-2 border-gray-900 hover:bg-gray-100 transform transition-all duration-200 ease-in-out hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
                     onClick={handleReject}
                   >
                     ไม่อนุมัติ

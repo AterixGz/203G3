@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+// Add generatePRNumber function
+const generatePRNumber = () => {
+  return `PR-${Math.floor(10000 + Math.random() * 90000)}`;
+};
 
 const PurchaseRequestForm = () => {
   // เพิ่ม departments array
@@ -13,7 +18,7 @@ const PurchaseRequestForm = () => {
 
   // ปรับปรุง state เพื่อเก็บข้อมูลทั้งหมด
   const [formData, setFormData] = useState({
-    prNumber: '',
+    prNumber: generatePRNumber(), // Initialize with generated number
     date: '',
     requester: '',
     department: '',
@@ -23,6 +28,14 @@ const PurchaseRequestForm = () => {
     approver: '',
     approvalDate: ''
   });
+
+  // Add useEffect to generate new PR number on page load/refresh
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      prNumber: generatePRNumber()
+    }));
+  }, []);
 
   // Handler functions
   const handleInputChange = (e) => {
@@ -76,7 +89,7 @@ const PurchaseRequestForm = () => {
         const result = await response.json();
         alert(result.message); // แจ้งเตือนว่าบันทึกสำเร็จ
         setFormData({
-          prNumber: "",
+          prNumber: generatePRNumber(), // Initialize with generated number
           date: "",
           requester: "",
           department: "",
@@ -106,10 +119,8 @@ const PurchaseRequestForm = () => {
             type="text" 
             name="prNumber"
             value={formData.prNumber}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="PR-00001"
-            required
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+            readOnly
           />
         </div>
         <div>
@@ -127,7 +138,7 @@ const PurchaseRequestForm = () => {
       
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-sm mb-1">ผู้ขอ<span className="text-red-500">*</span></label>
+          <label className="block text-sm mb-1">ผู้ขอ<span class="text-red-500">*</span></label>
           <input 
             type="text" 
             name="requester"
@@ -232,7 +243,7 @@ const PurchaseRequestForm = () => {
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                    <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1z"/>
+                    <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1v1z"/>
                   </svg>
                 </button>
               )}
