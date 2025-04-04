@@ -58,6 +58,9 @@ const PurchaseApprovalInterface = () => {
 
   // ข้อมูล PR ที่เลือก
   const selectedPRData = prList.find((pr) => pr.prNumber === selectedPR);
+  
+  // Add isActionable declaration here
+  const isActionable = selectedPRData?.status === 'pending';
 
   const handlePRClick = (prNumber) => {
     setSelectedPR(prNumber);
@@ -247,20 +250,22 @@ const PurchaseApprovalInterface = () => {
                 </div>
 
                 {/* Approve/Reject Buttons */}
-                <div className="mt-6 flex space-x-4">
-                  <button
-                    className="w-24 bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transform transition-all duration-200 ease-in-out hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
-                    onClick={handleApprove}
-                  >
-                    อนุมัติ
-                  </button>
-                  <button
-                    className="w-24 bg-white text-gray-900 px-4 py-2 rounded-md border-2 border-gray-900 hover:bg-gray-100 transform transition-all duration-200 ease-in-out hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
-                    onClick={handleReject}
-                  >
-                    ไม่อนุมัติ
-                  </button>
-                </div>
+                {isActionable && (
+                  <div className="mt-6 flex space-x-4">
+                    <button
+                      className="w-24 px-4 py-2 rounded-md transform transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 bg-black text-white hover:bg-gray-800 hover:-translate-y-0.5"
+                      onClick={handleApprove}
+                    >
+                      อนุมัติ
+                    </button>
+                    <button
+                      className="w-24 px-4 py-2 rounded-md transform transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 bg-white text-gray-900 border-2 border-gray-900 hover:bg-gray-100 hover:-translate-y-0.5"
+                      onClick={handleReject}
+                    >
+                      ไม่อนุมัติ
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <p>ไม่มีข้อมูลใบขอซื้อ</p>

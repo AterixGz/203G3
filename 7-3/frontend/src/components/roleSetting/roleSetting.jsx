@@ -87,7 +87,17 @@ const RoleSetting = () => {
     }
   }
 
+  // Update the handleDelete function to check for admin role
   const handleDelete = async (userId) => {
+    // Find the user to be deleted
+    const userToDelete = users.find(u => u.id === userId)
+    
+    // Prevent deleting if user is admin
+    if (userToDelete?.role === 'admin') {
+      alert('ไม่สามารถลบบัญชีผู้ดูแลระบบได้')
+      return
+    }
+
     if (window.confirm('คุณแน่ใจหรือไม่ที่จะลบผู้ใช้นี้?')) {
       try {
         const response = await fetch(`http://localhost:3000/users/${userId}`, {
@@ -250,9 +260,11 @@ const RoleSetting = () => {
                           <button className="btn-outline btn-sm" onClick={() => handleEdit(user)}>
                             <Edit2 size={14} />
                           </button>
-                          <button className="btn-outline btn-sm" onClick={() => handleDelete(user.id)}>
-                            <Trash2 size={14} />
-                          </button>
+                          {user.role !== 'admin' && (
+                            <button className="btn-outline btn-sm" onClick={() => handleDelete(user.id)}>
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </>
                       )}
                     </div>

@@ -41,6 +41,13 @@
       "role": "management",
       "name": "kk",
       "id": 6
+    },
+    {
+      "username": "Imo",
+      "password": "Imo",
+      "role": "admin",
+      "name": "ไอโม่ โม่",
+      "id": 7
     }
   ]
 }
