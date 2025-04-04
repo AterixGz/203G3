@@ -1,38 +1,59 @@
 [
   {
-    "prNumber": "WEF",
-    "date": "2025-03-31",
-    "requester": "kamin",
-    "department": "ฝ่ายจัดซื้อ",
-    "purpose": "ฟไก",
+    "prNumber": "007",
+    "date": "2025-04-01",
+    "requester": "Momo",
+    "department": "ฝ่ายบัญชี",
+    "purpose": "ยัดตูด",
     "items": [
       {
-        "name": "ฟไก",
-        "quantity": "1",
-        "unit": "ฟไก",
-        "price": "1"
-      }
-    ],
-    "note": "ฟไก",
-    "approver": "",
-    "approvalDate": ""
-  },
-  {
-    "prNumber": "dDDD",
-    "date": "2025-03-31",
-    "requester": "kaminasd",
-    "department": "ฝ่ายการตลาด",
-    "purpose": "asdasd",
-    "items": [
-      {
-        "name": "หำ",
-        "quantity": "3",
-        "unit": "อัน",
-        "price": "1111"
+        "name": "ดิลโด้",
+        "quantity": "100",
+        "unit": "แท่ง",
+        "price": "300"
       }
     ],
     "note": "",
     "approver": "",
-    "approvalDate": ""
+    "approvalDate": "",
+    "status": "approved"
+  },
+  {
+    "prNumber": "006",
+    "date": "2025-04-01",
+    "requester": "mr. บีสสสส",
+    "department": "ฝ่ายจัดซื้อ",
+    "purpose": "กินแก้เครียด",
+    "items": [
+      {
+        "name": "ยาคูล",
+        "quantity": "50",
+        "unit": "ขวด",
+        "price": "20"
+      }
+    ],
+    "note": "",
+    "approver": "",
+    "approvalDate": "",
+    "status": "approved"
+  },
+  {
+    "prNumber": "111",
+    "date": "2025-04-16",
+    "requester": "ไบร์ท",
+    "department": "ฝ่ายจัดซื้อ",
+    "purpose": "หิว",
+    "items": [
+      {
+        "name": "หมูปิ้ง",
+        "quantity": "500",
+        "unit": "ไม้",
+        "price": "10"
+      }
+    ],
+    "note": "",
+    "approver": "",
+    "approvalDate": "",
+    "status": "rejected"
   }
 ]

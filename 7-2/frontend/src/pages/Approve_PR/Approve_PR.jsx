@@ -63,33 +63,57 @@ const PurchaseApprovalInterface = () => {
     setSelectedPR(prNumber);
   };
 
-  const handleApprove = () => {
-    // อัปเดตสถานะ PR เป็น "อนุมัติแล้ว"
-    const updatedPrList = prList.map((pr) =>
-      pr.prNumber === selectedPR ? { ...pr, status: "approved" } : pr
-    );
-
-    setPrList(updatedPrList);
-    alert("อนุมัติ PR เรียบร้อยแล้ว");
-  };
-
-  const handlePending = () => {
-    // อัปเดตสถานะ PR เป็น "รออนุมัติ"
-    const updatedPrList = prList.map((pr) =>
-      pr.prNumber === selectedPR ? { ...pr, status: "pending" } : pr
-    );
+  const handleApprove = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/pr/${selectedPR}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "approved" }),
+      });
   
-    setPrList(updatedPrList);
-    alert("เปลี่ยนสถานะเป็น 'รออนุมัติ' เรียบร้อยแล้ว");
+      if (response.ok) {
+        const updatedPR = await response.json();
+        setPrList((prevList) =>
+          prevList.map((pr) =>
+            pr.prNumber === selectedPR ? { ...pr, status: "approved" } : pr
+          )
+        );
+        alert("อนุมัติ PR เรียบร้อยแล้ว");
+      } else {
+        alert("เกิดข้อผิดพลาดในการอนุมัติ PR");
+      }
+    } catch (error) {
+      console.error("Error approving PR:", error);
+      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    }
   };
-  const handleReject = () => {
-    // อัปเดตสถานะ PR เป็น "ไม่อนุมัติ"
-    const updatedPrList = prList.map((pr) =>
-      pr.prNumber === selectedPR ? { ...pr, status: "rejected" } : pr
-    );
-
-    setPrList(updatedPrList);
-    alert("ปฏิเสธ PR เรียบร้อยแล้ว");
+  const handleReject = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/pr/${selectedPR}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "rejected" }),
+      });
+  
+      if (response.ok) {
+        const updatedPR = await response.json();
+        setPrList((prevList) =>
+          prevList.map((pr) =>
+            pr.prNumber === selectedPR ? { ...pr, status: "rejected" } : pr
+          )
+        );
+        alert("ปฏิเสธ PR เรียบร้อยแล้ว");
+      } else {
+        alert("เกิดข้อผิดพลาดในการปฏิเสธ PR");
+      }
+    } catch (error) {
+      console.error("Error rejecting PR:", error);
+      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    }
   };
 
   return (

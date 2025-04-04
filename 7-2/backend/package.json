@@ -102,6 +102,8 @@
     "utils-merge": "^1.0.1",
     "vary": "^1.1.2"
   },
+
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
