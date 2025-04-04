@@ -266,6 +266,106 @@ app.post("/api/update-invoices", (req, res) => {
 });
 
 
+
+// Endpoint สำหรับดึงข้อมูลสมาชิก
+app.get("/api/members", (req, res) => {
+  if (!fs.existsSync(USER_ROLE_FILE)) {
+    return res.json({ users: [] });
+  }
+
+  const data = fs.readFileSync(USER_ROLE_FILE, "utf-8");
+  const users = JSON.parse(data).users || [];
+  res.json(users);
+});
+
+app.post("/api/members", (req, res) => {
+  const newMember = req.body;
+
+  // ตรวจสอบว่ามีข้อมูลที่จำเป็นครบถ้วน (ยกเว้น id)
+  if (!newMember.name || !newMember.username || !newMember.password || !newMember.role) {
+    return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
+  }
+
+  let users = [];
+  if (fs.existsSync(USER_ROLE_FILE)) {
+    const data = fs.readFileSync(USER_ROLE_FILE, "utf-8");
+    users = JSON.parse(data).users || [];
+  }
+
+  // คำนวณ id ใหม่โดยหาค่า id ที่มากที่สุดใน users แล้วเพิ่ม 1
+  const newId = users.length > 0 ? Math.max(...users.map((user) => user.id)) + 1 : 1;
+
+  // เพิ่ม id ให้กับสมาชิกใหม่
+  const memberWithId = { ...newMember, id: newId };
+
+  // เพิ่มสมาชิกใหม่ใน users
+  users.push(memberWithId);
+
+  // เขียนข้อมูลใหม่กลับไปที่ userRole.json
+  fs.writeFileSync(USER_ROLE_FILE, JSON.stringify({ users }, null, 2));
+
+  res.status(201).json({ message: "เพิ่มสมาชิกสำเร็จ", member: memberWithId });
+});
+
+// Endpoint สำหรับแก้ไขข้อมูลสมาชิก
+app.put("/api/members/:id", (req, res) => {
+  const { id } = req.params;
+  const updatedMember = req.body;
+
+  // อ่านข้อมูลจากไฟล์ userRole.json
+  const data = fs.readFileSync(USER_ROLE_FILE, "utf-8");
+  let users = JSON.parse(data).users || [];
+
+  // ค้นหาสมาชิกที่ต้องการแก้ไข
+  const index = users.findIndex((user) => user.id === parseInt(id)); // แปลง id เป็นตัวเลข
+  if (index === -1) {
+    return res.status(404).json({ message: "ไม่พบสมาชิกที่ต้องการแก้ไข" });
+  }
+
+  // อัปเดตข้อมูลสมาชิก
+  users[index] = { ...users[index], ...updatedMember };
+
+  // เขียนข้อมูลใหม่กลับไปที่ userRole.json
+  fs.writeFileSync(USER_ROLE_FILE, JSON.stringify({ users }, null, 2));
+
+  res.status(200).json({ message: "แก้ไขข้อมูลสำเร็จ", member: users[index] });
+});
+
+// Endpoint สำหรับลบสมาชิก
+app.delete("/api/members/:id", (req, res) => {
+  const { id } = req.params;
+
+  // ตรวจสอบว่าไฟล์ userRole.json มีอยู่หรือไม่
+  if (!fs.existsSync(USER_ROLE_FILE)) {
+    return res.status(404).json({ message: "ไม่พบไฟล์ userRole.json" });
+  }
+
+  // อ่านข้อมูลจากไฟล์ userRole.json
+  const data = fs.readFileSync(USER_ROLE_FILE, "utf-8");
+  let users = JSON.parse(data).users || [];
+
+  // ค้นหาสมาชิกที่ต้องการลบ
+  const userToDelete = users.find((user) => user.id === parseInt(id));
+
+  // หากไม่พบสมาชิกที่ต้องการลบ
+  if (!userToDelete) {
+    return res.status(404).json({ message: "ไม่พบสมาชิกที่ต้องการลบ" });
+  }
+
+  // ป้องกันการลบผู้ใช้ที่มี role เป็น admin
+  if (userToDelete.role === "admin") {
+    return res.status(403).json({ message: "ไม่สามารถลบผู้ใช้ที่เป็น admin ได้" });
+  }
+
+  // กรองสมาชิกที่ต้องการลบออก
+  const filteredUsers = users.filter((user) => user.id !== parseInt(id));
+
+  // เขียนข้อมูลใหม่กลับไปที่ userRole.json
+  fs.writeFileSync(USER_ROLE_FILE, JSON.stringify({ users: filteredUsers }, null, 2));
+
+  res.status(200).json({ message: "ลบสมาชิกสำเร็จ" });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

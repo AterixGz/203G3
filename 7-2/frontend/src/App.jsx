@@ -8,6 +8,7 @@ import AP from "./pages/AP";
 import PAY from "./pages/pay";
 import MEMBER from "./pages/Member/memberManagement";
 import Login from "./pages/Login/Login";
+import Dashboard from './pages/Dashboard/Dashboard';
 
 const SidebarNav = ({ role }) => {
   const location = useLocation();
@@ -102,6 +103,7 @@ function App() {
           <main className="flex-1 ml-64">
             <div className="p-6">
               <Routes>
+                <Route path="/" element={<Dashboard />} />
                 <Route path="/pr" element={user.role === "purchasing" || user.role === "admin" ? <PR /> : <Navigate to="/" />} />
                 <Route path="/po" element={user.role === "purchasing" || user.role === "admin" ? <PO /> : <Navigate to="/" />} />
                 <Route path="/ap_pr" element={user.role === "management" || user.role === "admin" ? <AP_PR /> : <Navigate to="/" />} />
@@ -109,7 +111,6 @@ function App() {
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
                 <Route path="/pay" element={user.role === "finance" || user.role === "admin" ? <PAY /> : <Navigate to="/" />} />
                 <Route path="/member" element={user.role === "admin" ? <MEMBER /> : <Navigate to="/" />} />
-                <Route path="/" element={<div>Dashboard</div>} />
               </Routes>
             </div>
           </main>
