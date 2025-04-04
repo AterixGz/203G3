@@ -180,6 +180,91 @@ app.post("/api/assets", (req, res) => {
   res.status(201).json({ message: "บันทึกข้อมูลสินทรัพย์สำเร็จ", asset: newAsset });
 });
 
+// Endpoint สำหรับอัปเดตข้อมูลสินทรัพย์
+
+
+// Path ของไฟล์ payments.json
+const PAYMENTS_FILE = path.join(__dirname, "data", "payments.json");
+
+// Endpoint สำหรับบันทึกข้อมูลการชำระเงิน
+app.post("/api/payments", (req, res) => {
+  const paymentData = req.body;
+
+  // ตรวจสอบว่ามีข้อมูลที่ส่งมาหรือไม่
+  if (!paymentData || Object.keys(paymentData).length === 0) {
+    return res.status(400).json({ message: "ไม่มีข้อมูลที่ส่งมา" });
+  }
+
+  let payments = [];
+
+  // อ่านข้อมูลเดิมจาก payments.json
+  if (fs.existsSync(PAYMENTS_FILE)) {
+    const fileData = fs.readFileSync(PAYMENTS_FILE, "utf-8");
+    payments = JSON.parse(fileData);
+  }
+
+  // เพิ่มข้อมูลใหม่
+  payments.push(paymentData);
+
+  // เขียนข้อมูลกลับไปที่ payments.json
+  fs.writeFileSync(PAYMENTS_FILE, JSON.stringify(payments, null, 2));
+
+  res.status(201).json({ message: "บันทึกข้อมูลการชำระเงินสำเร็จ" });
+});
+
+// Endpoint สำหรับดึงข้อมูลการชำระเงินทั้งหมด
+app.get("/api/payments", (req, res) => {
+  // ตรวจสอบว่าไฟล์ payments.json มีอยู่หรือไม่
+  if (!fs.existsSync(PAYMENTS_FILE)) {
+    return res.status(404).json({ message: "ไม่พบไฟล์ payments.json" });
+  }
+
+  // อ่านข้อมูลจากไฟล์ payments.json
+  const data = fs.readFileSync(PAYMENTS_FILE, "utf-8");
+  const payments = JSON.parse(data);
+
+  res.json(payments);
+});
+
+const INVOICES_FILE = path.join(__dirname, "data", "invoices.json");
+
+// Endpoint สำหรับอัปเดตสถานะใบแจ้งหนี้หลังการชำระเงิน
+app.post("/api/update-invoices", (req, res) => {
+  const { payments } = req.body; // รับข้อมูลการชำระเงินที่ส่งมาจาก Frontend
+
+  if (!fs.existsSync(INVOICES_FILE)) {
+    return res.status(404).json({ message: "ไม่พบไฟล์ invoices.json" });
+  }
+
+  try {
+    // อ่านข้อมูลใบแจ้งหนี้จากไฟล์
+    const data = fs.readFileSync(INVOICES_FILE, "utf-8");
+    let invoices = JSON.parse(data);
+
+    // อัปเดตสถานะของใบแจ้งหนี้
+    payments.forEach((payment) => {
+      const invoice = invoices.find((inv) => inv.id === payment.invoiceId);
+      if (invoice) {
+        invoice.remainAmount -= payment.amount; // หักยอดที่ชำระออกจากยอดคงเหลือ
+        if (invoice.remainAmount <= 0) {
+          invoice.status = "ชำระแล้ว"; // หากยอดคงเหลือ <= 0 ให้เปลี่ยนสถานะเป็น "ชำระแล้ว"
+          invoice.remainAmount = 0; // ป้องกันค่าติดลบ
+        } else {
+          invoice.status = "ชำระบางส่วน"; // หากยังมียอดคงเหลือ ให้เปลี่ยนสถานะเป็น "ชำระบางส่วน"
+        }
+      }
+    });
+
+    // เขียนข้อมูลกลับไปที่ไฟล์ invoices.json
+    fs.writeFileSync(INVOICES_FILE, JSON.stringify(invoices, null, 2));
+
+    res.status(200).json({ message: "อัปเดตสถานะใบแจ้งหนี้สำเร็จ", invoices });
+  } catch (error) {
+    console.error("Error updating invoices:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตใบแจ้งหนี้" });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
