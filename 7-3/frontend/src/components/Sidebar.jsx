@@ -16,9 +16,10 @@ function Sidebar({ activeTab, setActiveTab, onLogout, user }) {
     { id: "unit-cost", label: "ต้นทุนต่อหน่วย", icon: <DollarSign size={18} /> },
   ]
 
-  // Update getPurchasingMenuItems function to remove commonItems
+  // Update getPurchasingMenuItems function to include purchase order
   const getPurchasingMenuItems = () => [
     ...purchasingBaseItems,
+    { id: "purchase-order", label: "ใบสั่งซื้อ", icon: <ShoppingCart size={18} /> },
     { id: "approve", label: "รายการรออนุมัติ", icon: <CheckSquare size={18} /> },
     { id: "auto-requisition", label: "ขอซื้ออัตโนมัติ", icon: <RefreshCw size={18} /> },
     { id: "status", label: "สถานะคำสั่งซื้อ", icon: <ListIcon size={18} /> }
@@ -35,7 +36,6 @@ function Sidebar({ activeTab, setActiveTab, onLogout, user }) {
   const getManagementMenuItems = () => [
     ...commonItems,
     { id: "approve", label: "รายการรออนุมัติ", icon: <CheckSquare size={18} /> },
-    { id: "list", label: "รายการที่อนุมัติแล้ว", icon: <ListIcon size={18} /> },
     { id: "status", label: "สถานะคำสั่งซื้อ", icon: <ListIcon size={18} /> }
   ]
 
