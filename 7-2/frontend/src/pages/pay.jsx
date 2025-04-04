@@ -18,11 +18,11 @@ const PaymentRecord = () => {
     { id: 2, name: 'ธนาคารกสิกรไทย - 098-7-65432-1' }
   ];
 
-  const invoices = [
+  const [invoices, setInvoices] = useState([
     { id: 'INV-00456', date: '12/2/2568', dueDate: '31/3/2568', poNumber: 'PO-00123', totalAmount: 120000, remainAmount: 120000, status: 'ยังไม่ชำระ' },
     { id: 'INV-00432', date: '10/2/2568', dueDate: '17/3/2568', poNumber: 'PO-00120', totalAmount: 85000, remainAmount: 85000, status: 'ยังไม่ชำระ' },
-    { id: 'INV-00410', date: '20/1/2568', dueDate: '19/2/2568', poNumber: 'PO-00115', totalAmount: 110000, remainAmount: 40000, status: 'ชำระบางส่วน' }
-  ];
+    { id: 'INV-00410', date: '20/1/2568', dueDate: '19/2/2568', poNumber: 'PO-00115', totalAmount: 110000, remainAmount: 40000, status: 'ชำระบางส่วน' },
+  ]);
 
   const toggleSelect = (index) => {
     const newSelected = [...selected];
@@ -60,42 +60,79 @@ const PaymentRecord = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+  
     try {
-      const formData = new FormData();
-      formData.append('date', date);
-      formData.append('amount', amount);
-      formData.append('paymentMethod', paymentMethod);
-      formData.append('bankAccount', bankAccount);
-      formData.append('referenceNo', referenceNo);
-      formData.append('remarks', remarks);
-      if (fileInfo) {
-        formData.append('file', fileInfo);
-      }
-
-      // ส่งข้อมูลไปยัง API
-      const response = await fetch('http://localhost:3000/api/payments', {
-        method: 'POST',
-        body: formData
+      // สร้างข้อมูลการชำระเงิน
+      const payments = invoices
+        .filter((_, index) => selected[index]) // เลือกเฉพาะใบแจ้งหนี้ที่ถูกเลือก
+        .map((invoice) => {
+          const paymentAmount = Math.min(invoice.remainAmount, parseFloat(amount)); // ชำระไม่เกินยอดคงเหลือ
+          return {
+            invoiceId: invoice.id,
+            amount: paymentAmount,
+          };
+        });
+  
+      // ส่งข้อมูลการชำระเงินไปยัง API
+      const paymentResponse = await fetch("http://localhost:3000/api/payments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date,
+          amount: calculateTotal(),
+          paymentMethod,
+          bankAccount,
+          referenceNo,
+          remarks,
+        }),
       });
-
-      if (response.ok) {
-        alert('บันทึกข้อมูลสำเร็จ');
-        // Reset form
-        setAmount('');
-        setBankAccount('');
-        setReferenceNo('');
-        setFileInfo(null);
-        setRemarks('');
-      } else {
-        throw new Error('บันทึกข้อมูลไม่สำเร็จ');
+  
+      if (!paymentResponse.ok) {
+        throw new Error("บันทึกข้อมูลการชำระเงินไม่สำเร็จ");
       }
+  
+      // อัปเดตสถานะใบแจ้งหนี้
+      const updateResponse = await fetch("http://localhost:3000/api/update-invoices", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ payments }),
+      });
+  
+      if (!updateResponse.ok) {
+        throw new Error("อัปเดตสถานะใบแจ้งหนี้ไม่สำเร็จ");
+      }
+  
+      // อัปเดตสถานะใน Frontend
+      const updatedInvoices = invoices.map((invoice) => {
+        const payment = payments.find((p) => p.invoiceId === invoice.id);
+        if (payment) {
+          const newRemainAmount = invoice.remainAmount - payment.amount;
+          return {
+            ...invoice,
+            remainAmount: newRemainAmount,
+            status: newRemainAmount === 0 ? "ชำระแล้ว" : "ชำระบางส่วน",
+          };
+        }
+        return invoice;
+      });
+  
+      // ใช้ updatedInvoices เพื่ออัปเดต State
+      setInvoices(updatedInvoices); // เพิ่มบรรทัดนี้เพื่ออัปเดต State ของ invoices
+  
+      setSelected(new Array(invoices.length).fill(false)); // ยกเลิกการเลือกทั้งหมด
+      alert("บันทึกข้อมูลสำเร็จและอัปเดตสถานะใบแจ้งหนี้เรียบร้อย");
     } catch (error) {
       alert(error.message);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+
 
   return (
     <div className="font-sans bg-gray-50 p-4">
@@ -170,10 +207,10 @@ const PaymentRecord = () => {
           </div>
           
           <div className="flex justify-between items-center p-4 bg-gray-50 border-t border-gray-200">
-            <div className="text-sm text-gray-600">จำนวนรายการที่เลือกทั้งหมด: <span className="font-medium">1 รายการ</span></div>
+            <div className="text-sm text-gray-600">จำนวนรายการที่เลือกทั้งหมด: <span className="font-medium">{selected.filter(Boolean).length} รายการ</span></div>
             <div>
               <div className="text-sm text-right text-gray-500">ยอดรวมที่ต้องชำระ:</div>
-              <div className="text-lg font-semibold text-gray-800">{formatCurrency(85000)} บาท</div>
+              <div className="text-lg font-semibold text-gray-800">{formatCurrency(calculateTotal())} บาท</div>
             </div>
           </div>
         </div>

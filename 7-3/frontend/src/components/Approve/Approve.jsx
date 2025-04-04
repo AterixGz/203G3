@@ -46,6 +46,7 @@ const Approve = ({ userRole }) => {
     try {
       const response = await fetch('http://localhost:3000/pending-orders')
       const data = await response.json()
+      console.log(data)
       setPendingOrders(data)
     } catch (error) {
       console.error('Error fetching pending orders:', error)
@@ -160,7 +161,7 @@ const Approve = ({ userRole }) => {
                       <td>{order.po_number}</td>
                       <td>{new Date(order.date).toLocaleDateString('th-TH')}</td>
                       <td>{order.supplier_name}</td>
-                      <td className="text-right">{order.total.toLocaleString('th-TH')} บาท</td>
+                      <td>{order.total.toLocaleString('th-TH')} บาท</td>
                       <td>
                         <span className="status-pending">
                           <Clock size={14} />
