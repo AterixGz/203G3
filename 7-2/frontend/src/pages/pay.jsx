@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 
 const PaymentRecord = () => {
-  const [date, setDate] = useState('04/03/2025');
+  const [date, setDate] = useState(format(new Date(), 'dd/MM/yyyy'));
   const [amount, setAmount] = useState('85000');
-  const [fileInfo, setFileInfo] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('โอนเงินผ่านบัญชี');
+  const [bankAccount, setBankAccount] = useState('');
+  const [referenceNo, setReferenceNo] = useState('');
+  const [fileInfo, setFileInfo] = useState(null);
   const [remarks, setRemarks] = useState('');
   const [selected, setSelected] = useState([true, false, false]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // เพิ่มข้อมูลบัญชีธนาคาร
+  const bankAccounts = [
+    { id: 1, name: 'ธนาคารกรุงไทย - 123-4-56789-0' },
+    { id: 2, name: 'ธนาคารกสิกรไทย - 098-7-65432-1' }
+  ];
 
   const invoices = [
     { id: 'INV-00456', date: '12/2/2568', dueDate: '31/3/2568', poNumber: 'PO-00123', totalAmount: 120000, remainAmount: 120000, status: 'ยังไม่ชำระ' },
@@ -21,6 +32,69 @@ const PaymentRecord = () => {
 
   const formatCurrency = (value) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // คำนวณยอดรวมที่เลือก
+  const calculateTotal = () => {
+    return invoices.reduce((total, invoice, index) => {
+      if (selected[index]) {
+        return total + invoice.remainAmount;
+      }
+      return total;
+    }, 0);
+  };
+
+  // จัดการการ Upload ไฟล์
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        alert('ไฟล์มีขนาดใหญ่เกินไป กรุณาเลือกไฟล์ขนาดไม่เกิน 5MB');
+        return;
+      }
+      setFileInfo(file);
+    }
+  };
+
+  // จัดการการ Submit Form
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('date', date);
+      formData.append('amount', amount);
+      formData.append('paymentMethod', paymentMethod);
+      formData.append('bankAccount', bankAccount);
+      formData.append('referenceNo', referenceNo);
+      formData.append('remarks', remarks);
+      if (fileInfo) {
+        formData.append('file', fileInfo);
+      }
+
+      // ส่งข้อมูลไปยัง API
+      const response = await fetch('http://localhost:3000/api/payments', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        alert('บันทึกข้อมูลสำเร็จ');
+        // Reset form
+        setAmount('');
+        setBankAccount('');
+        setReferenceNo('');
+        setFileInfo(null);
+        setRemarks('');
+      } else {
+        throw new Error('บันทึกข้อมูลไม่สำเร็จ');
+      }
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -116,56 +190,42 @@ const PaymentRecord = () => {
           </div>
           
           <div className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ชำระเงิน <span className="text-red-500">*</span></label>
-                <div className="relative">
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ชำระเงิน <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      className="border border-gray-300 rounded w-full py-2 px-3 text-sm"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">จำนวนเงินที่ชำระ (บาท) <span className="text-red-500">*</span></label>
                   <input 
                     type="text" 
                     className="border border-gray-300 rounded w-full py-2 px-3 text-sm" 
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
                   />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">จำนวนเงินที่ชำระ (บาท) <span className="text-red-500">*</span></label>
-                <input 
-                  type="text" 
-                  className="border border-gray-300 rounded w-full py-2 px-3 text-sm" 
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">วิธีการชำระเงิน <span className="text-red-500">*</span></label>
-              <div className="relative">
-                <select className="border border-gray-300 rounded w-full py-2 pl-3 pr-10 text-sm appearance-none bg-white">
-                  <option>โอนเงินผ่านบัญชี</option>
-                  <option>เช็ค</option>
-                  <option>เงินสด</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">บัญชีที่ชำระเงินเข้า <span className="text-red-500">*</span></label>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">วิธีการชำระเงิน <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <select className="border border-gray-300 rounded w-full py-2 pl-3 pr-10 text-sm appearance-none bg-white">
-                    <option>เลือกบัญชีธนาคาร</option>
+                  <select 
+                    className="border border-gray-300 rounded w-full py-2 pl-3 pr-10 text-sm appearance-none bg-white"
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  >
+                    <option>โอนเงินผ่านบัญชี</option>
+                    <option>เช็ค</option>
+                    <option>เงินสด</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -174,62 +234,106 @@ const PaymentRecord = () => {
                   </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">เลขที่อ้างอิงการโอนเงิน <span className="text-red-500">*</span></label>
-                <input 
-                  type="text" 
-                  className="border border-gray-300 rounded w-full py-2 px-3 text-sm" 
-                  placeholder="เช่น 1234567890"
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">บัญชีที่ชำระเงินเข้า <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select 
+                      className="border border-gray-300 rounded w-full py-2 pl-3 pr-10 text-sm appearance-none bg-white"
+                      value={bankAccount}
+                      onChange={(e) => setBankAccount(e.target.value)}
+                    >
+                      <option value="">เลือกบัญชีธนาคาร</option>
+                      {bankAccounts.map((account) => (
+                        <option key={account.id} value={account.name}>{account.name}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">เลขที่อ้างอิงการโอนเงิน <span className="text-red-500">*</span></label>
+                  <input 
+                    type="text" 
+                    className="border border-gray-300 rounded w-full py-2 px-3 text-sm" 
+                    placeholder="เช่น 1234567890"
+                    value={referenceNo}
+                    onChange={(e) => setReferenceNo(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">ผู้ชำระเงินหรือบริษัท <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <select className="border border-gray-300 rounded w-full py-2 pl-3 pr-10 text-sm appearance-none bg-white">
+                    <option>ธนาคารกรุงไทย - 123-4-56789-0 - บัญชี ธีรพัฒน์พงศ์ จำกัด</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">แนบหลักฐานการโอนเงิน (ถ้ามี) <span className="text-red-500">*</span></label>
+                <input
+                  type="file"
+                  accept=".jpg,.png,.pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
                 />
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer border border-dashed border-gray-300 rounded-md p-6 text-center block"
+                >
+                  {fileInfo ? (
+                    <div className="text-sm text-gray-600">{fileInfo.name}</div>
+                  ) : (
+                    <>
+                      <div className="text-sm text-gray-500 mb-1">ลากไฟล์มาวางที่นี่หรือคลิกเพื่อเลือกไฟล์</div>
+                      <p className="text-xs text-gray-400">รองรับไฟล์ JPG, PNG, PDF หรือไฟล์ขนาด 5MB</p>
+                    </>
+                  )}
+                </label>
               </div>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">ผู้ชำระเงินหรือบริษัท <span className="text-red-500">*</span></label>
-              <div className="relative">
-                <select className="border border-gray-300 rounded w-full py-2 pl-3 pr-10 text-sm appearance-none bg-white">
-                  <option>ธนาคารกรุงไทย - 123-4-56789-0 - บัญชี ธีรพัฒน์พงศ์ จำกัด</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ (ถ้ามีระบุ)</label>
+                <textarea 
+                  className="border border-gray-300 rounded w-full py-2 px-3 text-sm" 
+                  rows="4"
+                  placeholder="ระบุรายละเอียดเพิ่มเติมที่ต้องการระบุ (ถ้ามี)"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                ></textarea>
               </div>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">แนบหลักฐานการโอนเงิน (ถ้ามี) <span className="text-red-500">*</span></label>
-              <div className="border border-dashed border-gray-300 rounded-md p-6 text-center">
-                <div className="mb-3">
-                  <svg className="w-8 h-8 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                  </svg>
-                </div>
-                <p className="text-sm text-gray-500 mb-1">ลากไฟล์มาวางที่นี่หรือ</p>
-                <p className="text-xs text-gray-400">รองรับไฟล์ JPG, PNG, PDF หรือไฟล์ขนาด 5MB</p>
+              
+              <div className="flex justify-between pt-4">
+                <button
+                  type="button"
+                  className="px-4 py-2 border border-gray-300 rounded text-sm text-gray-600 bg-white hover:bg-gray-50"
+                  onClick={() => window.history.back()}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกการชำระเงิน'}
+                </button>
               </div>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ (ถ้ามีระบุ)</label>
-              <textarea 
-                className="border border-gray-300 rounded w-full py-2 px-3 text-sm" 
-                rows="4"
-                placeholder="ระบุรายละเอียดเพิ่มเติมที่ต้องการระบุ (ถ้ามี)"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-              ></textarea>
-            </div>
-            
-            <div className="flex justify-between pt-4">
-              <button className="px-4 py-2 border border-gray-300 rounded text-sm text-gray-600 bg-white hover:bg-gray-50">
-                ยกเลิก
-              </button>
-              <button className="px-6 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
-                บันทึกการชำระเงิน
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>

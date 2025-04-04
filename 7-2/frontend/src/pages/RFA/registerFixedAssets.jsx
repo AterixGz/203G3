@@ -280,7 +280,7 @@ const AssetRegistrationInterface = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b text-left">
+                <tr className="border-b border-gray-300 text-left">
                   <SortableTableHeader 
                     label="รหัสสินทรัพย์"
                     sortKey="id"
@@ -334,7 +334,7 @@ const AssetRegistrationInterface = () => {
               </thead>
               <tbody>
                 {/* Row 1 */}
-                <tr className="border-b hover:bg-gray-50">
+                <tr className="border-b border-gray-300 hover:bg-gray-50">
                   <td className="py-3 px-2">FA-00123</td>
                   <td className="py-3 px-2">
                     <div className="font-medium">
@@ -358,7 +358,7 @@ const AssetRegistrationInterface = () => {
                 </tr>
 
                 {/* Row 2 */}
-                <tr className="border-b hover:bg-gray-50">
+                <tr className="border-b border-gray-300 hover:bg-gray-50">
                   <td className="py-3 px-2">FA-00124</td>
                   <td className="py-3 px-2">
                     <div className="font-medium">โต๊ะทำงาน</div>
@@ -380,7 +380,7 @@ const AssetRegistrationInterface = () => {
                 </tr>
 
                 {/* Row 3 */}
-                <tr className="border-b hover:bg-gray-50">
+                <tr className="border-b border-gray-300 hover:bg-gray-50">
                   <td className="py-3 px-2">FA-00125</td>
                   <td className="py-3 px-2">
                     <div className="font-medium">
@@ -404,7 +404,7 @@ const AssetRegistrationInterface = () => {
                 </tr>
 
                 {/* Row 4 */}
-                <tr className="border-b hover:bg-gray-50">
+                <tr className="border-b border-gray-300 hover:bg-gray-50">
                   <td className="py-3 px-2">FA-00127</td>
                   <td className="py-3 px-2">
                     <div className="font-medium">เครื่องปรับอากาศ Daikin</div>
@@ -426,7 +426,7 @@ const AssetRegistrationInterface = () => {
                 </tr>
 
                 {/* Row 5 */}
-                <tr className="border-b hover:bg-gray-50">
+                <tr className="border-b border-gray-300 hover:bg-gray-50">
                   <td className="py-3 px-2">FA-00126</td>
                   <td className="py-3 px-2">
                     <div className="font-medium">รถยนต์ Toyota Fortuner</div>
