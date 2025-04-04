@@ -60,10 +60,39 @@ const PurchaseRequestForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // TODO: Add API call here
+  
+    try {
+      const response = await fetch("http://localhost:3000/api/pr", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message); // แจ้งเตือนว่าบันทึกสำเร็จ
+        setFormData({
+          prNumber: "",
+          date: "",
+          requester: "",
+          department: "",
+          purpose: "",
+          items: [{ name: "", quantity: "", unit: "", price: "" }],
+          note: "",
+          approver: "",
+          approvalDate: "",
+        }); // รีเซ็ตฟอร์ม
+      } else {
+        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    }
   };
 
   return (

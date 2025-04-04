@@ -1,0 +1,38 @@
+[
+  {
+    "prNumber": "WEF",
+    "date": "2025-03-31",
+    "requester": "kamin",
+    "department": "ฝ่ายจัดซื้อ",
+    "purpose": "ฟไก",
+    "items": [
+      {
+        "name": "ฟไก",
+        "quantity": "1",
+        "unit": "ฟไก",
+        "price": "1"
+      }
+    ],
+    "note": "ฟไก",
+    "approver": "",
+    "approvalDate": ""
+  },
+  {
+    "prNumber": "dDDD",
+    "date": "2025-03-31",
+    "requester": "kaminasd",
+    "department": "ฝ่ายการตลาด",
+    "purpose": "asdasd",
+    "items": [
+      {
+        "name": "หำ",
+        "quantity": "3",
+        "unit": "อัน",
+        "price": "1111"
+      }
+    ],
+    "note": "",
+    "approver": "",
+    "approvalDate": ""
+  }
+]
