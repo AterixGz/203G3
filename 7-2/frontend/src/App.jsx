@@ -5,6 +5,7 @@ import AP_PR from './pages/Approve_PR/Approve_PR';
 import RFA from './pages/RFA/registerFixedAssets'
 import AP from './pages/AP';
 import PAY from './pages/pay';
+import MEMBER from './pages/Member/memberManagement';
 
 // Create a new component for the sidebar navigation
 const SidebarNav = () => {
@@ -18,6 +19,7 @@ const SidebarNav = () => {
     { path: '/rfa', icon: 'fas fa-check-circle', label: 'ขึ้นทะเบียนสินทรัพย์ถาวร' },
     { path: '/ap', icon: 'fas fa-check-circle', label: 'ดูยอดคงเหลือเจ้าหนี้' },
     { path: '/pay', icon: 'fas fa-check-circle', label: 'จ่ายเงิน' },
+    { path: '/member', icon: 'fas fa-users', label: 'จัดการสมาชิก' },
   ];
 
   return (
@@ -86,6 +88,7 @@ function App() {
                 <Route path="/rfa" element={<RFA />} />
                 <Route path="/ap" element={<AP />} />
                 <Route path="/pay" element={<PAY />} />
+                <Route path="/member" element={<MEMBER />} />
                 <Route path="/" element={
                   <div className="bg-white rounded-lg shadow-sm">
                     <div className="px-6 py-4 border-b border-gray-200">
