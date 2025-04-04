@@ -349,25 +349,12 @@ app.get("/pending-orders", (req, res) => {
   });
 });
 
-// Get approved orders
-app.get("/approved-orders", (req, res) => {
-  const sql = "SELECT * FROM purchase_orders WHERE status = 'approved' ORDER BY date DESC";
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error("Error fetching approved orders:", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
-    }
-    res.json(results);
-  });
-});
-
-// Handle order approval/rejection
 app.post("/approve-order/:id", (req, res) => {
   const { id } = req.params;
   const { status, comment } = req.body;
+  console.log("body:", req.body);
 
-  // Start transaction
-  connection.beginTransaction(err => {
+  connection.beginTransaction((err) => {
     if (err) {
       console.error("Error starting transaction:", err);
       return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดำเนินการ" });
@@ -382,15 +369,17 @@ app.post("/approve-order/:id", (req, res) => {
       }
 
       const orderTotal = orderResults[0].total;
+      console.log("Order Total:", orderTotal);
 
       // Get current budget
       const getBudgetSQL = "SELECT amount FROM management_budget ORDER BY updated_at DESC LIMIT 1";
+      
       connection.query(getBudgetSQL, (err, budgetResults) => {
         if (err) {
           connection.rollback();
           return res.status(500).json({ message: "เกิดข้อผิดพลาดในการตรวจสอบวงเงิน" });
         }
-
+        console.log("Budget Results:", budgetResults);
         const currentBudget = budgetResults.length > 0 ? budgetResults[0].amount : 1000000;
 
         if (status === 'approved' && orderTotal > currentBudget) {
@@ -417,7 +406,7 @@ app.post("/approve-order/:id", (req, res) => {
               }
 
               // Commit transaction
-              connection.commit(err => {
+              connection.commit((err) => {
                 if (err) {
                   connection.rollback();
                   return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
@@ -427,7 +416,7 @@ app.post("/approve-order/:id", (req, res) => {
             });
           } else {
             // If rejected, just commit the status change
-            connection.commit(err => {
+            connection.commit((err) => {
               if (err) {
                 connection.rollback();
                 return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
@@ -440,7 +429,6 @@ app.post("/approve-order/:id", (req, res) => {
     });
   });
 });
-
 // Get all users
 app.get("/users", (req, res) => {
   try {
