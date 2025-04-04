@@ -96,7 +96,6 @@ app.post("/login", (req, res) => {
   }
 });
 
-//                                            Login
 // Endpoint สำหรับอัปเดตสถานะ PR
 app.put("/api/pr/:prNumber", (req, res) => {
   const { prNumber } = req.params;
@@ -145,6 +144,43 @@ app.get("/api/pr/approved", (req, res) => {
 
   res.json(approvedPRs);
 });
+
+
+
+// Path ของไฟล์ RFA.json          แสดงข้อมูลสินทรัพย์
+const RFA_FILE = path.join(__dirname, "data", "RFA.json");
+// Endpoint สำหรับดึงข้อมูลสินทรัพย์
+app.get("/api/assets", (req, res) => {
+  if (!fs.existsSync(RFA_FILE)) {
+    return res.json([]);
+  }
+
+  const data = fs.readFileSync(RFA_FILE, "utf-8");
+  const assets = JSON.parse(data);
+  res.json(assets);
+});
+
+// Endpoint สำหรับบันทึกข้อมูลสินทรัพย์ใหม่
+app.post("/api/assets", (req, res) => {
+  const newAsset = req.body;
+
+  // ตรวจสอบว่าไฟล์ RFA.json มีอยู่หรือไม่
+  let assets = [];
+  if (fs.existsSync(RFA_FILE)) {
+    const data = fs.readFileSync(RFA_FILE, "utf-8");
+    assets = JSON.parse(data);
+  }
+
+  // เพิ่มสินทรัพย์ใหม่
+  assets.push(newAsset);
+
+  // เขียนข้อมูลกลับไปที่ RFA.json
+  fs.writeFileSync(RFA_FILE, JSON.stringify(assets, null, 2));
+
+  res.status(201).json({ message: "บันทึกข้อมูลสินทรัพย์สำเร็จ", asset: newAsset });
+});
+
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

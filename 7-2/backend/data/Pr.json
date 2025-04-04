@@ -53,6 +53,7 @@
     ],
     "note": "",
     "approver": "",
-    "approvalDate": ""
+    "approvalDate": "",
+    "status": "rejected"
   }
 ]
