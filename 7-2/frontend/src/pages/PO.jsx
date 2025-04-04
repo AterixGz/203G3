@@ -1,11 +1,13 @@
-
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
+// เพิ่ม import date-fns
+import { format, parse } from 'date-fns';
+import th from 'date-fns/locale/th';
 
 const PurchaseOrderForm = () => {
   const [approvedPRs, setApprovedPRs] = useState([]);
   const navigate = useNavigate();
-  const [formData, setFormData,] = useState({
+  const [formData, setFormData] = useState({
     poNumber: "",
     poDate: "",
     prReference: "",
@@ -22,6 +24,38 @@ const PurchaseOrderForm = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // เพิ่ม state
+  const [selectedPR, setSelectedPR] = useState(null);
+  const [showPRSelection, setShowPRSelection] = useState(false);
+
+  // เพิ่ม state สำหรับ generate PO number
+  const [poNumber, setPoNumber] = useState("");
+
+  // เพิ่มฟังก์ชัน generatePONumber
+  const generatePONumber = () => {
+    const today = new Date();
+    const year = today.getFullYear().toString().substring(2);
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const random = Math.floor(Math.random() * 9000 + 1000);
+    return `PO${year}${month}-${random}`;
+  };
+
+  // เพิ่มฟังก์ชันสำหรับเลือก PR
+  const handlePRSelect = (pr) => {
+    setSelectedPR(pr);
+    setFormData({
+      ...formData,
+      prReference: pr.prNumber,
+      prDate: pr.date,
+      vendorName: pr.vendor || '',
+      department: pr.department,
+      requester: pr.requester,
+      purpose: pr.purpose,
+      totalAmount: calculateTotalPrice(pr.items)
+    });
+    setShowPRSelection(false);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -41,20 +75,21 @@ const PurchaseOrderForm = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Required fields validation
-    if (!formData.poDate) newErrors.poDate = "กรุณาระบุวันที่";
-    if (!formData.prDate) newErrors.prDate = "กรุณาระบุวันที่อนุมัติ PR";
+    // เพิ่มการ validate วันที่
+    if (!formData.poDate) {
+      newErrors.poDate = "กรุณาระบุวันที่";
+    } else {
+      const poDate = new Date(formData.poDate);
+      const today = new Date();
+      if (poDate > today) {
+        newErrors.poDate = "วันที่ไม่สามารถเป็นวันในอนาคต";
+      }
+    }
+
+    // validate อื่นๆ ที่มีอยู่เดิม...
     if (!formData.vendorName) newErrors.vendorName = "กรุณาระบุชื่อผู้ขาย";
     if (!formData.taxId) newErrors.taxId = "กรุณาระบุเลขประจำตัวผู้เสียภาษี";
-    if (!formData.address) newErrors.address = "กรุณาระบุที่อยู่";
-    if (!formData.contact) newErrors.contact = "กรุณาระบุผู้ติดต่อ";
-    if (!formData.phone) newErrors.phone = "กรุณาระบุเบอร์โทรศัพท์";
-    if (!formData.paymentMethod)
-      newErrors.paymentMethod = "กรุณาเลือกเงื่อนไขการชำระเงิน";
-    if (!formData.deliveryDate)
-      newErrors.deliveryDate = "กรุณาระบุวันที่ส่งมอบ";
-    if (!formData.deliveryLocation)
-      newErrors.deliveryLocation = "กรุณาระบุสถานที่ส่งมอบ";
+    // ...
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -69,15 +104,40 @@ const PurchaseOrderForm = () => {
     alert("กำลังบันทึกเป็น PDF...");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!selectedPR) {
+      alert("กรุณาเลือก PR");
+      return;
+    }
 
     if (validateForm()) {
-      // Save PO logic here
-      alert("บันทึก PO เรียบร้อยแล้ว");
-      navigate("/purchase-orders"); // Redirect to PO list
-    } else {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+      try {
+        const response = await fetch("http://localhost:3000/api/purchase-orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...formData,
+            poNumber: formData.poNumber, // เพิ่มเลข PO
+            items: selectedPR.items,
+            totalAmount: calculateTotalPrice(selectedPR.items),
+            prReference: selectedPR.prNumber,
+            createdAt: new Date().toISOString()
+          }),
+        });
+
+        if (response.ok) {
+          alert("บันทึก PO เรียบร้อยแล้ว");
+          navigate("/purchase-orders");
+        } else {
+          throw new Error("Failed to create PO");
+        }
+      } catch (error) {
+        console.error("Error creating PO:", error);
+        alert("เกิดข้อผิดพลาดในการบันทึก PO");
+      }
     }
   };
 
@@ -87,38 +147,63 @@ const PurchaseOrderForm = () => {
     }
   };
 
+  // แก้ไขฟังก์ชัน calculateTotalPrice
   const calculateTotalPrice = (items) => {
-    return items.reduce((total, item) => total + item.quantity * item.price, 0);
+    if (!items) return 0;
+    return items.reduce((total, item) => {
+      return total + (Number(item.quantity) * Number(item.price));
+    }, 0);
   };
+
   const [totalPrice, setTotalPrice] = useState(0);
 
-useEffect(() => {
-  const total = approvedPRs.reduce(
-    (sum, pr) => sum + calculateTotalPrice(pr.items),
-    0
-  );
-  setTotalPrice(total);
-}, [approvedPRs]);
-    // ดึงข้อมูล PR ที่อนุมัติแล้วเมื่อโหลดหน้า
-    useEffect(() => {
-      const fetchApprovedPRs = async () => {
-        try {
-          const response = await fetch("http://localhost:3000/api/pr/approved");
-          if (response.ok) {
-            const data = await response.json();
-            setApprovedPRs(data);
-          } else {
-            console.error("Failed to fetch approved PRs");
-          }
-        } catch (error) {
-          console.error("Error fetching approved PRs:", error);
+  // แก้ไขส่วน useEffect สำหรับคำนวณราคารวม
+  useEffect(() => {
+    if (selectedPR) {
+      const total = calculateTotalPrice(selectedPR.items);
+      setTotalPrice(total);
+    }
+  }, [selectedPR]);
+
+  // ดึงข้อมูล PR ที่อนุมัติแล้วเมื่อโหลดหน้า
+  useEffect(() => {
+    const fetchApprovedPRs = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/pr/approved");
+        if (response.ok) {
+          const data = await response.json();
+          setApprovedPRs(data);
+        } else {
+          console.error("Failed to fetch approved PRs");
         }
-      };
-  
-      fetchApprovedPRs();
-    }, []);
+      } catch (error) {
+        console.error("Error fetching approved PRs:", error);
+      }
+    };
 
+    fetchApprovedPRs();
+  }, []);
 
+  // แก้ไข useEffect เพื่อ generate PO number เมื่อโหลดหน้า
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      poNumber: generatePONumber(),
+      poDate: format(new Date(), 'yyyy-MM-dd') // กำหนดวันที่ปัจจุบัน
+    }));
+  }, []);
+
+  // เพิ่มฟังก์ชัน formatDate
+  const formatDate = (date) => {
+    if (!date) return '';
+    return format(new Date(date), 'dd/MM/yyyy', { locale: th });
+  };
+
+  // เพิ่มฟังก์ชัน parseDate
+  const parseDate = (dateString) => {
+    if (!dateString) return '';
+    return format(parse(dateString, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd');
+  };
 
   return (
     <div className="max-w-7xl mx-auto bg-white p-6 rounded-md shadow">
@@ -176,7 +261,7 @@ useEffect(() => {
             </label>
             <input
               type="text"
-              className="w-full p-2 border border-gray-300 rounded"
+              className="w-full p-2 border border-gray-300 rounded bg-gray-50"
               value={formData.poNumber}
               readOnly
             />
@@ -187,29 +272,12 @@ useEffect(() => {
             </label>
             <div className="relative">
               <input
-                type="text"
+                type="date"
                 className="w-full p-2 border border-gray-300 rounded"
-                placeholder="mm/dd/yyyy"
                 name="poDate"
                 value={formData.poDate}
                 onChange={handleInputChange}
               />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
               {errors.poDate && (
                 <p className="text-red-500 text-sm mt-1">{errors.poDate}</p>
               )}
@@ -217,53 +285,49 @@ useEffect(() => {
           </div>
         </div>
 
+        {/* ส่วนข้อมูล PR */}
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               อ้างอิงเลขที่ PR
             </label>
-            <input
-              type="text"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.prReference}
-              readOnly
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded"
+                value={formData.prReference}
+                readOnly
+              />
+              <button
+                type="button"
+                onClick={() => setShowPRSelection(true)}
+                className="px-4 py-2 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
+              >
+                เลือก PR
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               วันที่อนุมัติ PR
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded"
-                placeholder="mm/dd/yyyy"
-                name="prDate"
-                value={formData.prDate}
-                onChange={handleInputChange}
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              {errors.prDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.prDate}</p>
-              )}
-            </div>
+            <input
+              type="text"
+              className="w-full p-2 border border-gray-300 rounded"
+              value={formData.prDate}
+              readOnly
+            />
           </div>
         </div>
+
+        {/* แสดง Modal เมื่อกดปุ่มเลือก PR */}
+        {showPRSelection && (
+          <PRSelectionModal
+            approvedPRs={approvedPRs}
+            onSelect={handlePRSelect}
+            onClose={() => setShowPRSelection(false)}
+          />
+        )}
 
         <div className="border-t border-gray-200 pt-6 mb-6">
           <h2 className="text-lg font-medium mb-4">ข้อมูลผู้ขาย</h2>
@@ -356,89 +420,124 @@ useEffect(() => {
         </div>
 
         <div className="max-w-7xl mx-auto bg-white p-6 rounded-md shadow">
-      <h1 className="text-xl font-medium mb-6">รายการสินค้า (อนุมัติแล้ว)</h1>
+          <h1 className="text-xl font-medium mb-6">รายการสินค้าจาก PR</h1>
+          
+          {selectedPR ? (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-300">
+                    <th className="py-2 px-4 text-left">เลขที่ PR</th>
+                    <th className="py-2 px-4 text-left">วันที่</th>
+                    <th className="py-2 px-4 text-left">ผู้ขอ</th>
+                    <th className="py-2 px-4 text-left">รายการสินค้า</th>
+                    <th className="py-2 px-4 text-right">ราคารวม</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-gray-200">
+                    <td className="py-3 px-4">{selectedPR.prNumber}</td>
+                    <td className="py-3 px-4">{selectedPR.date}</td>
+                    <td className="py-3 px-4">{selectedPR.requester}</td>
+                    <td className="py-3 px-4">
+                      <table className="w-full">
+                        <tbody>
+                          {selectedPR.items.map((item, index) => (
+                            <tr key={index}>
+                              <td>{item.name}</td>
+                              <td className="text-center">{item.quantity} {item.unit}</td>
+                              <td className="text-right">{Number(item.price).toLocaleString()} บาท</td>
+                              <td className="text-right">
+                                {(Number(item.quantity) * Number(item.price)).toLocaleString()} บาท
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      {calculateTotalPrice(selectedPR.items).toLocaleString()} บาท
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">กรุณาเลือก PR เพื่อดูรายการสินค้า</p>
+          )}
+        </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-gray-300">
-              <th className="py-2 px-4 text-left">เลขที่ PR</th>
-              <th className="py-2 px-4 text-left">วันที่</th>
-              <th className="py-2 px-4 text-left">ผู้ขอ</th>
-              <th className="py-2 px-4 text-left">วัตถุประสงค์</th>
-              <th className="py-2 px-4 text-left">รายการสินค้า</th>
-              <th className="py-2 px-4 text-left">หน่วยละ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {approvedPRs.map((pr) => (
-              <tr key={pr.prNumber} className="border-b border-gray-200">
-                <td className="py-3 px-4">{pr.prNumber}</td>
-                <td className="py-3 px-4">{pr.date}</td>
-                <td className="py-3 px-4">{pr.requester}</td>
-                <td className="py-3 px-4">{pr.purpose}</td>
-                <td className="py-3 px-4">
-                  <ul>
-                    {pr.items.map((item, index) => (
-                      <li key={index}>
-                        {item.name} - {item.quantity} {item.unit}
-                      </li>
-                    ))}
-                  </ul>
-                </td>
-                <td className="py-3 px-4">
-                  <ul>
-                    {pr.items.map((item, index) => (
-                      <li key={index}>
-                        {item.price} บาท
-                      </li>
-                    ))}
-                  </ul>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div className="border-t border-gray-200 pt-6 mb-6">
-  <h2 className="text-lg font-medium mb-4">สรุปราคาทั้งหมด</h2>
-  <div className="grid grid-cols-3 gap-6">
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        ราคาทั้งหมด (Subtotal)
-      </label>
-      <input
-        type="text"
-        className="w-full p-2 border border-gray-300 rounded"
-        value={totalPrice.toLocaleString()} // แปลงเป็นรูปแบบตัวเลข
-        readOnly
-      />
-    </div>
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        ภาษีมูลค่าเพิ่ม (VAT 7%)
-      </label>
-      <input
-        type="text"
-        className="w-full p-2 border border-gray-300 rounded"
-        value={(totalPrice * 0.07).toLocaleString()} // คำนวณ VAT
-        readOnly
-      />
-    </div>
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        ราคาสุทธิ (Grand Total)
-      </label>
-      <input
-        type="text"
-        className="w-full p-2 border border-gray-300 rounded"
-        value={(totalPrice * 1.07).toLocaleString()} // คำนวณราคาสุทธิ
-        readOnly
-      />
-    </div>
-  </div>
-</div>        
+        <div className="border-t border-gray-200 pt-6 mb-6">
+          <h2 className="text-lg font-medium mb-4">รายการสินค้า</h2>
+          {selectedPR ? (
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-300">
+                  <th className="py-2 px-4 text-left">รายการ</th>
+                  <th className="py-2 px-4 text-center">จำนวน</th>
+                  <th className="py-2 px-4 text-center">หน่วย</th>
+                  <th className="py-2 px-4 text-right">ราคาต่อหน่วย</th>
+                  <th className="py-2 px-4 text-right">รวม</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedPR.items.map((item, index) => (
+                  <tr key={index} className="border-b border-gray-200">
+                    <td className="py-3 px-4">{item.name}</td>
+                    <td className="py-3 px-4 text-center">{item.quantity}</td>
+                    <td className="py-3 px-4 text-center">{item.unit}</td>
+                    <td className="py-3 px-4 text-right">
+                      {Number(item.price).toLocaleString()} บาท
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      {(Number(item.quantity) * Number(item.price)).toLocaleString()} บาท
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-gray-500 text-center py-4">กรุณาเลือก PR</p>
+          )}
+        </div>
+        <div className="border-t border-gray-200 pt-6 mb-6">
+          <h2 className="text-lg font-medium mb-4">สรุปราคาทั้งหมด</h2>
+          <div className="grid grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ราคารวม (Subtotal)
+              </label>
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded"
+                value={`${totalPrice.toLocaleString()} บาท`}
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ภาษีมูลค่าเพิ่ม (7%)
+              </label>
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded"
+                value={`${(totalPrice * 0.07).toLocaleString()} บาท`}
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ราคาสุทธิ
+              </label>
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded"
+                value={`${(totalPrice * 1.07).toLocaleString()} บาท`}
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
         <div className="border-t border-gray-200 pt-6 mb-6">
           <h2 className="text-lg font-medium mb-4">เงื่อนไขการชำระเงิน</h2>
           <div className="grid grid-cols-2 gap-6 mb-4">
@@ -580,6 +679,52 @@ useEffect(() => {
           </button>
         </div>
       </form>
+    </div>
+  );
+};
+
+const PRSelectionModal = ({ approvedPRs, onSelect, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-3/4 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-medium">เลือกใบขอซื้อ (PR)</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="py-2 text-left">เลขที่ PR</th>
+              <th className="py-2 text-left">วันที่</th>
+              <th className="py-2 text-left">ผู้ขอ</th>
+              <th className="py-2 text-left">วัตถุประสงค์</th>
+              <th className="py-2 text-left">การดำเนินการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {approvedPRs.map((pr) => (
+              <tr key={pr.prNumber} className="border-b">
+                <td className="py-2">{pr.prNumber}</td>
+                <td className="py-2">{pr.date}</td>
+                <td className="py-2">{pr.requester}</td>
+                <td className="py-2">{pr.purpose}</td>
+                <td className="py-2">
+                  <button
+                    onClick={() => onSelect(pr)}
+                    className="px-3 py-1 bg-black text-white rounded hover:bg-gray-800"
+                  >
+                    เลือก
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
