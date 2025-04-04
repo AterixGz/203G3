@@ -73,6 +73,28 @@ app.get("/api/pr", (req, res) => {
   res.json(prList);
 });
 
+//      Login
+// Path ของไฟล์ userRole.json
+const USER_ROLE_FILE = path.join(__dirname, "data", "userRole.json");
+
+// Endpoint สำหรับตรวจสอบการเข้าสู่ระบบ
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+
+  // อ่านข้อมูลผู้ใช้จาก userRole.json
+  const userData = JSON.parse(fs.readFileSync(USER_ROLE_FILE, "utf-8"));
+  const user = userData.users.find(
+    (u) => u.username === username && u.password === password
+  );
+
+  if (user) {
+    // หากพบผู้ใช้ ส่งข้อมูลผู้ใช้กลับไป
+    res.json({ success: true, user });
+  } else {
+    // หากไม่พบผู้ใช้ ส่งข้อความแสดงข้อผิดพลาด
+    res.status(401).json({ success: false, message: "Invalid username or password" });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

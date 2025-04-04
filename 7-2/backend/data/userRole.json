@@ -1,0 +1,32 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "123456",
+      "role": "admin",
+      "name": "admin นะจ๊ะ"
+    },
+    {
+      "id": 2,
+      "username": "purchase",
+      "password": "purchase123",
+      "role": "purchasing",
+      "name": "Purchasing Staff"
+    },
+    {
+      "id": 3,
+      "username": "finance",
+      "password": "finance123",
+      "role": "finance",
+      "name": "Finance Staff"
+    },
+    {
+      "id": 4,
+      "username": "management",
+      "password": "management123",
+      "role": "management",
+      "name": "Management Staff"
+    }
+  ]
+}

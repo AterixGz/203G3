@@ -1,37 +1,42 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import PR from './pages/PR/PR';
-import PO from './pages/PO';
-import AP_PR from './pages/Approve_PR/Approve_PR';
-import RFA from './pages/RFA/registerFixedAssets'
-import AP from './pages/AP';
-import PAY from './pages/pay';
-import MEMBER from './pages/Member/memberManagement';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import PR from "./pages/PR/PR";
+import PO from "./pages/PO";
+import AP_PR from "./pages/Approve_PR/Approve_PR";
+import RFA from "./pages/RFA/registerFixedAssets";
+import AP from "./pages/AP";
+import PAY from "./pages/pay";
+import MEMBER from "./pages/Member/memberManagement";
+import Login from "./pages/Login/Login";
 
-// Create a new component for the sidebar navigation
-const SidebarNav = () => {
+const SidebarNav = ({ role }) => {
   const location = useLocation();
 
+  // กำหนดสิทธิ์การเข้าถึงสำหรับแต่ละ Role
   const navItems = [
-    { path: '/', icon: 'fas fa-home', label: 'Dashboard' },
-    { path: '/pr', icon: 'fas fa-file-alt', label: 'ใบขอซื้อ' },
-    { path: '/ap_pr', icon: 'fas fa-file-alt', label: 'อนุมัติใบขอซื้อ' },
-    { path: '/po', icon: 'fas fa-shopping-cart', label: 'ใบสั่งซื้อ' },
-    { path: '/rfa', icon: 'fas fa-check-circle', label: 'ขึ้นทะเบียนสินทรัพย์ถาวร' },
-    { path: '/ap', icon: 'fas fa-check-circle', label: 'ดูยอดคงเหลือเจ้าหนี้' },
-    { path: '/pay', icon: 'fas fa-check-circle', label: 'จ่ายเงิน' },
-    { path: '/member', icon: 'fas fa-users', label: 'จัดการสมาชิก' },
+    { path: "/", icon: "fas fa-home", label: "Dashboard", roles: ["admin", "purchasing", "finance", "management"] },
+    { path: "/pr", icon: "fas fa-file-alt", label: "ใบขอซื้อ", roles: ["admin", "purchasing"] },
+    { path: "/ap_pr", icon: "fas fa-file-alt", label: "อนุมัติใบขอซื้อ", roles: ["admin", "management"] },
+    { path: "/po", icon: "fas fa-shopping-cart", label: "ใบสั่งซื้อ", roles: ["admin", "purchasing"] },
+    { path: "/rfa", icon: "fas fa-check-circle", label: "ขึ้นทะเบียนสินทรัพย์ถาวร", roles: ["admin", "finance"] },
+    { path: "/ap", icon: "fas fa-check-circle", label: "ดูยอดคงเหลือเจ้าหนี้", roles: ["admin", "finance"] },
+    { path: "/pay", icon: "fas fa-check-circle", label: "จ่ายเงิน", roles: ["admin", "finance"] },
+    { path: "/member", icon: "fas fa-users", label: "จัดการสมาชิก", roles: ["admin"] },
   ];
+
+  // กรองเฉพาะเมนูที่ Role ปัจจุบันสามารถเข้าถึงได้
+  const accessibleNavItems = navItems.filter((item) => item.roles.includes(role));
 
   return (
     <nav className="mt-4">
-      {navItems.map((item) => (
+      {accessibleNavItems.map((item) => (
         <Link
           key={item.path}
           to={item.path}
           className={`flex items-center px-6 py-3 transition-colors ${
             location.pathname === item.path
-              ? 'bg-blue-50 text-blue-600'
-              : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+              ? "bg-blue-50 text-blue-600"
+              : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
           }`}
         >
           <i className={`${item.icon} text-xl w-8`}></i>
@@ -43,96 +48,68 @@ const SidebarNav = () => {
 };
 
 function App() {
-  return (  
-    <Router>
-    <div className="min-h-screen bg-gray-100">
-      <div className="flex">
-        {/* Fixed Sidebar - เพิ่ม flex flex-col เพื่อจัดการ layout แนวตั้ง */}
-        <aside className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-center">PMS 7-2</h2>
-          </div>
+  const [user, setUser] = useState(null);
 
-          {/* Navigation - ใส่ flex-1 เพื่อให้ขยายพื้นที่ที่เหลือ */}
-          <div className="flex-1 overflow-y-auto">
-            <SidebarNav />
-          </div>
-          
-          {/* Profile Section - จะอยู่ล่างสุดเสมอ */}
-          <div className="border-t border-gray-200 bg-white">
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">ชื่อ User</p>
-                  <p className="text-sm text-gray-500">ตำแหน่ง</p>
+  // ตรวจสอบสถานะการล็อกอิน
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
+  if (!user) {
+    // หากผู้ใช้ไม่ได้ล็อกอิน ให้เปลี่ยนเส้นทางไปยังหน้า Login
+    return <Login onLoginSuccess={(user) => setUser(user)} />;
+  }
+
+  return (
+    <Router>
+      <div className="min-h-screen bg-gray-100">
+        <div className="flex">
+          {/* Sidebar */}
+          <aside className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-center">PMS 7-2</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <SidebarNav role={user.role} />
+            </div>
+            <div className="border-t border-gray-200 bg-white">
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{user.name}</p>
+                    <p className="text-sm text-gray-500">{user.role}</p>
+                  </div>
+                  <button
+                    className="text-sm text-red-600 hover:text-red-800"
+                    onClick={handleLogout}
+                  >
+                    ออกจากระบบ
+                  </button>
                 </div>
-                <button
-                  className="text-sm text-red-600 hover:text-red-800"
-                >
-                  ออกจากระบบ
-                </button>
               </div>
             </div>
-          </div>
-        </aside>
+          </aside>
 
-          {/* Main Content with left margin to prevent sidebar overlap */}
+          {/* Main Content */}
           <main className="flex-1 ml-64">
-
             <div className="p-6">
               <Routes>
-                <Route path="/pr" element={<PR />} />
-                <Route path="/po" element={<PO />} />
-                <Route path="/ap_pr" element={<AP_PR />} />
-                <Route path="/rfa" element={<RFA />} />
-                <Route path="/ap" element={<AP />} />
-                <Route path="/pay" element={<PAY />} />
-                <Route path="/member" element={<MEMBER />} />
-                <Route path="/" element={
-                  <div className="bg-white rounded-lg shadow-sm">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                      <h2 className="text-lg font-semibold text-gray-800">Recent Activities</h2>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          <tr>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">PR001</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Purchase Request</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Office Supplies</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                                Pending
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-04-03</td>
-                          </tr>
-                          <tr>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">PO002</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Purchase Order</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">IT Equipment</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                Approved
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-04-02</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                } />
+                <Route path="/pr" element={user.role === "purchasing" || user.role === "admin" ? <PR /> : <Navigate to="/" />} />
+                <Route path="/po" element={user.role === "purchasing" || user.role === "admin" ? <PO /> : <Navigate to="/" />} />
+                <Route path="/ap_pr" element={user.role === "management" || user.role === "admin" ? <AP_PR /> : <Navigate to="/" />} />
+                <Route path="/rfa" element={user.role === "finance" || user.role === "admin" ? <RFA /> : <Navigate to="/" />} />
+                <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
+                <Route path="/pay" element={user.role === "finance" || user.role === "admin" ? <PAY /> : <Navigate to="/" />} />
+                <Route path="/member" element={user.role === "admin" ? <MEMBER /> : <Navigate to="/" />} />
+                <Route path="/" element={<div>Dashboard</div>} />
               </Routes>
             </div>
           </main>
