@@ -2,7 +2,15 @@ import React, { useState, useEffect } from 'react';
 
 // Add generatePRNumber function
 const generatePRNumber = () => {
-  return `PR-${Math.floor(10000 + Math.random() * 90000)}`;
+  const today = new Date();
+  const year = today.getFullYear().toString().slice(-2); // 2 หลักสุดท้ายของปี
+  const month = (today.getMonth() + 1).toString().padStart(2, '0'); // เดือนแบบ 2 หลัก
+  const day = today.getDate().toString().padStart(2, '0'); // วันแบบ 2 หลัก
+  const random = Math.floor(1000 + Math.random() * 9000); // สุ่มเลข 4 หลัก
+  
+  // รูปแบบ: PR-YYMMDDxxxx
+  // YY = ปี 2 หลัก, MM = เดือน, DD = วัน, xxxx = เลขสุ่ม 4 หลัก
+  return `PR-${year}${month}${day}${random}`;
 };
 
 const PurchaseRequestForm = () => {

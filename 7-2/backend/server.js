@@ -366,6 +366,87 @@ app.delete("/api/members/:id", (req, res) => {
   res.status(200).json({ message: "ลบสมาชิกสำเร็จ" });
 });
 
+// กำหนด path ของไฟล์ PO.json
+const PO_FILE = path.join(__dirname, "data", "Po.json");
+
+// Endpoint สำหรับบันทึกข้อมูล PO
+app.post("/api/purchase-orders", (req, res) => {
+  const newPO = req.body;
+
+  // ตรวจสอบว่ามีข้อมูลที่ส่งมาหรือไม่
+  if (!newPO || Object.keys(newPO).length === 0) {
+    return res.status(400).json({ message: "ไม่มีข้อมูลที่ส่งมา" });
+  }
+
+  // อ่านข้อมูลเดิมจาก Po.json
+  let poData = [];
+  if (fs.existsSync(PO_FILE)) {
+    const fileData = fs.readFileSync(PO_FILE, "utf-8");
+    poData = JSON.parse(fileData);
+  }
+
+  // เพิ่มข้อมูลใหม่
+  poData.push(newPO);
+
+  // เขียนข้อมูลกลับไปที่ Po.json
+  fs.writeFileSync(PO_FILE, JSON.stringify(poData, null, 2));
+
+  res.status(201).json({ message: "บันทึกข้อมูล PO สำเร็จ" });
+});
+
+// Endpoint สำหรับดึงข้อมูล PO ทั้งหมด
+app.get("/api/purchase-orders", (req, res) => {
+  if (!fs.existsSync(PO_FILE)) {
+    return res.json([]);
+  }
+
+  const data = fs.readFileSync(PO_FILE, "utf-8");
+  const poList = JSON.parse(data);
+  res.json(poList);
+});
+
+// Endpoint สำหรับดึงข้อมูล PO ตาม poNumber
+app.get("/api/purchase-orders/:poNumber", (req, res) => {
+  const { poNumber } = req.params;
+
+  if (!fs.existsSync(PO_FILE)) {
+    return res.status(404).json({ message: "ไม่พบข้อมูล PO" });
+  }
+
+  const data = fs.readFileSync(PO_FILE, "utf-8");
+  const poList = JSON.parse(data);
+  const po = poList.find(p => p.poNumber === poNumber);
+
+  if (!po) {
+    return res.status(404).json({ message: "ไม่พบ PO ที่ระบุ" });
+  }
+
+  res.json(po);
+});
+
+// Endpoint สำหรับอัพเดตสถานะ PO
+app.put("/api/purchase-orders/:poNumber", (req, res) => {
+  const { poNumber } = req.params;
+  const { status } = req.body;
+
+  if (!fs.existsSync(PO_FILE)) {
+    return res.status(404).json({ message: "ไม่พบข้อมูล PO" });
+  }
+
+  const data = fs.readFileSync(PO_FILE, "utf-8");
+  let poList = JSON.parse(data);
+  const poIndex = poList.findIndex(p => p.poNumber === poNumber);
+
+  if (poIndex === -1) {
+    return res.status(404).json({ message: "ไม่พบ PO ที่ระบุ" });
+  }
+
+  poList[poIndex].status = status;
+  fs.writeFileSync(PO_FILE, JSON.stringify(poList, null, 2));
+
+  res.json({ message: "อัพเดตสถานะ PO สำเร็จ" });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

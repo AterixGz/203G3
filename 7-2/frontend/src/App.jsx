@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import PR from "./pages/PR/PR";
+import PR from "./pages/PR";
 import PO from "./pages/PO";
 import AP_PR from "./pages/Approve_PR/Approve_PR";
 import RFA from "./pages/RFA/registerFixedAssets";
@@ -9,14 +9,18 @@ import PAY from "./pages/pay";
 import MEMBER from "./pages/Member/memberManagement";
 import Login from "./pages/Login/Login";
 import Dashboard from './pages/Dashboard/Dashboard';
+import DashboardPR from './pages/Dashboard/DashboardPR';
+import DashboardPO from './pages/Dashboard/DashboardPO';
 
 const SidebarNav = ({ role }) => {
   const location = useLocation();
 
   // กำหนดสิทธิ์การเข้าถึงสำหรับแต่ละ Role
   const navItems = [
-    { path: "/", icon: "fas fa-home", label: "Dashboard", roles: ["admin", "purchasing", "finance", "management"] },
-    { path: "/pr", icon: "fas fa-file-alt", label: "ใบขอซื้อ", roles: ["admin", "purchasing"] },
+    { path: "/", icon: "fas fa-home", label: "Dashboard", roles: ["admin", "management"] },
+    { path: "/dbpr", icon: "fas fa-tachometer-alt", label: "DashboardPR", roles: ["admin", "it", "itHead"] },
+    { path: "/dbpo", icon: "fas fa-tachometer-alt", label: "DashboardPO", roles: ["admin", "purchasing"] },
+    { path: "/pr", icon: "fas fa-file-alt", label: "ใบขอซื้อ", roles: ["admin", "it"] },
     { path: "/ap_pr", icon: "fas fa-file-alt", label: "อนุมัติใบขอซื้อ", roles: ["admin", "management"] },
     { path: "/po", icon: "fas fa-shopping-cart", label: "ใบสั่งซื้อ", roles: ["admin", "purchasing"] },
     { path: "/rfa", icon: "fas fa-check-circle", label: "ขึ้นทะเบียนสินทรัพย์ถาวร", roles: ["admin", "finance"] },
@@ -69,6 +73,16 @@ function App() {
     return <Login onLoginSuccess={(user) => setUser(user)} />;
   }
 
+  const getDefaultRoute = () => {
+    if (user.role === "it" || user.role === "itHead") {
+      return <Navigate to="/dbpr" />;
+    }
+    if (user.role === "purchasing") {
+      return <Navigate to="/dbpo" />;
+    }
+    return <Dashboard />;
+  };
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-100">
@@ -103,9 +117,11 @@ function App() {
           <main className="flex-1 ml-64">
             <div className="p-6">
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/pr" element={user.role === "purchasing" || user.role === "admin" ? <PR /> : <Navigate to="/" />} />
+                <Route path="/" element={getDefaultRoute()} />
+                <Route path="/pr" element={user.role === "it" || user.role === "admin" ? <PR /> : <Navigate to="/" />} />
+                <Route path="/dbpr" element={user.role === "it"|| user.role ==="itHead" || user.role === "admin" ? <DashboardPR /> : <Navigate to="/" />} />
                 <Route path="/po" element={user.role === "purchasing" || user.role === "admin" ? <PO /> : <Navigate to="/" />} />
+                <Route path="/dbpo" element={user.role === "purchasing" || user.role === "admin" ? <DashboardPO /> : <Navigate to="/" />} />
                 <Route path="/ap_pr" element={user.role === "management" || user.role === "admin" ? <AP_PR /> : <Navigate to="/" />} />
                 <Route path="/rfa" element={user.role === "finance" || user.role === "admin" ? <RFA /> : <Navigate to="/" />} />
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />

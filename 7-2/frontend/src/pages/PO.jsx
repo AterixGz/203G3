@@ -35,10 +35,14 @@ const PurchaseOrderForm = () => {
   // เพิ่มฟังก์ชัน generatePONumber
   const generatePONumber = () => {
     const today = new Date();
-    const year = today.getFullYear().toString().substring(2);
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 9000 + 1000);
-    return `PO${year}${month}-${random}`;
+    const year = today.getFullYear().toString().slice(-2); // 2 หลักสุดท้ายของปี
+    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // เดือนแบบ 2 หลัก
+    const day = today.getDate().toString().padStart(2, '0'); // วันแบบ 2 หลัก
+    const random = Math.floor(1000 + Math.random() * 9000); // สุ่มเลข 4 หลัก
+    
+    // รูปแบบ: PO-YYMMDDxxxx
+    // YY = ปี 2 หลัก, MM = เดือน, DD = วัน, xxxx = เลขสุ่ม 4 หลัก
+    return `PO-${year}${month}${day}${random}`;
   };
 
   // เพิ่มฟังก์ชันสำหรับเลือก PR
@@ -112,20 +116,40 @@ const PurchaseOrderForm = () => {
     }
 
     if (validateForm()) {
+      const poData = {
+        poNumber: formData.poNumber,
+        poDate: formData.poDate,
+        prReference: formData.prReference,
+        vendorInfo: {
+          name: formData.vendorName,
+          taxId: formData.taxId,
+          address: formData.address,
+          contact: formData.contact,
+          phone: formData.phone
+        },
+        items: selectedPR.items,
+        summary: {
+          subtotal: totalPrice,
+          vat: totalPrice * 0.07,
+          total: totalPrice * 1.07
+        },
+        terms: {
+          paymentMethod: formData.paymentMethod,
+          deliveryDate: formData.deliveryDate,
+          deliveryLocation: formData.deliveryLocation,
+          notes: formData.notes
+        },
+        status: "pending",
+        createdAt: new Date().toISOString()
+      };
+
       try {
         const response = await fetch("http://localhost:3000/api/purchase-orders", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            ...formData,
-            poNumber: formData.poNumber, // เพิ่มเลข PO
-            items: selectedPR.items,
-            totalAmount: calculateTotalPrice(selectedPR.items),
-            prReference: selectedPR.prNumber,
-            createdAt: new Date().toISOString()
-          }),
+          body: JSON.stringify(poData),
         });
 
         if (response.ok) {

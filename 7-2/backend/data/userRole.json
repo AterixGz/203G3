@@ -27,6 +27,27 @@
       "password": "management123",
       "role": "management",
       "name": "Management Staff"
+    },
+    {
+      "id": 5,
+      "username": "it",
+      "password": "it",
+      "role": "it",
+      "name": "IT"
+    },
+    {
+      "id": 6,
+      "username": "itHead",
+      "password": "itHead",
+      "role": "itHead",
+      "name": "Head of IT"
+    },
+    {
+      "id": 7,
+      "username": "Warehouse",
+      "password": "warehouse",
+      "role": "warehouse",
+      "name": "Warehouse Staff"
     }
   ]
 }
