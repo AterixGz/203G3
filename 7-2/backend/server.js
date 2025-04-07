@@ -679,6 +679,72 @@ app.put("/auto-settings", (req, res) => {
   }
 });
 
+// Add this with other constants at the top
+const PO_REGIS_FILE = path.join(__dirname, "data", "PoRegis.json");
+
+// Add new endpoint for PO registration
+app.post("/api/po-registration", (req, res) => {
+  try {
+    let poRegisData = { purchaseOrders: [] };
+    
+    if (fs.existsSync(PO_REGIS_FILE)) {
+      const fileData = fs.readFileSync(PO_REGIS_FILE, 'utf8');
+      poRegisData = JSON.parse(fileData);
+    }
+    
+    const newPO = {
+      ...req.body,
+      createdAt: new Date().toISOString(),
+      status: "pending"
+    };
+    
+    poRegisData.purchaseOrders.push(newPO);
+    fs.writeFileSync(PO_REGIS_FILE, JSON.stringify(poRegisData, null, 2));
+    
+    res.status(201).json({ message: "บันทึกข้อมูล PO สำเร็จ", po: newPO });
+  } catch (error) {
+    console.error('Error saving PO:', error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+  }
+});
+
+// Update PO status
+app.put("/api/po-registration/:poNumber", (req, res) => {
+  try {
+    const { poNumber } = req.params;
+    const { status } = req.body;
+    
+    const poData = JSON.parse(fs.readFileSync(PO_REGIS_FILE, 'utf8'));
+    const poIndex = poData.purchaseOrders.findIndex(po => po.poNumber === poNumber);
+    
+    if (poIndex === -1) {
+      return res.status(404).json({ message: "PO not found" });
+    }
+    
+    poData.purchaseOrders[poIndex].status = status;
+    fs.writeFileSync(PO_REGIS_FILE, JSON.stringify(poData, null, 2));
+    
+    res.json({ message: "Updated successfully" });
+  } catch (error) {
+    console.error('Error updating PO:', error);
+    res.status(500).json({ message: "Error updating PO" });
+  }
+});
+
+// GET PO registration data
+app.get("/api/po-registration", (req, res) => {
+  try {
+    if (!fs.existsSync(PO_REGIS_FILE)) {
+      fs.writeFileSync(PO_REGIS_FILE, JSON.stringify({ purchaseOrders: [] }));
+    }
+    const data = fs.readFileSync(PO_REGIS_FILE, 'utf8');
+    res.json(JSON.parse(data));
+  } catch (error) {
+    console.error('Error reading PO registration data:', error);
+    res.status(500).json({ message: "Error fetching PO data" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

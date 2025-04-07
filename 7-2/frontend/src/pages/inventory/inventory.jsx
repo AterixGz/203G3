@@ -19,9 +19,14 @@ const Inventory = () => {
     unitPrice: '',
     supplier: ''
   });
+  const [pendingPOs, setPendingPOs] = useState([]);
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [selectedPO, setSelectedPO] = useState(null);
+  const [prData, setPrData] = useState(null);
 
   useEffect(() => {
     fetchItems();
+    fetchPendingPOs();
   }, []);
 
   const fetchItems = async () => {
@@ -37,6 +42,144 @@ const Inventory = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Fetch pending POs
+  const fetchPendingPOs = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/po-registration');
+      if (!response.ok) throw new Error('Failed to fetch POs');
+      const data = await response.json();
+      setPendingPOs(data.purchaseOrders.filter(po => po.status === 'pending'));
+    } catch (error) {
+      console.error('Error fetching POs:', error);
+    }
+  };
+
+  // Fetch PR data when PO is selected
+  const handlePOSelect = async (po) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/pr');
+      if (!response.ok) throw new Error('Failed to fetch PRs');
+      const prs = await response.json();
+      const matchingPR = prs.find(pr => pr.prNumber === po.prReference);
+      if (matchingPR) {
+        setSelectedPO(po);
+        setPrData(matchingPR);
+        setShowReceiveModal(true);
+      }
+    } catch (error) {
+      console.error('Error fetching PR data:', error);
+    }
+  };
+
+  // Handle receiving items
+  const handleReceiveItems = async () => {
+    try {
+      // For each item in the PO
+      for (const item of selectedPO.items) {
+        const existingItem = items.find(i => 
+          i.name === item.name && 
+          i.supplier === selectedPO.vendor.name
+        );
+
+        if (existingItem) {
+          // Update existing item
+          await fetch(`http://localhost:3000/inventory-items/${existingItem.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...existingItem,
+              quantity: (Number(existingItem.quantity) + Number(item.quantity)).toString()
+            })
+          });
+        } else {
+          // Add new item
+          await fetch('http://localhost:3000/inventory-items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: item.name,
+              quantity: item.quantity,
+              unitPrice: item.price,
+              supplier: selectedPO.vendor.name
+            })
+          });
+        }
+      }
+
+      // Update PO status
+      await fetch(`http://localhost:3000/api/po-registration/${selectedPO.poNumber}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'received' })
+      });
+
+      // Refresh data
+      fetchItems();
+      fetchPendingPOs();
+      setShowReceiveModal(false);
+      setSelectedPO(null);
+      setPrData(null);
+      
+      alert('รับสินค้าเข้าคลังเรียบร้อยแล้ว');
+    } catch (error) {
+      console.error('Error receiving items:', error);
+      alert('เกิดข้อผิดพลาดในการรับสินค้า');
+    }
+  };
+
+  // Add ReceiveModal component
+  const ReceiveModal = ({ po, onClose, onConfirm }) => {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg w-3/4 max-h-[80vh] overflow-y-auto">
+          <h2 className="text-xl font-medium mb-4">รับสินค้าเข้าคลัง</h2>
+          <div className="mb-4">
+            <p>เลขที่ PO: {po.poNumber}</p>
+            <p>ผู้จำหน่าย: {po.vendor.name}</p>
+          </div>
+          
+          <table className="w-full mb-4">
+            <thead>
+              <tr>
+                <th className="text-left">รายการ</th>
+                <th className="text-center">จำนวน</th>
+                <th className="text-right">ราคาต่อหน่วย</th>
+                <th className="text-right">มูลค่ารวม</th>
+              </tr>
+            </thead>
+            <tbody>
+              {po.items.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.name}</td>
+                  <td className="text-center">{item.quantity}</td>
+                  <td className="text-right">{Number(item.price).toLocaleString()} บาท</td>
+                  <td className="text-right">
+                    {(Number(item.quantity) * Number(item.price)).toLocaleString()} บาท
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+            >
+              ยืนยันการรับสินค้า
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const handleInputChange = (e) => {
@@ -331,6 +474,33 @@ const Inventory = () => {
               ))}
             </tbody>
           </table>
+        )}
+
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4">รายการ PO ที่รอรับเข้าคลัง</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pendingPOs.map(po => (
+              <div 
+                key={po.poNumber}
+                className="border rounded-lg p-4 hover:border-gray-400 cursor-pointer"
+                onClick={() => handlePOSelect(po)}
+              >
+                <p className="font-medium">{po.poNumber}</p>
+                <p className="text-sm text-gray-600">ผู้จำหน่าย: {po.vendor.name}</p>
+                <p className="text-sm text-gray-600">
+                  วันที่: {new Date(po.poDate).toLocaleDateString('th-TH')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {showReceiveModal && selectedPO && (
+          <ReceiveModal
+            po={selectedPO}
+            onClose={() => setShowReceiveModal(false)}
+            onConfirm={handleReceiveItems}
+          />
         )}
       </div>
     </div>

@@ -17,10 +17,12 @@ const PurchaseOrderForm = () => {
     address: "",
     contact: "",
     phone: "",
-    paymentMethod: "",
+    paymentMethod: "โอนเงินธนาคาร", // default payment method
     deliveryDate: "",
     deliveryLocation: "",
     notes: "",
+    approver: "ผู้บริหาร", // default approver
+    sellerName: "", // will be filled from vendor selection
   });
 
   const [errors, setErrors] = useState({});
@@ -114,64 +116,55 @@ const PurchaseOrderForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedPR) {
-      alert("กรุณาเลือก PR");
+    
+    if (!validateForm()) {
       return;
     }
-  
-    if (validateForm()) {
-      const poData = {
-        poNumber: formData.poNumber,
-        poDate: formData.poDate,
-        prReference: formData.prReference,
-        vendorInfo: {
-          name: formData.vendorName,
-          taxId: formData.taxId,
-          address: formData.address,
-          contact: formData.contact,
-          phone: formData.phone,
+
+    const poData = {
+      poNumber: formData.poNumber,
+      poDate: new Date().toISOString().split('T')[0],
+      prReference: formData.prReference,
+      prDate: formData.prDate,
+      vendor: {
+        name: formData.vendorName,
+        taxId: formData.taxId,
+        address: formData.address,
+        contact: formData.contact,
+        phone: formData.phone
+      },
+      items: selectedPR.items,
+      subtotal: totalPrice,
+      vat: totalPrice * 0.07,
+      total: totalPrice * 1.07,
+      paymentMethod: "โอนเงินธนาคาร",
+      deliveryDate: formData.deliveryDate,
+      deliveryLocation: formData.deliveryLocation,
+      notes: formData.notes,
+      approver: "ผู้บริหาร",
+      sellerName: formData.vendorName,
+      status: "pending"
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/api/po-registration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        items: selectedPR.items.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-          unit: item.unit,
-          price: item.price,
-        })),
-        summary: {
-          subtotal: totalPrice,
-          vat: totalPrice * 0.07,
-          total: totalPrice * 1.07,
-        },
-        remainingBalance: totalPrice * 1.07,
-        terms: {
-          paymentMethod: formData.paymentMethod,
-          deliveryDate: formData.deliveryDate,
-          deliveryLocation: formData.deliveryLocation,
-          notes: formData.notes,
-        },
-        status: "ยังไม่ชำระ",
-        createdAt: new Date().toISOString(),
-      };
-  
-      try {
-        const response = await fetch("http://localhost:3000/api/purchase-orders", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(poData),
-        });
-  
-        if (response.ok) {
-          alert("บันทึก PO เรียบร้อยแล้ว");
-          navigate("/purchase-orders");
-        } else {
-          throw new Error("Failed to create PO");
-        }
-      } catch (error) {
-        console.error("Error creating PO:", error);
-        alert("เกิดข้อผิดพลาดในการบันทึก PO");
+        body: JSON.stringify(poData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save PO');
       }
+
+      const result = await response.json();
+      alert('บันทึกข้อมูล PO สำเร็จ');
+      navigate('/po-list'); // หรือเปลี่ยนเส้นทางไปยังหน้าที่ต้องการ
+    } catch (error) {
+      console.error('Error saving PO:', error);
+      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
   };
 
@@ -263,7 +256,8 @@ const PurchaseOrderForm = () => {
       taxId: vendor.taxId,
       address: vendor.address,
       contact: vendor.contactName,
-      phone: vendor.phone
+      phone: vendor.phone,
+      sellerName: vendor.companyName // Add this line
     }));
     setShowVendorSelection(false);
   };
@@ -571,38 +565,16 @@ const PurchaseOrderForm = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 เงื่อนไขการชำระเงิน
               </label>
-              <div className="relative">
-                <select
-                  className="w-full p-2 border border-gray-300 rounded appearance-none"
-                  name="paymentMethod"
-                  value={formData.paymentMethod}
-                  onChange={handleInputChange}
-                >
-                  <option>เลือกเงื่อนไข</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-                {errors.paymentMethod && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.paymentMethod}
-                  </p>
-                )}
-              </div>
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded bg-gray-50"
+                value="โอนเงินธนาคาร"
+                readOnly
+              />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 วันที่ส่งมอบ
@@ -680,12 +652,14 @@ const PurchaseOrderForm = () => {
             <div>
               <h3 className="text-md font-medium mb-4">ผู้อนุมัติ</h3>
               <div className="h-20 border-b border-dashed border-gray-300 mb-2"></div>
-              <p className="text-sm">วันที่: ____/____/____</p>
+              <p className="text-sm font-medium">ผู้บริหาร</p>
+              <p className="text-sm">วันที่: {new Date().toLocaleDateString('th-TH')}</p>
             </div>
             <div>
               <h3 className="text-md font-medium mb-4">ผู้ขาย</h3>
               <div className="h-20 border-b border-dashed border-gray-300 mb-2"></div>
-              <p className="text-sm">วันที่: ____/____/____</p>
+              <p className="text-sm font-medium">{formData.sellerName}</p>
+              <p className="text-sm">วันที่: {new Date().toLocaleDateString('th-TH')}</p>
             </div>
           </div>
         </div>
