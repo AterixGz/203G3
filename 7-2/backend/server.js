@@ -1,4 +1,4 @@
-import path from "path";
+  import path from "path";
 import fs from "fs";
 import cors from "cors";
 import express from "express";
@@ -378,6 +378,24 @@ app.post("/api/purchase-orders", (req, res) => {
     return res.status(400).json({ message: "ไม่มีข้อมูลที่ส่งมา" });
   }
 
+  // ปรับโครงสร้างข้อมูล PO
+  const formattedPO = {
+    poNumber: newPO.poNumber,
+    poDate: newPO.poDate,
+    prReference: newPO.prReference,
+    vendorInfo: newPO.vendorInfo,
+    items: newPO.items,
+    summary: {
+      subtotal: newPO.summary.subtotal,
+      vat: newPO.summary.vat,
+      total: newPO.summary.total,
+    },
+    remainingBalance: newPO.remainingBalance,
+    terms: newPO.terms,
+    status: newPO.status,
+    createdAt: new Date().toISOString(),
+  };
+
   // อ่านข้อมูลเดิมจาก Po.json
   let poData = [];
   if (fs.existsSync(PO_FILE)) {
@@ -386,7 +404,7 @@ app.post("/api/purchase-orders", (req, res) => {
   }
 
   // เพิ่มข้อมูลใหม่
-  poData.push(newPO);
+  poData.push(formattedPO);
 
   // เขียนข้อมูลกลับไปที่ Po.json
   fs.writeFileSync(PO_FILE, JSON.stringify(poData, null, 2));
@@ -447,124 +465,36 @@ app.put("/api/purchase-orders/:poNumber", (req, res) => {
   res.json({ message: "อัพเดตสถานะ PO สำเร็จ" });
 });
 
-// Remove SQL related code and keep only JSON implementation
-const INVENTORY_FILE = path.join(__dirname, "data", "inventory.json");
+// Endpoint สำหรับอัปเดตสถานะ PO และยอดคงเหลือ
+app.post("/api/update-po-status", (req, res) => {
+  const { payments } = req.body;
 
-// GET inventory items
-app.get("/inventory-items", (req, res) => {
-  try {
-    if (!fs.existsSync(INVENTORY_FILE)) {
-      fs.writeFileSync(INVENTORY_FILE, JSON.stringify([]));
-    }
-    const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
-    const items = JSON.parse(data);
-    // Sort by updatedAt in descending order
-    items.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-    res.json(items);
-  } catch (error) {
-    console.error('Error reading inventory:', error);
-    res.status(500).json({ message: "Error fetching inventory items" });
+  if (!fs.existsSync(PO_FILE)) {
+    return res.status(404).json({ message: "ไม่พบไฟล์ Po.json" });
   }
-});
 
-// POST new inventory item
-app.post("/inventory-items", (req, res) => {
   try {
-    const newItem = {
-      id: Date.now(),
-      ...req.body,
-      updatedAt: new Date().toISOString()
-    };
+    const data = fs.readFileSync(PO_FILE, "utf-8");
+    let poList = JSON.parse(data);
 
-    let items = [];
-    if (fs.existsSync(INVENTORY_FILE)) {
-      const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
-      items = JSON.parse(data);
-    }
+    payments.forEach((payment) => {
+      const po = poList.find((p) => p.poNumber === payment.invoiceId);
+      if (po) {
+        po.remainingBalance -= payment.amount; // หักยอดที่ชำระออกจากยอดคงเหลือ
+        if (po.remainingBalance <= 0) {
+          po.status = "ชำระแล้ว"; // หากยอดคงเหลือ <= 0 ให้เปลี่ยนสถานะเป็น "ชำระแล้ว"
+          po.remainingBalance = 0; // ป้องกันค่าติดลบ
+        } else {
+          po.status = "ชำระบางส่วน"; // หากยังมียอดคงเหลือ ให้เปลี่ยนสถานะเป็น "ชำระบางส่วน"
+        }
+      }
+    });
 
-    items.push(newItem);
-    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(items, null, 2));
-
-    res.status(201).json(newItem);
+    fs.writeFileSync(PO_FILE, JSON.stringify(poList, null, 2));
+    res.status(200).json({ message: "อัปเดตสถานะและยอดคงเหลือ PO สำเร็จ", poList });
   } catch (error) {
-    console.error('Error adding item:', error);
-    res.status(500).json({ message: "Error adding item" });
-  }
-});
-
-// PUT update inventory item
-app.put("/inventory-items/:id", (req, res) => {
-  try {
-    const { id } = req.params;
-    const updatedItem = {
-      ...req.body,
-      updatedAt: new Date().toISOString()
-    };
-
-    const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
-    let items = JSON.parse(data);
-
-    const index = items.findIndex(item => item.id === parseInt(id));
-    if (index === -1) {
-      return res.status(404).json({ message: "Item not found" });
-    }
-
-    items[index] = { ...items[index], ...updatedItem };
-    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(items, null, 2));
-
-    res.json({ message: "Item updated successfully" });
-  } catch (error) {
-    console.error('Error updating item:', error);
-    res.status(500).json({ message: "Error updating item" });
-  }
-});
-
-// DELETE inventory item
-app.delete("/inventory-items/:id", (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
-    let items = JSON.parse(data);
-    
-    const filteredItems = items.filter(item => item.id !== parseInt(id));
-    
-    if (items.length === filteredItems.length) {
-      return res.status(404).json({ message: "Item not found" });
-    }
-    
-    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(filteredItems, null, 2));
-    res.json({ message: "Item deleted successfully" });
-  } catch (error) {
-    console.error('Error deleting item:', error);
-    res.status(500).json({ message: "Error deleting item" });
-  }
-});
-
-const AUTO_SETTINGS_FILE = path.join(__dirname, "data", "DataAuto.json");
-
-// GET auto order settings
-app.get("/auto-settings", (req, res) => {
-  try {
-    if (!fs.existsSync(AUTO_SETTINGS_FILE)) {
-      fs.writeFileSync(AUTO_SETTINGS_FILE, JSON.stringify({ settings: {} }));
-    }
-    const data = fs.readFileSync(AUTO_SETTINGS_FILE, 'utf8');
-    res.json(JSON.parse(data));
-  } catch (error) {
-    console.error('Error reading auto settings:', error);
-    res.status(500).json({ message: "Error fetching auto settings" });
-  }
-});
-
-// UPDATE auto order settings
-app.put("/auto-settings", (req, res) => {
-  try {
-    fs.writeFileSync(AUTO_SETTINGS_FILE, JSON.stringify(req.body, null, 2));
-    res.json({ message: "Settings updated successfully" });
-  } catch (error) {
-    console.error('Error updating auto settings:', error);
-    res.status(500).json({ message: "Error updating auto settings" });
+    console.error("Error updating PO:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดต PO" });
   }
 });
 

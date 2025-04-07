@@ -9,6 +9,7 @@ const PaymentRecord = () => {
   const [referenceNo, setReferenceNo] = useState('');
   const [fileInfo, setFileInfo] = useState(null);
   const [remarks, setRemarks] = useState('');
+  const [invoices, setInvoices] = useState([]);
   const [selected, setSelected] = useState([true, false, false]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -18,11 +19,43 @@ const PaymentRecord = () => {
     { id: 2, name: 'ธนาคารกสิกรไทย - 098-7-65432-1' }
   ];
 
-  const [invoices, setInvoices] = useState([
-    { id: 'INV-00456', date: '12/2/2568', dueDate: '31/3/2568', poNumber: 'PO-00123', totalAmount: 120000, remainAmount: 120000, status: 'ยังไม่ชำระ' },
-    { id: 'INV-00432', date: '10/2/2568', dueDate: '17/3/2568', poNumber: 'PO-00120', totalAmount: 85000, remainAmount: 85000, status: 'ยังไม่ชำระ' },
-    { id: 'INV-00410', date: '20/1/2568', dueDate: '19/2/2568', poNumber: 'PO-00115', totalAmount: 110000, remainAmount: 40000, status: 'ชำระบางส่วน' },
-  ]);
+  // const [invoices, setInvoices] = useState([
+  //   { id: 'INV-00456', date: '12/2/2568', dueDate: '31/3/2568', poNumber: 'PO-00123', totalAmount: 120000, remainAmount: 120000, status: 'ยังไม่ชำระ' },
+  //   { id: 'INV-00432', date: '10/2/2568', dueDate: '17/3/2568', poNumber: 'PO-00120', totalAmount: 85000, remainAmount: 85000, status: 'ยังไม่ชำระ' },
+  //   { id: 'INV-00410', date: '20/1/2568', dueDate: '19/2/2568', poNumber: 'PO-00115', totalAmount: 110000, remainAmount: 40000, status: 'ชำระบางส่วน' },
+  // ]);
+
+  useEffect(() => {
+    // ดึงข้อมูล PO จาก API
+    const fetchInvoices = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/purchase-orders");
+        if (!response.ok) {
+          throw new Error("ไม่สามารถดึงข้อมูล PO ได้");
+        }
+        const data = await response.json();
+
+        // แปลงข้อมูล PO ให้เป็นรูปแบบที่เหมาะสมกับ invoices
+        const formattedInvoices = data.map((po) => ({
+          id: po.poNumber,
+          date: po.poDate,
+          dueDate: po.terms.deliveryDate,
+          poNumber: po.poNumber,
+          totalAmount: po.summary.total,
+          remainAmount: po.remainingBalance, // ใช้ remainingBalance ที่อัปเดตแล้ว
+          status: po.status,
+        }));
+        
+
+        setInvoices(formattedInvoices);
+        setSelected(new Array(formattedInvoices.length).fill(false)); // ตั้งค่า default ของ selected
+      } catch (error) {
+        console.error(error.message);
+      }
+    };
+
+    fetchInvoices();
+  }, []);
 
   const toggleSelect = (index) => {
     const newSelected = [...selected];
@@ -64,7 +97,7 @@ const PaymentRecord = () => {
     try {
       // สร้างข้อมูลการชำระเงิน
       const payments = invoices
-        .filter((_, index) => selected[index]) // เลือกเฉพาะใบแจ้งหนี้ที่ถูกเลือก
+        .filter((_, index) => selected[index]) // เลือกเฉพาะรายการที่ถูกเลือก
         .map((invoice) => {
           const paymentAmount = Math.min(invoice.remainAmount, parseFloat(amount)); // ชำระไม่เกินยอดคงเหลือ
           return {
@@ -73,7 +106,7 @@ const PaymentRecord = () => {
           };
         });
   
-      // ส่งข้อมูลการชำระเงินไปยัง API
+      // ส่งข้อมูลการชำระเงินไปยัง Payments.json
       const paymentResponse = await fetch("http://localhost:3000/api/payments", {
         method: "POST",
         headers: {
@@ -93,8 +126,8 @@ const PaymentRecord = () => {
         throw new Error("บันทึกข้อมูลการชำระเงินไม่สำเร็จ");
       }
   
-      // อัปเดตสถานะใบแจ้งหนี้
-      const updateResponse = await fetch("http://localhost:3000/api/update-invoices", {
+      // อัปเดตสถานะใน Po.json
+      const updateResponse = await fetch("http://localhost:3000/api/update-po-status", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -103,35 +136,34 @@ const PaymentRecord = () => {
       });
   
       if (!updateResponse.ok) {
-        throw new Error("อัปเดตสถานะใบแจ้งหนี้ไม่สำเร็จ");
+        throw new Error("อัปเดตสถานะ PO ไม่สำเร็จ");
       }
+  
+      const updatedData = await updateResponse.json();
   
       // อัปเดตสถานะใน Frontend
       const updatedInvoices = invoices.map((invoice) => {
         const payment = payments.find((p) => p.invoiceId === invoice.id);
         if (payment) {
-          const newRemainAmount = invoice.remainAmount - payment.amount;
+          const po = updatedData.poList.find((p) => p.poNumber === invoice.id);
           return {
             ...invoice,
-            remainAmount: newRemainAmount,
-            status: newRemainAmount === 0 ? "ชำระแล้ว" : "ชำระบางส่วน",
+            remainAmount: po.remainingBalance, // ใช้ remainingBalance ที่อัปเดตแล้ว
+            status: po.status,
           };
         }
         return invoice;
       });
   
-      // ใช้ updatedInvoices เพื่ออัปเดต State
-      setInvoices(updatedInvoices); // เพิ่มบรรทัดนี้เพื่ออัปเดต State ของ invoices
-  
+      setInvoices(updatedInvoices);
       setSelected(new Array(invoices.length).fill(false)); // ยกเลิกการเลือกทั้งหมด
-      alert("บันทึกข้อมูลสำเร็จและอัปเดตสถานะใบแจ้งหนี้เรียบร้อย");
+      alert("บันทึกข้อมูลสำเร็จและอัปเดตสถานะ PO เรียบร้อย");
     } catch (error) {
       alert(error.message);
     } finally {
       setIsSubmitting(false);
     }
   };
-
 
 
   return (

@@ -24,13 +24,14 @@
       "vat": 70,
       "total": 1070
     },
+    "remainingBalance": 1070,
     "terms": {
       "paymentMethod": "เครดิต 30 วัน",
       "deliveryDate": "2025-05-07",
       "deliveryLocation": "คลังสินค้าหลัก",
       "notes": "หมายเหตุเพิ่มเติม"
     },
-    "status": "pending",
+    "status": "ยังไม่ชำระ",
     "createdAt": "2025-04-07T10:00:00.000Z"
   },
   {
@@ -57,13 +58,82 @@
       "vat": 70,
       "total": 1070
     },
+    "remainingBalance": 1070,
     "terms": {
       "paymentMethod": "",
       "deliveryDate": "123123",
       "deliveryLocation": "12312",
       "notes": "3123"
     },
-    "status": "pending",
+    "status": "ยังไม่ชำระ",
     "createdAt": "2025-04-06T19:34:21.749Z"
+  },
+  {
+    "poNumber": "PO-2504077338",
+    "poDate": "2025-04-07",
+    "prReference": "PR-2504075204",
+    "vendorInfo": {
+      "name": "Knight",
+      "taxId": "1234567890123",
+      "address": "andress",
+      "contact": "king",
+      "phone": "0923456851"
+    },
+    "items": [
+      {
+        "name": "Computer",
+        "quantity": "15",
+        "unit": "set",
+        "price": "250000"
+      }
+    ],
+    "summary": {
+      "subtotal": 0,
+      "vat": 262500,
+      "total": 4012500
+    },
+    "remainingBalance": 1000000,
+    "terms": {
+      "paymentMethod": "",
+      "deliveryDate": "04/10/2025",
+      "deliveryLocation": "test",
+      "notes": ""
+    },
+    "status": "ชำระบางส่วน",
+    "createdAt": "2025-04-07T14:35:06.743Z"
+  },
+  {
+    "poNumber": "PO-2504077419",
+    "poDate": "2025-04-07",
+    "prReference": "PR-2504076389",
+    "vendorInfo": {
+      "name": "Knight",
+      "taxId": "1234567890123",
+      "address": "test",
+      "contact": "test",
+      "phone": "0923456851"
+    },
+    "items": [
+      {
+        "name": "mouse",
+        "quantity": "15",
+        "unit": "ชิ้น",
+        "price": "750"
+      }
+    ],
+    "summary": {
+      "subtotal": 11250,
+      "vat": 787.5000000000001,
+      "total": 12037.5
+    },
+    "remainingBalance": 10000,
+    "terms": {
+      "paymentMethod": "",
+      "deliveryDate": "04/10/2025",
+      "deliveryLocation": "",
+      "notes": ""
+    },
+    "status": "ชำระบางส่วน",
+    "createdAt": "2025-04-07T16:14:51.054Z"
   }
 ]
