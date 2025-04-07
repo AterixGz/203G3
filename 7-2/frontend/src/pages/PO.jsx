@@ -114,7 +114,7 @@ const PurchaseOrderForm = () => {
       alert("กรุณาเลือก PR");
       return;
     }
-
+  
     if (validateForm()) {
       const poData = {
         poNumber: formData.poNumber,
@@ -125,24 +125,30 @@ const PurchaseOrderForm = () => {
           taxId: formData.taxId,
           address: formData.address,
           contact: formData.contact,
-          phone: formData.phone
+          phone: formData.phone,
         },
-        items: selectedPR.items,
+        items: selectedPR.items.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          price: item.price,
+        })),
         summary: {
           subtotal: totalPrice,
           vat: totalPrice * 0.07,
-          total: totalPrice * 1.07
+          total: totalPrice * 1.07,
         },
+        remainingBalance: totalPrice * 1.07,
         terms: {
           paymentMethod: formData.paymentMethod,
           deliveryDate: formData.deliveryDate,
           deliveryLocation: formData.deliveryLocation,
-          notes: formData.notes
+          notes: formData.notes,
         },
-        status: "pending",
-        createdAt: new Date().toISOString()
+        status: "ยังไม่ชำระ",
+        createdAt: new Date().toISOString(),
       };
-
+  
       try {
         const response = await fetch("http://localhost:3000/api/purchase-orders", {
           method: "POST",
@@ -151,7 +157,7 @@ const PurchaseOrderForm = () => {
           },
           body: JSON.stringify(poData),
         });
-
+  
         if (response.ok) {
           alert("บันทึก PO เรียบร้อยแล้ว");
           navigate("/purchase-orders");

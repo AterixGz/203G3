@@ -378,6 +378,24 @@ app.post("/api/purchase-orders", (req, res) => {
     return res.status(400).json({ message: "ไม่มีข้อมูลที่ส่งมา" });
   }
 
+  // ปรับโครงสร้างข้อมูล PO
+  const formattedPO = {
+    poNumber: newPO.poNumber,
+    poDate: newPO.poDate,
+    prReference: newPO.prReference,
+    vendorInfo: newPO.vendorInfo,
+    items: newPO.items,
+    summary: {
+      subtotal: newPO.summary.subtotal,
+      vat: newPO.summary.vat,
+      total: newPO.summary.total,
+    },
+    remainingBalance: newPO.remainingBalance,
+    terms: newPO.terms,
+    status: newPO.status,
+    createdAt: new Date().toISOString(),
+  };
+
   // อ่านข้อมูลเดิมจาก Po.json
   let poData = [];
   if (fs.existsSync(PO_FILE)) {
@@ -386,7 +404,7 @@ app.post("/api/purchase-orders", (req, res) => {
   }
 
   // เพิ่มข้อมูลใหม่
-  poData.push(newPO);
+  poData.push(formattedPO);
 
   // เขียนข้อมูลกลับไปที่ Po.json
   fs.writeFileSync(PO_FILE, JSON.stringify(poData, null, 2));
@@ -445,6 +463,39 @@ app.put("/api/purchase-orders/:poNumber", (req, res) => {
   fs.writeFileSync(PO_FILE, JSON.stringify(poList, null, 2));
 
   res.json({ message: "อัพเดตสถานะ PO สำเร็จ" });
+});
+
+// Endpoint สำหรับอัปเดตสถานะ PO และยอดคงเหลือ
+app.post("/api/update-po-status", (req, res) => {
+  const { payments } = req.body;
+
+  if (!fs.existsSync(PO_FILE)) {
+    return res.status(404).json({ message: "ไม่พบไฟล์ Po.json" });
+  }
+
+  try {
+    const data = fs.readFileSync(PO_FILE, "utf-8");
+    let poList = JSON.parse(data);
+
+    payments.forEach((payment) => {
+      const po = poList.find((p) => p.poNumber === payment.invoiceId);
+      if (po) {
+        po.remainingBalance -= payment.amount; // หักยอดที่ชำระออกจากยอดคงเหลือ
+        if (po.remainingBalance <= 0) {
+          po.status = "ชำระแล้ว"; // หากยอดคงเหลือ <= 0 ให้เปลี่ยนสถานะเป็น "ชำระแล้ว"
+          po.remainingBalance = 0; // ป้องกันค่าติดลบ
+        } else {
+          po.status = "ชำระบางส่วน"; // หากยังมียอดคงเหลือ ให้เปลี่ยนสถานะเป็น "ชำระบางส่วน"
+        }
+      }
+    });
+
+    fs.writeFileSync(PO_FILE, JSON.stringify(poList, null, 2));
+    res.status(200).json({ message: "อัปเดตสถานะและยอดคงเหลือ PO สำเร็จ", poList });
+  } catch (error) {
+    console.error("Error updating PO:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดต PO" });
+  }
 });
 
 app.listen(PORT, () => {

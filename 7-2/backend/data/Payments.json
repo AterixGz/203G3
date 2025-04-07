@@ -1,58 +1,50 @@
 [
   {
-    "date": "2025-04-04",
-    "amount": "85000",
+    "date": "2025-04-08",
+    "amount": 4012500,
     "paymentMethod": "โอนเงินผ่านบัญชี",
     "bankAccount": "ธนาคารกรุงไทย - 123-4-56789-0",
-    "referenceNo": "1234567",
+    "referenceNo": "1111111111111",
     "remarks": ""
   },
   {
-    "date": "2025-04-04",
-    "amount": 120000,
+    "date": "2025-04-08",
+    "amount": 0,
     "paymentMethod": "โอนเงินผ่านบัญชี",
     "bankAccount": "ธนาคารกรุงไทย - 123-4-56789-0",
-    "referenceNo": "1234567",
+    "referenceNo": "1111111111",
     "remarks": ""
   },
   {
-    "date": "2025-04-04",
-    "amount": 85000,
+    "date": "2025-04-08",
+    "amount": 4012500,
     "paymentMethod": "โอนเงินผ่านบัญชี",
     "bankAccount": "ธนาคารกรุงไทย - 123-4-56789-0",
-    "referenceNo": "123456",
+    "referenceNo": "1111111111",
     "remarks": ""
   },
   {
-    "date": "2025-04-04",
-    "amount": 85000,
+    "date": "2025-04-08",
+    "amount": 0,
     "paymentMethod": "โอนเงินผ่านบัญชี",
     "bankAccount": "ธนาคารกรุงไทย - 123-4-56789-0",
-    "referenceNo": "123456",
+    "referenceNo": "111111111",
     "remarks": ""
   },
   {
-    "date": "2025-04-04",
-    "amount": 85000,
+    "date": "2025-04-07",
+    "amount": 4012500,
     "paymentMethod": "โอนเงินผ่านบัญชี",
     "bankAccount": "ธนาคารกรุงไทย - 123-4-56789-0",
-    "referenceNo": "1234556",
+    "referenceNo": "1111111111",
     "remarks": ""
   },
   {
-    "date": "2025-04-04",
-    "amount": 120000,
+    "date": "2025-04-07",
+    "amount": 12037.5,
     "paymentMethod": "โอนเงินผ่านบัญชี",
-    "bankAccount": "ธนาคารกรุงไทย - 123-4-56789-0",
-    "referenceNo": "1234567",
-    "remarks": ""
-  },
-  {
-    "date": "2025-04-04",
-    "amount": 35000,
-    "paymentMethod": "โอนเงินผ่านบัญชี",
-    "bankAccount": "ธนาคารกรุงไทย - 123-4-56789-0",
-    "referenceNo": "1234567",
+    "bankAccount": "",
+    "referenceNo": "11111111111",
     "remarks": ""
   }
 ]
