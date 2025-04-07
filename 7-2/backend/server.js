@@ -1,9 +1,11 @@
-  import path from "path";
+import path from "path";
 import fs from "fs";
 import cors from "cors";
 import express from "express";
 import { fileURLToPath } from "url"; // ใช้สำหรับหา __dirname ใน ES Module
 import mysql from "mysql2";
+import bodyParser from 'body-parser';
+import { dirname } from 'path';
 
 // ตั้งค่าการเชื่อมต่อฐานข้อมูล
 const connection = mysql.createConnection({
@@ -20,9 +22,11 @@ const PORT = 3000;
 // สร้าง __dirname สำหรับ ES Module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const dataFilePath = path.join(__dirname, 'vendor.json');
 
 app.use(cors());
 app.use(express.json());
+app.use(bodyParser.json());
 
 // ตัวอย่าง API
 app.get("/", (req, res) => {
@@ -495,6 +499,63 @@ app.post("/api/update-po-status", (req, res) => {
   } catch (error) {
     console.error("Error updating PO:", error);
     res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดต PO" });
+  }
+});
+
+// Helper function: อ่านข้อมูลจาก vendor.json
+const readData = () => {
+  try {
+    const data = fs.readFileSync(dataFilePath, 'utf8');
+    return JSON.parse(data || '[]');
+  } catch (err) {
+    console.error('Error reading data file:', err);
+    return [];
+  }
+};
+
+// Helper function: เขียนข้อมูลลง vendor.json
+const writeData = (data) => {
+  fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2), 'utf8');
+};
+
+// API บันทึกข้อมูลบริษัท
+app.post('/api/company/save', (req, res) => {
+  const formData = req.body;
+
+  // Validation เบื้องต้น
+  const requiredFields = ['companyName', 'taxId', 'phone', 'email'];
+  const missingFields = requiredFields.filter((field) => !formData[field]);
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({ message: `กรุณากรอกข้อมูล: ${missingFields.join(', ')}` });
+  }
+
+  try {
+    const existingData = readData();
+
+    const newEntry = {
+      id: existingData.length + 1,
+      ...formData,
+      createdAt: new Date()
+    };
+
+    existingData.push(newEntry);
+    writeData(existingData);
+
+    res.status(200).json({ message: 'บันทึกข้อมูลเรียบร้อย', data: newEntry });
+  } catch (error) {
+    console.error('Error saving data:', error);
+    res.status(500).json({ message: 'ไม่สามารถบันทึกข้อมูลได้' });
+  }
+});
+
+app.get('/api/company/list', (req, res) => {
+  try {
+    const data = readData();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error reading data:', error);
+    res.status(500).json({ message: 'ไม่สามารถอ่านข้อมูลได้' });
   }
 });
 

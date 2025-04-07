@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "companyName": "เจริญทรัพย์",
+    "taxId": "1111111111111",
+    "address": "22222",
+    "province": "3333",
+    "district": "4444",
+    "postalCode": "55555",
+    "contactName": "Manee",
+    "position": "ผู้บริหาร",
+    "phone": "1111111111",
+    "email": "sawatdeekab@gmail.com",
+    "businessType": "ขายไก่",
+    "products": "ไก่สดสะอาด",
+    "createdAt": "2025-04-07T18:11:21.380Z"
+  }
+]
