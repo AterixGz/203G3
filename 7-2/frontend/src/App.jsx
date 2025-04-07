@@ -11,6 +11,8 @@ import Login from "./pages/Login/Login";
 import Dashboard from './pages/Dashboard/Dashboard';
 import DashboardPR from './pages/Dashboard/DashboardPR';
 import DashboardPO from './pages/Dashboard/DashboardPO';
+import Vendor from "./pages/store/registerVendor";
+import ViewVendor from "./pages/store/viewVendor";
 
 const SidebarNav = ({ role }) => {
   const location = useLocation();
@@ -127,6 +129,8 @@ function App() {
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
                 <Route path="/pay" element={user.role === "finance" || user.role === "admin" ? <PAY /> : <Navigate to="/" />} />
                 <Route path="/member" element={user.role === "admin" ? <MEMBER /> : <Navigate to="/" />} />
+                <Route path="/Vendor" element={user.role === "admin" ? <Vendor /> : <Navigate to="/" />} />
+                <Route path="/ViewVendor" element={user.role === "admin" ? <ViewVendor /> : <Navigate to="/" />} />
               </Routes>
             </div>
           </main>
