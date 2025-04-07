@@ -11,8 +11,14 @@ import Login from "./pages/Login/Login";
 import Dashboard from './pages/Dashboard/Dashboard';
 import DashboardPR from './pages/Dashboard/DashboardPR';
 import DashboardPO from './pages/Dashboard/DashboardPO';
+<<<<<<< HEAD
+import Cost from "./pages/inventory/inventory";
+import AutoPR from "./pages/autoPR/autoPR";
+import Inventory from "./pages/inventory/inventory";
+=======
 import Vendor from "./pages/store/registerVendor";
 import ViewVendor from "./pages/store/viewVendor";
+>>>>>>> 60cf0eb08fe216b98c64c06c101fef1d37c98c1e
 
 const SidebarNav = ({ role }) => {
   const location = useLocation();
@@ -29,6 +35,13 @@ const SidebarNav = ({ role }) => {
     { path: "/ap", icon: "fas fa-check-circle", label: "ดูยอดคงเหลือเจ้าหนี้", roles: ["admin", "finance"] },
     { path: "/pay", icon: "fas fa-check-circle", label: "จ่ายเงิน", roles: ["admin", "finance"] },
     { path: "/member", icon: "fas fa-users", label: "จัดการสมาชิก", roles: ["admin"] },
+    { path: "/cost", icon: "fas fa-dollar-sign", label: "คลังสินค้า", roles: ["admin", "finance", "management"] },
+    { 
+      path: "/auto-pr", 
+      icon: "fas fa-sync", 
+      label: "ขอซื้ออัตโนมัติ", 
+      roles: ["admin", "purchasing"] 
+    },
   ];
 
   // กรองเฉพาะเมนูที่ Role ปัจจุบันสามารถเข้าถึงได้
@@ -129,8 +142,35 @@ function App() {
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
                 <Route path="/pay" element={user.role === "finance" || user.role === "admin" ? <PAY /> : <Navigate to="/" />} />
                 <Route path="/member" element={user.role === "admin" ? <MEMBER /> : <Navigate to="/" />} />
+<<<<<<< HEAD
+                <Route 
+                  path="/cost" 
+                  element={
+                    ['finance', 'management', 'admin'].includes(user.role) 
+                      ? <Cost /> 
+                      : <Navigate to="/" />
+                  } 
+                />
+                <Route 
+                  path="/auto-pr" 
+                  element={
+                    user.role === "purchasing" || user.role === "admin" 
+                      ? <AutoPR /> 
+                      : <Navigate to="/" />
+                  } 
+                />
+                <Route 
+                  path="/inventory" 
+                  element={
+                    ['finance', 'management', 'admin'].includes(user.role) 
+                      ? <Inventory /> 
+                      : <Navigate to="/" />
+                  } 
+                />
+=======
                 <Route path="/Vendor" element={user.role === "admin" ? <Vendor /> : <Navigate to="/" />} />
                 <Route path="/ViewVendor" element={user.role === "admin" ? <ViewVendor /> : <Navigate to="/" />} />
+>>>>>>> 60cf0eb08fe216b98c64c06c101fef1d37c98c1e
               </Routes>
             </div>
           </main>
