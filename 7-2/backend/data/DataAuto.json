@@ -1,3 +1,10 @@
 {
-  "settings": {}
+  "settings": {
+    "1744042000820": {
+      "minThreshold": 33,
+      "purchaseQuantity": 2,
+      "maxThreshold": 44,
+      "enabled": true
+    }
+  }
 }

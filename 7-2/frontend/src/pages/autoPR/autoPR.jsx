@@ -6,6 +6,7 @@ const AutoPR = () => {
   const [autoOrderSettings, setAutoOrderSettings] = useState({});
   const [pendingPRs, setPendingPRs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
 
   // Fetch items and pending PRs when component mounts
   useEffect(() => {
@@ -13,11 +14,6 @@ const AutoPR = () => {
     fetchPendingPRs();
     loadSettings();
   }, []);
-
-  // Save settings to API when they change
-  useEffect(() => {
-    saveSettings(autoOrderSettings);
-  }, [autoOrderSettings]);
 
   // Load saved settings from API
   const loadSettings = async () => {
@@ -86,37 +82,34 @@ const AutoPR = () => {
       ...autoOrderSettings,
       [itemId]: {
         ...autoOrderSettings[itemId],
-        minThreshold: parseInt(value)
+        minThreshold: parseInt(value || 0)
       }
     };
     setAutoOrderSettings(newSettings);
-    await saveSettings(newSettings);
   };
 
-  // Add maxThreshold update function
+  // Update maximum threshold
   const updateMaxThreshold = async (itemId, value) => {
     const newSettings = {
       ...autoOrderSettings,
       [itemId]: {
         ...autoOrderSettings[itemId],
-        maxThreshold: parseInt(value)
+        maxThreshold: parseInt(value || 0)
       }
     };
     setAutoOrderSettings(newSettings);
-    await saveSettings(newSettings);
   };
 
-  // Add new function to update purchase quantity
+  // Update purchase quantity
   const updatePurchaseQuantity = async (itemId, value) => {
     const newSettings = {
       ...autoOrderSettings,
       [itemId]: {
         ...autoOrderSettings[itemId],
-        purchaseQuantity: parseInt(value)
+        purchaseQuantity: parseInt(value || 0)
       }
     };
     setAutoOrderSettings(newSettings);
-    await saveSettings(newSettings);
   };
 
   // Calculate number of orders needed to reach minimum threshold
@@ -250,6 +243,23 @@ const AutoPR = () => {
       }
     } catch (error) {
       console.error('Error saving settings:', error);
+      alert('เกิดข้อผิดพลาดในการบันทึกการตั้งค่า');
+    }
+  };
+
+  // Add edit and save functions
+  const handleEdit = (itemId) => {
+    setEditingId(itemId);
+  };
+
+  const handleSave = async (itemId) => {
+    try {
+      await saveSettings(autoOrderSettings);
+      setEditingId(null);
+      alert('บันทึกการตั้งค่าสำเร็จ');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('เกิดข้อผิดพลาดในการบันทึกการตั้งค่า');
     }
   };
 
@@ -271,6 +281,7 @@ const AutoPR = () => {
             <th>ราคาต่อหน่วย</th>
             <th>สถานะ</th>
             <th>เปิด/ปิด</th>
+            <th>การดำเนินการ</th>
           </tr>
         </thead>
         <tbody>
@@ -281,6 +292,7 @@ const AutoPR = () => {
               const matchingItem = pr.items.find(i => i.name === item.name);
               return total + (matchingItem ? Number(matchingItem.quantity) : 0);
             }, 0);
+            const isEditing = editingId === item.id;
 
             return (
               <tr key={item.id}>
@@ -289,44 +301,56 @@ const AutoPR = () => {
                 <td>{pendingQuantity > 0 ? pendingQuantity : 0}</td>
                 <td>{effectiveQuantity}</td>
                 <td>
-                  <input
-                    type="number"
-                    min="0"
-                    value={settings.minThreshold || 0}
-                    onChange={(e) => updateMinThreshold(item.id, e.target.value)}
-                    className="threshold-input"
-                  />
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min="0"
+                      value={settings.minThreshold || 0}
+                      onChange={(e) => updateMinThreshold(item.id, e.target.value)}
+                      className="threshold-input"
+                    />
+                  ) : (
+                    settings.minThreshold || 0
+                  )}
                 </td>
                 <td>
-                  <input
-                    type="number"
-                    min="0"
-                    value={settings.maxThreshold || 0}
-                    onChange={(e) => updateMaxThreshold(item.id, e.target.value)}
-                    className="threshold-input"
-                  />
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min="0"
+                      value={settings.maxThreshold || 0}
+                      onChange={(e) => updateMaxThreshold(item.id, e.target.value)}
+                      className="threshold-input"
+                    />
+                  ) : (
+                    settings.maxThreshold || 0
+                  )}
                 </td>
                 <td>
-                  <input
-                    type="number"
-                    min="0"
-                    value={settings.purchaseQuantity || 0}
-                    onChange={(e) => updatePurchaseQuantity(item.id, e.target.value)}
-                    className="threshold-input"
-                  />
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min="0"
+                      value={settings.purchaseQuantity || 0}
+                      onChange={(e) => updatePurchaseQuantity(item.id, e.target.value)}
+                      className="threshold-input"
+                    />
+                  ) : (
+                    settings.purchaseQuantity || 0
+                  )}
                 </td>
                 <td>{Number(item.unitPrice).toLocaleString('th-TH')} บาท</td>
                 <td>
                   <span className={`status ${
-                    effectiveQuantity < (settings.minThreshold || 0)
+                    Number(item.quantity) < (settings.minThreshold || 0)
                       ? 'below'
-                      : effectiveQuantity > (settings.maxThreshold || 0)
+                      : Number(item.quantity) > (settings.maxThreshold || 0)
                       ? 'above'
                       : 'normal'
                   }`}>
-                    {effectiveQuantity < (settings.minThreshold || 0)
+                    {Number(item.quantity) < (settings.minThreshold || 0)
                       ? 'ต่ำกว่าพิกัด'
-                      : effectiveQuantity > (settings.maxThreshold || 0)
+                      : Number(item.quantity) > (settings.maxThreshold || 0)
                       ? 'เกินพิกัด'
                       : 'ปกติ'}
                   </span>
@@ -340,6 +364,23 @@ const AutoPR = () => {
                     />
                     <span className="slider"></span>
                   </label>
+                </td>
+                <td>
+                  {isEditing ? (
+                    <button
+                      onClick={() => handleSave(item.id)}
+                      className="save-btn"
+                    >
+                      บันทึก
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleEdit(item.id)}
+                      className="edit-btn"
+                    >
+                      แก้ไข
+                    </button>
+                  )}
                 </td>
               </tr>
             );
