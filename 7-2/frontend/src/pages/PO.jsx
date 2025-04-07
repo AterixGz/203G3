@@ -32,6 +32,10 @@ const PurchaseOrderForm = () => {
   // เพิ่ม state สำหรับ generate PO number
   const [poNumber, setPoNumber] = useState("");
 
+  // Inside PurchaseOrderForm component
+  const [vendors, setVendors] = useState([]);
+  const [showVendorSelection, setShowVendorSelection] = useState(false);
+
   // เพิ่มฟังก์ชัน generatePONumber
   const generatePONumber = () => {
     const today = new Date();
@@ -223,6 +227,22 @@ const PurchaseOrderForm = () => {
     }));
   }, []);
 
+  // Add useEffect to fetch vendors
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/company/list');
+        if (!response.ok) throw new Error('Failed to fetch vendors');
+        const data = await response.json();
+        setVendors(data);
+      } catch (error) {
+        console.error('Error fetching vendors:', error);
+      }
+    };
+    
+    fetchVendors();
+  }, []);
+
   // เพิ่มฟังก์ชัน formatDate
   const formatDate = (date) => {
     if (!date) return '';
@@ -233,6 +253,19 @@ const PurchaseOrderForm = () => {
   const parseDate = (dateString) => {
     if (!dateString) return '';
     return format(parse(dateString, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd');
+  };
+
+  // Add handleVendorSelect function
+  const handleVendorSelect = (vendor) => {
+    setFormData(prev => ({
+      ...prev,
+      vendorName: vendor.companyName,
+      taxId: vendor.taxId,
+      address: vendor.address,
+      contact: vendor.contactName,
+      phone: vendor.phone
+    }));
+    setShowVendorSelection(false);
   };
 
   return (
@@ -360,7 +393,18 @@ const PurchaseOrderForm = () => {
         )}
 
         <div className="border-t border-gray-200 pt-6 mb-6">
-          <h2 className="text-lg font-medium mb-4">ข้อมูลผู้ขาย</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-medium">ข้อมูลผู้ขาย</h2>
+            <button
+              type="button"
+              onClick={() => setShowVendorSelection(true)}
+              className="px-4 py-2 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
+            >
+              เลือกผู้ขาย
+            </button>
+          </div>
+          
+          {/* Existing vendor form fields */}
           <div className="grid grid-cols-2 gap-6 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -369,14 +413,10 @@ const PurchaseOrderForm = () => {
               <input
                 type="text"
                 className="w-full p-2 border border-gray-300 rounded"
-                placeholder="ชื่อบริษัทผู้ขาย"
                 name="vendorName"
                 value={formData.vendorName}
-                onChange={handleInputChange}
+                readOnly
               />
-              {errors.vendorName && (
-                <p className="text-red-500 text-sm mt-1">{errors.vendorName}</p>
-              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -385,35 +425,23 @@ const PurchaseOrderForm = () => {
               <input
                 type="text"
                 className="w-full p-2 border border-gray-300 rounded"
-                placeholder="0-0000-00000-00-0"
                 name="taxId"
                 value={formData.taxId}
-                onChange={handleInputChange}
+                readOnly
               />
-              {errors.taxId && (
-                <p className="text-red-500 text-sm mt-1">{errors.taxId}</p>
-              )}
             </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              ที่อยู่
-            </label>
-            <textarea
-              className="w-full p-2 border border-gray-300 rounded"
-              rows="3"
-              placeholder="ที่อยู่ผู้ขาย"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-            ></textarea>
-            {errors.address && (
-              <p className="text-red-500 text-sm mt-1">{errors.address}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ที่อยู่
+              </label>
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded"
+                name="address"
+                value={formData.address}
+                readOnly
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 ผู้ติดต่อ
@@ -421,14 +449,10 @@ const PurchaseOrderForm = () => {
               <input
                 type="text"
                 className="w-full p-2 border border-gray-300 rounded"
-                placeholder="ชื่อผู้ติดต่อ"
-                name="contact"
+                name="contact" 
                 value={formData.contact}
-                onChange={handleInputChange}
+                readOnly
               />
-              {errors.contact && (
-                <p className="text-red-500 text-sm mt-1">{errors.contact}</p>
-              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -437,17 +461,22 @@ const PurchaseOrderForm = () => {
               <input
                 type="text"
                 className="w-full p-2 border border-gray-300 rounded"
-                placeholder="0xx-xxx-xxxx"
                 name="phone"
                 value={formData.phone}
-                onChange={handleInputChange}
+                readOnly
               />
-              {errors.phone && (
-                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-              )}
             </div>
           </div>
         </div>
+
+        {/* Add modal */}
+        {showVendorSelection && (
+          <VendorSelectionModal
+            vendors={vendors}
+            onSelect={handleVendorSelect}
+            onClose={() => setShowVendorSelection(false)}
+          />
+        )}
 
         <div className="max-w-7xl mx-auto bg-white p-6 rounded-md shadow">
           <h1 className="text-xl font-medium mb-6">รายการสินค้าจาก PR</h1>
@@ -625,7 +654,7 @@ const PurchaseOrderForm = () => {
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 text-gray-400"
                     fill="none"
-                    viewBox="0 0 24 24"
+                    viewBox="0 24 24"
                     stroke="currentColor"
                   >
                     <path
@@ -745,6 +774,55 @@ const PRSelectionModal = ({ approvedPRs, onSelect, onClose }) => {
                 <td className="py-2">
                   <button
                     onClick={() => onSelect(pr)}
+                    className="px-3 py-1 bg-black text-white rounded hover:bg-gray-800"
+                  >
+                    เลือก
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const VendorSelectionModal = ({ vendors, onSelect, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-3/4 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-medium">เลือกผู้ขาย</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="px-4 py-2 text-left">ชื่อบริษัท</th>
+              <th className="px-4 py-2 text-left">เลขประจำตัวผู้เสียภาษี</th>
+              <th className="px-4 py-2 text-left">ที่อยู่</th>
+              <th className="px-4 py-2 text-left">ผู้ติดต่อ</th>
+              <th className="px-4 py-2 text-left">เบอร์โทร</th>
+              <th className="px-4 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {vendors.map((vendor) => (
+              <tr key={vendor.id} className="border-b border-gray-200 hover:bg-gray-50">
+                <td className="px-4 py-2">{vendor.companyName}</td>
+                <td className="px-4 py-2">{vendor.taxId}</td>
+                <td className="px-4 py-2">{vendor.address}</td>
+                <td className="px-4 py-2">{vendor.contactName}</td>
+                <td className="px-4 py-2">{vendor.phone}</td>
+                <td className="px-4 py-2">
+                  <button
+                    onClick={() => onSelect(vendor)}
                     className="px-3 py-1 bg-black text-white rounded hover:bg-gray-800"
                   >
                     เลือก

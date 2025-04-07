@@ -4,7 +4,7 @@
       "minThreshold": 33,
       "purchaseQuantity": 2,
       "maxThreshold": 44,
-      "enabled": true
+      "enabled": false
     }
   }
 }

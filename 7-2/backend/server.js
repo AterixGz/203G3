@@ -556,6 +556,9 @@ app.get('/api/company/list', (req, res) => {
   } catch (error) {
     console.error('Error reading data:', error);
     res.status(500).json({ message: 'ไม่สามารถอ่านข้อมูลได้' });
+  }
+});
+
 // Add inventory endpoints
 const INVENTORY_FILE = path.join(__dirname, "data", "Inventory.json");
 
