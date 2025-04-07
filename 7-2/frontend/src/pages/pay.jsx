@@ -58,8 +58,8 @@ const PaymentRecord = () => {
   }, []);
 
   const toggleSelect = (index) => {
-    const newSelected = [...selected];
-    newSelected[index] = !newSelected[index];
+    const newSelected = new Array(selected.length).fill(false); // ตั้งค่าทุกช่องเป็น false
+    newSelected[index] = true; // ตั้งค่าช่องที่เลือกเป็น true
     setSelected(newSelected);
   };
 
@@ -224,9 +224,9 @@ const PaymentRecord = () => {
                     <td className="py-3 px-4">
                       <div className={`px-4 py-1 rounded-full text-xs text-center w-28 ${
                         invoice.status === 'ยังไม่ชำระ' 
-                          ? 'bg-yellow-100 text-yellow-800' 
+                          ? 'bg-red-100 text-red-800' 
                           : invoice.status === 'ชำระบางส่วน'
-                            ? 'bg-blue-100 text-blue-800'
+                            ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-green-100 text-green-800'
                       }`}>
                         {invoice.status}
