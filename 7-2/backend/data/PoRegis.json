@@ -1,0 +1,68 @@
+{
+  "purchaseOrders": [
+    {
+      "poNumber": "PO-2504087453",
+      "poDate": "2025-04-07",
+      "prReference": "PR-AUTO-814461",
+      "prDate": "2025-04-07",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "ปากกา",
+          "quantity": "1",
+          "unit": "ชิ้น",
+          "price": "5"
+        }
+      ],
+      "subtotal": 5,
+      "vat": 0.35000000000000003,
+      "total": 5.3500000000000005,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "1/12/2222",
+      "deliveryLocation": "คลังสินค้า C",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "received",
+      "createdAt": "2025-04-07T22:00:42.198Z"
+    },
+    {
+      "poNumber": "PO-2504085898",
+      "poDate": "2025-04-07",
+      "prReference": "PR-AUTO-395016",
+      "prDate": "2025-04-07",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "หมูกรอบ",
+          "quantity": "5",
+          "unit": "ชิ้น",
+          "price": "5"
+        }
+      ],
+      "subtotal": 25,
+      "vat": 1.7500000000000002,
+      "total": 26.75,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "2/12/2222",
+      "deliveryLocation": "ที่ไหนอ่ะ",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "received",
+      "createdAt": "2025-04-07T22:23:03.107Z"
+    }
+  ]
+}

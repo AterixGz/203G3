@@ -14,5 +14,21 @@
     "unitPrice": "5",
     "supplier": "สหกรน",
     "updatedAt": "2025-04-07T17:06:29.985Z"
+  },
+  {
+    "id": 1744064513508,
+    "name": "ปากกา",
+    "quantity": "1",
+    "unitPrice": "5",
+    "supplier": "เจริญทรัพย์",
+    "updatedAt": "2025-04-07T22:21:53.508Z"
+  },
+  {
+    "id": 1744064632420,
+    "name": "หมูกรอบ",
+    "quantity": "5",
+    "unitPrice": "5",
+    "supplier": "เจริญทรัพย์",
+    "updatedAt": "2025-04-07T22:23:52.420Z"
   }
 ]
