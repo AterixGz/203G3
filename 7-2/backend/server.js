@@ -556,6 +556,123 @@ app.get('/api/company/list', (req, res) => {
   } catch (error) {
     console.error('Error reading data:', error);
     res.status(500).json({ message: 'ไม่สามารถอ่านข้อมูลได้' });
+// Add inventory endpoints
+const INVENTORY_FILE = path.join(__dirname, "data", "Inventory.json");
+
+// GET inventory items
+app.get("/inventory-items", (req, res) => {
+  try {
+    if (!fs.existsSync(INVENTORY_FILE)) {
+      fs.writeFileSync(INVENTORY_FILE, JSON.stringify([]));
+    }
+    const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
+    const items = JSON.parse(data);
+    res.json(items);
+  } catch (error) {
+    console.error('Error reading inventory:', error);
+    res.status(500).json({ message: "Error fetching inventory items" });
+  }
+});
+
+// POST new inventory item
+app.post("/inventory-items", (req, res) => {
+  try {
+    const newItem = {
+      id: Date.now(),
+      ...req.body,
+      updatedAt: new Date().toISOString()
+    };
+
+    let items = [];
+    if (fs.existsSync(INVENTORY_FILE)) {
+      const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
+      items = JSON.parse(data);
+    }
+
+    items.push(newItem);
+    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(items, null, 2));
+
+    res.status(201).json(newItem);
+  } catch (error) {
+    console.error('Error adding item:', error);
+    res.status(500).json({ message: "Error adding item" });
+  }
+});
+
+// PUT update inventory item
+app.put("/inventory-items/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedItem = {
+      ...req.body,
+      updatedAt: new Date().toISOString()
+    };
+
+    const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
+    let items = JSON.parse(data);
+
+    const index = items.findIndex(item => item.id === parseInt(id));
+    if (index === -1) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    items[index] = { ...items[index], ...updatedItem };
+    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(items, null, 2));
+
+    res.json({ message: "Item updated successfully" });
+  } catch (error) {
+    console.error('Error updating item:', error);
+    res.status(500).json({ message: "Error updating item" });
+  }
+});
+
+// DELETE inventory item
+app.delete("/inventory-items/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
+    let items = JSON.parse(data);
+    
+    const filteredItems = items.filter(item => item.id !== parseInt(id));
+    
+    if (items.length === filteredItems.length) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+    
+    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(filteredItems, null, 2));
+    res.json({ message: "Item deleted successfully" });
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    res.status(500).json({ message: "Error deleting item" });
+  }
+});
+
+const AUTO_SETTINGS_FILE = path.join(__dirname, "data", "DataAuto.json");
+
+// GET auto settings
+app.get("/auto-settings", (req, res) => {
+  try {
+    if (!fs.existsSync(AUTO_SETTINGS_FILE)) {
+      fs.writeFileSync(AUTO_SETTINGS_FILE, JSON.stringify({ settings: {} }));
+    }
+    const data = fs.readFileSync(AUTO_SETTINGS_FILE, 'utf8');
+    res.json(JSON.parse(data));
+  } catch (error) {
+    console.error('Error reading auto settings:', error);
+    res.status(500).json({ message: "Error fetching auto settings" });
+  }
+});
+
+// PUT auto settings
+app.put("/auto-settings", (req, res) => {
+  try {
+    const { settings } = req.body;
+    fs.writeFileSync(AUTO_SETTINGS_FILE, JSON.stringify({ settings }, null, 2));
+    res.json({ message: "Settings saved successfully" });
+  } catch (error) {
+    console.error('Error saving auto settings:', error);
+    res.status(500).json({ message: "Error saving auto settings" });
   }
 });
 
