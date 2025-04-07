@@ -76,7 +76,6 @@
     "status": "approved"
   },
   {
-<<<<<<< HEAD
     "prNumber": "PR-AUTO-395016",
     "date": "2025-04-07",
     "requester": "ระบบอัตโนมัติ",
@@ -653,7 +652,8 @@
     ],
     "note": "สร้างโดยระบบอัตโนมัติ",
     "status": "rejected"
-=======
+  },
+  {
     "prNumber": "PR-2504075204",
     "date": "2025-04-07",
     "requester": "John Smith",
@@ -690,6 +690,243 @@
     "approver": "",
     "approvalDate": "",
     "status": "approved"
->>>>>>> 60cf0eb08fe216b98c64c06c101fef1d37c98c1e
+  },
+  {
+    "prNumber": "PR-AUTO-871235",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "10",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-156294",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "10",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-227920",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "20",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-280842",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "20",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-348479",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "20",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-357849",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "20",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-407432",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "2",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-410681",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "42",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-810029",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "14",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-030227",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "14",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-065651",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "14",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-065657",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "14",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-296194",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "14",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "pending"
+  },
+  {
+    "prNumber": "PR-AUTO-318681",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "14",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "pending"
   }
 ]

@@ -11,14 +11,11 @@ import Login from "./pages/Login/Login";
 import Dashboard from './pages/Dashboard/Dashboard';
 import DashboardPR from './pages/Dashboard/DashboardPR';
 import DashboardPO from './pages/Dashboard/DashboardPO';
-<<<<<<< HEAD
 import Cost from "./pages/inventory/inventory";
 import AutoPR from "./pages/autoPR/autoPR";
 import Inventory from "./pages/inventory/inventory";
-=======
 import Vendor from "./pages/store/registerVendor";
 import ViewVendor from "./pages/store/viewVendor";
->>>>>>> 60cf0eb08fe216b98c64c06c101fef1d37c98c1e
 
 const SidebarNav = ({ role }) => {
   const location = useLocation();
@@ -142,7 +139,6 @@ function App() {
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
                 <Route path="/pay" element={user.role === "finance" || user.role === "admin" ? <PAY /> : <Navigate to="/" />} />
                 <Route path="/member" element={user.role === "admin" ? <MEMBER /> : <Navigate to="/" />} />
-<<<<<<< HEAD
                 <Route 
                   path="/cost" 
                   element={
@@ -167,10 +163,8 @@ function App() {
                       : <Navigate to="/" />
                   } 
                 />
-=======
                 <Route path="/Vendor" element={user.role === "admin" ? <Vendor /> : <Navigate to="/" />} />
                 <Route path="/ViewVendor" element={user.role === "admin" ? <ViewVendor /> : <Navigate to="/" />} />
->>>>>>> 60cf0eb08fe216b98c64c06c101fef1d37c98c1e
               </Routes>
             </div>
           </main>
