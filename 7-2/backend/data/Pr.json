@@ -74,5 +74,43 @@
     "approver": "",
     "approvalDate": "",
     "status": "approved"
+  },
+  {
+    "prNumber": "PR-2504075204",
+    "date": "2025-04-07",
+    "requester": "John Smith",
+    "department": "ฝ่ายบุคคล",
+    "purpose": "Test",
+    "items": [
+      {
+        "name": "Computer",
+        "quantity": "15",
+        "unit": "set",
+        "price": "250000"
+      }
+    ],
+    "note": "",
+    "approver": "",
+    "approvalDate": "",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-2504076389",
+    "date": "2025-04-07",
+    "requester": "kamin",
+    "department": "ฝ่ายการเงิน",
+    "purpose": "test",
+    "items": [
+      {
+        "name": "mouse",
+        "quantity": "15",
+        "unit": "ชิ้น",
+        "price": "750"
+      }
+    ],
+    "note": "",
+    "approver": "",
+    "approvalDate": "",
+    "status": "approved"
   }
 ]
