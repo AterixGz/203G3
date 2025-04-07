@@ -5,6 +5,9 @@
       "purchaseQuantity": 2,
       "maxThreshold": 44,
       "enabled": false
+    },
+    "1744044195042": {
+      "enabled": false
     }
   }
 }

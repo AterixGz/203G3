@@ -1,0 +1,18 @@
+@media print {
+  @page {
+    margin: 1cm;
+  }
+  
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none;
+  }
+
+  table {
+    page-break-inside: avoid;
+  }
+}

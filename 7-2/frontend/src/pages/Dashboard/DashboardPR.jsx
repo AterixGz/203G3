@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaFileAlt, FaCheckCircle, FaTimesCircle, FaMoneyBillWave } from 'react-icons/fa';
+import { FaFileAlt, FaCheckCircle, FaTimesCircle, FaMoneyBillWave, FaPrint } from 'react-icons/fa';
 
 const DashboardPR = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -48,6 +48,144 @@ const DashboardPR = () => {
 
     fetchData();
   }, []);
+
+  const handlePrint = (pr) => {
+    const printWindow = window.open('', '_blank');
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title></title>
+          <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+          <style>
+            @page { 
+              size: A4;
+              margin: 1cm;
+            }
+            body { 
+              font-family: 'Sarabun', sans-serif;
+              font-size: 16px;
+              line-height: 1.5;
+              -webkit-print-color-adjust: exact;
+            }
+            @media print {
+              @page { 
+                margin: 1cm;
+              }
+              body { 
+                -webkit-print-color-adjust: exact;
+                margin: 0;
+              }
+              .no-print { 
+                display: none; 
+              }
+            }
+            /* ซ่อนส่วนหัวและท้ายของ browser */
+            @media print {
+              @page { margin: 0; }
+              body { margin: 1cm; }
+              html, body {
+                height: initial !important;
+                overflow: initial !important;
+                -webkit-print-color-adjust: exact;
+              }
+            }
+          </style>
+          <script>
+            // ล้าง URL และ title ก่อนพิมพ์
+            function clearHeaderAndPrint() {
+              document.title = '';
+              if (window.history && window.history.replaceState) {
+                window.history.replaceState('', '', '');
+              }
+              setTimeout(() => {
+                window.print();
+              }, 100);
+            }
+          </script>
+        </head>
+        <body onload="clearHeaderAndPrint()">
+          <div class="p-8 max-w-4xl mx-auto">
+            <div class="text-center mb-8">
+              <h1 class="text-2xl font-bold">ใบขอซื้อ (Purchase Request)</h1>
+              <p class="text-xl">เลขที่: ${pr.prNumber}</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <p><strong>วันที่:</strong> ${new Date(pr.date).toLocaleDateString('th-TH')}</p>
+                <p><strong>ผู้ขอ:</strong> ${pr.requester}</p>
+                <p><strong>แผนก:</strong> ${pr.department}</p>
+              </div>
+              <div>
+                <p><strong>วัตถุประสงค์:</strong> ${pr.purpose}</p>
+                <p><strong>สถานะ:</strong> ${pr.status}</p>
+                <p><strong>ผู้อนุมัติ:</strong> ${pr.approver || '-'}</p>
+              </div>
+            </div>
+
+            <table class="w-full mb-6">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="border p-2">ลำดับ</th>
+                  <th class="border p-2">รายการ</th>
+                  <th class="border p-2">จำนวน</th>
+                  <th class="border p-2">หน่วย</th>
+                  <th class="border p-2">ราคา/หน่วย</th>
+                  <th class="border p-2">รวมเงิน</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pr.items.map((item, index) => `
+                  <tr>
+                    <td class="border p-2 text-center">${index + 1}</td>
+                    <td class="border p-2">${item.name}</td>
+                    <td class="border p-2 text-right">${item.quantity}</td>
+                    <td class="border p-2">${item.unit}</td>
+                    <td class="border p-2 text-right">฿${Number(item.price).toLocaleString()}</td>
+                    <td class="border p-2 text-right">฿${(Number(item.price) * Number(item.quantity)).toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+                <tr>
+                  <td colspan="5" class="border p-2 text-right font-bold">รวมทั้งสิ้น</td>
+                  <td class="border p-2 text-right font-bold">฿${pr.items.reduce((sum, item) => 
+                    sum + (Number(item.price) * Number(item.quantity)), 0).toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="grid grid-cols-3 gap-8 mt-16">
+              <div class="text-center">
+                <div class="border-t pt-2">ผู้ขอซื้อ</div>
+                <div>${pr.requester}</div>
+                <div>วันที่: ${new Date(pr.date).toLocaleDateString('th-TH')}</div>
+              </div>
+              <div class="text-center">
+                <div class="border-t pt-2">ผู้ตรวจสอบ</div>
+                <div>_________________</div>
+                <div>วันที่: _____/_____/_____</div>
+              </div>
+              <div class="text-center">
+                <div class="border-t pt-2">ผู้อนุมัติ</div>
+                <div>${pr.approver || '_________________'}</div>
+                <div>วันที่: ${pr.approvalDate ? new Date(pr.approvalDate).toLocaleDateString('th-TH') : '_____/_____/_____'}</div>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // เขียนเนื้อหาและปิด document
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // ล้างข้อมูลที่ไม่ต้องการทันที
+    printWindow.document.title = '';
+    if (printWindow.history && printWindow.history.replaceState) {
+      printWindow.history.replaceState('', '', '');
+    }
+  };
 
   const stats = [
     { 
@@ -117,6 +255,7 @@ const DashboardPR = () => {
                 <th className="pb-3">สถานะ</th>
                 <th className="pb-3">การอนุมัติ</th>
                 <th className="pb-3">วันที่</th>
+                <th className="pb-3">พิมพ์</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -154,6 +293,15 @@ const DashboardPR = () => {
                       </span>
                     </td>
                     <td className="py-3">{pr.date}</td>
+                    <td className="py-3">
+                      <button
+                        onClick={() => handlePrint(pr)}
+                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full"
+                        title="พิมพ์ใบขอซื้อ"
+                      >
+                        <FaPrint className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
