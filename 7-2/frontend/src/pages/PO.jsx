@@ -478,87 +478,54 @@ const PurchaseOrderForm = () => {
           />
         )}
 
-        <div className="max-w-7xl mx-auto bg-white p-6 rounded-md shadow">
-          <h1 className="text-xl font-medium mb-6">รายการสินค้าจาก PR</h1>
-          
+        <div className="border-t border-gray-200 pt-6 mb-6">
+          {/* เพิ่มคำอธิบายหัวเรื่อง */}
+          <div className="mb-4">
+            <h2 className="text-lg font-medium">รายการสินค้า</h2>
+            <p className="text-sm text-gray-600">รายการสินค้าที่สั่งซื้อจาก PR ที่ได้รับการอนุมัติ</p>
+          </div>
+
           {selectedPR ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+            <div>
+              {/* เพิ่มคำอธิบายรายการ */}
+              <div className="mb-3 text-sm text-gray-600">
+                <p>ข้อมูลจาก PR เลขที่: {selectedPR.prNumber}</p>
+                <p>ผู้ขอ: {selectedPR.requester}</p>
+                <p>วัตถุประสงค์: {selectedPR.purpose}</p>
+              </div>
+
+              <table className="w-full border-collapse table-fixed">
                 <thead>
                   <tr className="border-b border-gray-300">
-                    <th className="py-2 px-4 text-left">เลขที่ PR</th>
-                    <th className="py-2 px-4 text-left">วันที่</th>
-                    <th className="py-2 px-4 text-left">ผู้ขอ</th>
-                    <th className="py-2 px-4 text-left">รายการสินค้า</th>
-                    <th className="py-2 px-4 text-right">ราคารวม</th>
+                    <th className="py-2 px-4 text-left w-[35%]">รายการ</th>
+                    <th className="py-2 px-4 text-center w-[15%]">จำนวน</th>
+                    <th className="py-2 px-4 text-center w-[15%]">หน่วย</th>
+                    <th className="py-2 px-4 text-right w-[17.5%]">ราคาต่อหน่วย</th>
+                    <th className="py-2 px-4 text-right w-[17.5%]">รวม</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b border-gray-200">
-                    <td className="py-3 px-4">{selectedPR.prNumber}</td>
-                    <td className="py-3 px-4">{selectedPR.date}</td>
-                    <td className="py-3 px-4">{selectedPR.requester}</td>
-                    <td className="py-3 px-4">
-                      <table className="w-full">
-                        <tbody>
-                          {selectedPR.items.map((item, index) => (
-                            <tr key={index}>
-                              <td>{item.name}</td>
-                              <td className="text-center">{item.quantity} {item.unit}</td>
-                              <td className="text-right">{Number(item.price).toLocaleString()} บาท</td>
-                              <td className="text-right">
-                                {(Number(item.quantity) * Number(item.price)).toLocaleString()} บาท
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      {calculateTotalPrice(selectedPR.items).toLocaleString()} บาท
-                    </td>
-                  </tr>
+                  {selectedPR.items.map((item, index) => (
+                    <tr key={index} className="border-b border-gray-200">
+                      <td className="py-2 px-4 text-left whitespace-normal">{item.name}</td>
+                      <td className="py-2 px-4 text-center">{item.quantity}</td>
+                      <td className="py-2 px-4 text-center">{item.unit}</td>
+                      <td className="py-2 px-4 text-right">
+                        {Number(item.price).toLocaleString()} บาท
+                      </td>
+                      <td className="py-2 px-4 text-right">
+                        {(Number(item.quantity) * Number(item.price)).toLocaleString()} บาท
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-4">กรุณาเลือก PR เพื่อดูรายการสินค้า</p>
-          )}
-        </div>
-
-        <div className="border-t border-gray-200 pt-6 mb-6">
-          <h2 className="text-lg font-medium mb-4">รายการสินค้า</h2>
-          {selectedPR ? (
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-gray-300">
-                  <th className="py-2 px-4 text-left">รายการ</th>
-                  <th className="py-2 px-4 text-center">จำนวน</th>
-                  <th className="py-2 px-4 text-center">หน่วย</th>
-                  <th className="py-2 px-4 text-right">ราคาต่อหน่วย</th>
-                  <th className="py-2 px-4 text-right">รวม</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedPR.items.map((item, index) => (
-                  <tr key={index} className="border-b border-gray-200">
-                    <td className="py-3 px-4">{item.name}</td>
-                    <td className="py-3 px-4 text-center">{item.quantity}</td>
-                    <td className="py-3 px-4 text-center">{item.unit}</td>
-                    <td className="py-3 px-4 text-right">
-                      {Number(item.price).toLocaleString()} บาท
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      {(Number(item.quantity) * Number(item.price)).toLocaleString()} บาท
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
             <p className="text-gray-500 text-center py-4">กรุณาเลือก PR</p>
           )}
         </div>
+
         <div className="border-t border-gray-200 pt-6 mb-6">
           <h2 className="text-lg font-medium mb-4">สรุปราคาทั้งหมด</h2>
           <div className="grid grid-cols-3 gap-6">

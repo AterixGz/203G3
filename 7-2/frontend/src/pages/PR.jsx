@@ -13,6 +13,16 @@ const generatePRNumber = () => {
   return `PR-${year}${month}${day}${random}`;
 };
 
+const calculateAmount = (item) => {
+  const quantity = parseFloat(item.quantity) || 0;
+  const price = parseFloat(item.price) || 0;
+  return quantity * price;
+};
+
+const calculateTotalAmount = (items) => {
+  return items.reduce((sum, item) => sum + calculateAmount(item), 0);
+};
+
 const PurchaseRequestForm = () => {
   // เพิ่ม departments array
   const departments = [
@@ -26,16 +36,31 @@ const PurchaseRequestForm = () => {
 
   // ปรับปรุง state เพื่อเก็บข้อมูลทั้งหมด
   const [formData, setFormData] = useState({
-    prNumber: generatePRNumber(), // Initialize with generated number
-    date: '',
+    prNumber: generatePRNumber(),
+    date: new Date().toISOString().split('T')[0],
     requester: '',
     department: '',
     purpose: '',
-    items: [{ name: '', quantity: '', unit: '', price: '' }],
+    requiredDate: new Date().toISOString().split('T')[0],
+    items: [{
+      name: '',
+      description: '',
+      quantity: '',
+      unit: '',
+      price: '',
+      amount: 0
+    }],
+    totalAmount: 0,
     note: '',
-    approver: '',
-    approvalDate: ''
+    status: 'pending',
+    headerDescription: '',
+    creator: '',
+    creatorPosition: '',
+    creatorNote: ''
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Add useEffect to generate new PR number on page load/refresh
   useEffect(() => {
@@ -57,16 +82,23 @@ const PurchaseRequestForm = () => {
   const handleItemChange = (index, field, value) => {
     const newItems = [...formData.items];
     newItems[index][field] = value;
+    
+    // คำนวณจำนวนเงินของรายการ
+    if (field === 'quantity' || field === 'price') {
+      newItems[index].amount = calculateAmount(newItems[index]);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      items: newItems
+      items: newItems,
+      totalAmount: calculateTotalAmount(newItems)
     }));
   };
 
   const addItem = () => {
     setFormData(prev => ({
       ...prev,
-      items: [...prev.items, { name: '', quantity: '', unit: '', price: '' }]
+      items: [...prev.items, { name: '', description: '', quantity: '', unit: '', price: '', amount: 0 }]
     }));
   };
 
@@ -76,13 +108,16 @@ const PurchaseRequestForm = () => {
       newItems.splice(index, 1);
       setFormData(prev => ({
         ...prev,
-        items: newItems
+        items: newItems,
+        totalAmount: calculateTotalAmount(newItems)
       }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
   
     try {
       const response = await fetch("http://localhost:3000/api/pr", {
@@ -98,21 +133,27 @@ const PurchaseRequestForm = () => {
         alert(result.message); // แจ้งเตือนว่าบันทึกสำเร็จ
         setFormData({
           prNumber: generatePRNumber(), // Initialize with generated number
-          date: "",
+          date: new Date().toISOString().split('T')[0],
           requester: "",
           department: "",
           purpose: "",
-          items: [{ name: "", quantity: "", unit: "", price: "" }],
+          requiredDate: new Date().toISOString().split('T')[0],
+          items: [{ name: "", description: "", quantity: "", unit: "", price: "", amount: 0 }],
+          totalAmount: 0,
           note: "",
-          approver: "",
-          approvalDate: "",
+          status: "pending",
+          headerDescription: '',
+          creator: '',
+          creatorPosition: '',
+          creatorNote: ''
         }); // รีเซ็ตฟอร์ม
       } else {
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        throw new Error('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -186,6 +227,29 @@ const PurchaseRequestForm = () => {
         ></textarea>
       </div>
 
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm mb-1">วันที่ต้องการ<span className="text-red-500">*</span></label>
+          <input 
+            type="date" 
+            name="requiredDate"
+            value={formData.requiredDate}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">สถานะ</label>
+          <input 
+            type="text" 
+            value={formData.status}
+            className="w-full p-2 border border-gray-300 rounded bg-gray-50"
+            readOnly
+          />
+        </div>
+      </div>
+
       <div className="mb-2 flex justify-between items-center">
         <h2 className="font-medium">รายการสินค้า<span className="text-red-500">*</span></h2>
         <button 
@@ -200,17 +264,26 @@ const PurchaseRequestForm = () => {
       <div className="border-t border-gray-200 pt-4">
         {formData.items.map((item, index) => (
           <div key={index} className="grid grid-cols-12 gap-2 mb-2">
-            <div className="col-span-5">
+            <div className="col-span-3">
               <input 
                 type="text" 
                 value={item.name}
                 onChange={(e) => handleItemChange(index, 'name', e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="รายละเอียดสินค้า"
+                placeholder="ชื่อสินค้า"
                 required
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-3">
+              <input 
+                type="text" 
+                value={item.description}
+                onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="คำอธิบายรายการ"
+              />
+            </div>
+            <div className="col-span-1">
               <input 
                 type="number" 
                 value={item.quantity}
@@ -221,7 +294,7 @@ const PurchaseRequestForm = () => {
                 required
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1">
               <input 
                 type="text" 
                 value={item.unit}
@@ -237,9 +310,17 @@ const PurchaseRequestForm = () => {
                 value={item.price}
                 onChange={(e) => handleItemChange(index, 'price', e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="ราคา"
+                placeholder="ราคาต่อหน่วย"
                 min="0"
                 required
+              />
+            </div>
+            <div className="col-span-2">
+              <input 
+                type="number" 
+                value={calculateAmount(item)}
+                className="w-full p-2 border border-gray-300 rounded bg-gray-50"
+                readOnly
               />
             </div>
             <div className="col-span-1 flex items-center justify-center">
@@ -260,6 +341,19 @@ const PurchaseRequestForm = () => {
         ))}
       </div>
 
+      {/* แก้ไขส่วนแสดงจำนวนเงินรวม */}
+      <div className="flex justify-end mt-4">
+        <div className="px-4 py-3">
+          <span className="text-sm">จำนวนเงินรวม: </span>
+          <span className="text-lg ml-2">
+            {new Intl.NumberFormat('th-TH', {
+              style: 'currency',
+              currency: 'THB'
+            }).format(formData.totalAmount)}
+          </span>
+        </div>
+      </div>
+
       <div className="my-6">
         <label className="block text-sm mb-1">หมายเหตุ</label>
         <textarea 
@@ -270,37 +364,66 @@ const PurchaseRequestForm = () => {
           placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
         ></textarea>
       </div>
-      
-      {/* <div className="grid grid-cols-2 gap-4 mb-6">
-        <div>
-          <label className="block text-sm mb-1">ผู้อนุมัติ</label>
-          <input 
-            type="text" 
-            name="approver"
-            value={formData.approver}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="ชื่อผู้อนุมัติ" 
-          />
+
+      {/* เพิ่มส่วนคำอธิบายหัวรายการ */}
+      <div className="mb-6">
+        <label className="block text-sm mb-1">คำอธิบายหัวรายการ</label>
+        <textarea 
+          name="headerDescription"
+          value={formData.headerDescription || ''}
+          onChange={handleInputChange}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24"
+          placeholder="รายละเอียดเพิ่มเติมของรายการ"
+        ></textarea>
+      </div>
+
+      {/* เพิ่มส่วนผู้จัดทำ */}
+      <div>
+        <h2 className="text-lg font-medium mb-4">ข้อมูลผู้จัดทำ</h2>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm mb-1">ชื่อผู้จัดทำ<span className="text-red-500">*</span></label>
+            <input 
+              type="text" 
+              name="creator"
+              value={formData.creator || ''}
+              onChange={handleInputChange}
+              className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1">ตำแหน่ง</label>
+            <input 
+              type="text" 
+              name="creatorPosition"
+              value={formData.creatorPosition || ''}
+              onChange={handleInputChange}
+              className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm mb-1">วันที่อนุมาร</label>
-          <input 
-            type="date" 
-            name="approvalDate"
-            value={formData.approvalDate}
+
+        <div className="mt-4">
+          <label className="block text-sm mb-1">หมายเหตุจากผู้จัดทำ</label>
+          <textarea 
+            name="creatorNote"
+            value={formData.creatorNote || ''}
             onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24"
+            placeholder="หมายเหตุหรือความคิดเห็นเพิ่มเติม"
+          ></textarea>
         </div>
-      </div> */}
-      
+      </div>
+
       <button 
         type="submit" 
         className="w-full bg-gray-800 text-white py-3 rounded font-medium hover:bg-gray-700 transition-colors mt-6"
       >
-        ส่งแบบฟอร์ม
+        {loading ? 'กำลังส่ง...' : 'ส่งแบบฟอร์ม'}
       </button>
+      {error && <p className="text-red-500 mt-4">{error}</p>}
     </form>
   );
 };
