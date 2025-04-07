@@ -41,6 +41,13 @@ function Sidebar({ activeTab, setActiveTab, onLogout, user }) {
 
   // Update getAdminMenuItems function
   const getAdminMenuItems = () => [
+    { id: "receiving", label: "รับพัสดุเข้าคลัง", icon: <Package size={18} /> },
+    { id: "disbursement", label: "เบิกจ่ายพัสดุ", icon: <LogOut size={18} /> },
+    { id: "unit-cost", label: "ต้นทุนต่อหน่วย", icon: <DollarSign size={18} /> },
+    { id: "purchase-order", label: "ใบสั่งซื้อ", icon: <ShoppingCart size={18} /> },
+    { id: "approve", label: "รายการรออนุมัติ", icon: <CheckSquare size={18} /> },
+    { id: "auto-requisition", label: "ขอซื้ออัตโนมัติ", icon: <RefreshCw size={18} /> },
+    { id: "status", label: "สถานะคำสั่งซื้อ", icon: <ListIcon size={18} /> },
     { id: "role-setting", label: "จัดการสิทธิ์", icon: <Settings size={18} /> }
   ]
 

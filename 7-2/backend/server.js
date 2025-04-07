@@ -447,6 +447,102 @@ app.put("/api/purchase-orders/:poNumber", (req, res) => {
   res.json({ message: "อัพเดตสถานะ PO สำเร็จ" });
 });
 
+// Create cost_items table if it doesn't exist
+const createCostItemsTable = `
+CREATE TABLE IF NOT EXISTS cost_items (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  unitPrice DECIMAL(10,2) NOT NULL,
+  supplier VARCHAR(255) NOT NULL,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)`;
+
+connection.query(createCostItemsTable, (err) => {
+  if (err) {
+    console.error("Error creating cost_items table:", err);
+  }
+});
+
+// GET endpoint to fetch all cost items
+app.get("/cost-items", (req, res) => {
+  const sql = "SELECT * FROM cost_items ORDER BY updatedAt DESC";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching cost items:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+    }
+    res.json(results);
+  });
+});
+
+// POST endpoint to add new cost item
+app.post("/cost-items", (req, res) => {
+  const { name, unitPrice, supplier } = req.body;
+  const sql = "INSERT INTO cost_items (name, unitPrice, supplier) VALUES (?, ?, ?)";
+
+  connection.query(sql, [name, unitPrice, supplier], (err) => {
+    if (err) {
+      console.error("Error adding cost item:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูล" });
+    }
+    res.json({ message: "เพิ่มข้อมูลสำเร็จ" });
+  });
+});
+
+// Update cost item
+app.put("/cost-items/:id", (req, res) => {
+  const { id } = req.params;
+  const { name, unitPrice, supplier } = req.body;
+  const sql = "UPDATE cost_items SET name = ?, unitPrice = ?, supplier = ? WHERE id = ?";
+  
+  connection.query(sql, [name, unitPrice, supplier, id], (err) => {
+    if (err) {
+      console.error("Error updating cost item:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล" });
+    }
+    res.json({ message: "อัปเดตข้อมูลสำเร็จ" });
+  });
+});
+
+// Delete cost item
+app.delete("/cost-items/:id", (req, res) => {
+  const { id } = req.params;
+  const sql = "DELETE FROM cost_items WHERE id = ?";
+  
+  connection.query(sql, [id], (err) => {
+    if (err) {
+      console.error("Error deleting cost item:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
+    }
+    res.json({ message: "ลบข้อมูลสำเร็จ" });
+  });
+});
+
+// Update endpoints
+app.get("/inventory-items", (req, res) => {
+  const sql = "SELECT * FROM inventory_items ORDER BY updatedAt DESC";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching inventory items:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+    }
+    res.json(results);
+  });
+});
+
+app.post("/inventory-items", (req, res) => {
+  const { name, quantity, unitPrice, supplier } = req.body;
+  const sql = "INSERT INTO inventory_items (name, quantity, unitPrice, supplier) VALUES (?, ?, ?, ?)";
+  
+  connection.query(sql, [name, quantity, unitPrice, supplier], (err) => {
+    if (err) {
+      console.error("Error adding inventory item:", err);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูล" });
+    }
+    res.json({ message: "เพิ่มข้อมูลสำเร็จ" });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

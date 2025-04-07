@@ -6,6 +6,8 @@ function AutoRequisition() {
   const [itemSettings, setItemSettings] = useState([]); // เก็บข้อมูลพัสดุจากฐานข้อมูล
   const [requisitions, setRequisitions] = useState([]); // เก็บข้อมูลใบขอซื้อ
   const [showSettings, setShowSettings] = useState(false);
+  // เพิ่ม state สำหรับเก็บการตั้งค่า autoReorder
+  const [autoReorderSettings, setAutoReorderSettings] = useState({});
 
   // ดึงข้อมูลพัสดุจาก API เมื่อโหลดหน้า
   useEffect(() => {
@@ -26,31 +28,28 @@ function AutoRequisition() {
     fetchInventoryItems();
   }, []);
 
+  // โหลดการตั้งค่า autoReorder จาก localStorage เมื่อ component โหลด
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('autoReorderSettings');
+    if (savedSettings) {
+      setAutoReorderSettings(JSON.parse(savedSettings));
+    }
+  }, []);
+
+  // บันทึกการตั้งค่าลง localStorage เมื่อมีการเปลี่ยนแปลง
+  useEffect(() => {
+    localStorage.setItem('autoReorderSettings', JSON.stringify(autoReorderSettings));
+  }, [autoReorderSettings]);
+
   // ฟังก์ชันตรวจสอบระดับสินค้าคงเหลือและสร้างใบขอซื้อ
   const checkInventoryLevels = () => {
     const belowThresholdItems = itemSettings.filter(
-      (item) => item.autoReorder && item.received_quantity < item.minThreshold
+      (item) => autoReorderSettings[item.id] && 
+                item.received_quantity < item.minThreshold
     );
 
     if (belowThresholdItems.length > 0) {
-      const newRequisitionId = `PR-AUTO-${(requisitions.length + 1).toString().padStart(3, "0")}`;
-      const today = new Date().toISOString().split("T")[0];
-
-      const newRequisition = {
-        id: newRequisitionId,
-        date: today,
-        status: "รออนุมัติ",
-        items: belowThresholdItems.map((item) => ({
-          itemId: item.id,
-          code: item.item_id,
-          name: item.name,
-          quantity: item.minThreshold - item.received_quantity,
-          unit_price: item.unit_price,
-        })),
-      };
-
-      setRequisitions([newRequisition, ...requisitions]);
-      alert(`สร้างใบขอซื้ออัตโนมัติ ${newRequisitionId} สำหรับพัสดุที่ต่ำกว่าพิกัด`);
+      createAutoPurchaseOrder(belowThresholdItems);
     } else {
       alert("ไม่มีพัสดุที่ต่ำกว่าพิกัดขั้นต่ำ");
     }
@@ -77,6 +76,48 @@ function AutoRequisition() {
   // คำนวณมูลค่ารวมของใบขอซื้อ
   const calculateTotal = (items) => {
     return items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+  };
+
+  const createAutoPurchaseOrder = async (items) => {
+    const poNumber = `PO-AUTO-${new Date().getTime().toString().slice(-6)}`;
+    const today = new Date().toISOString().split('T')[0];
+  
+    const purchaseOrder = {
+      poNumber,
+      date: today,
+      requiredDate: today, // วันที่ต้องการ = วันที่สั่ง
+      branch: branches[Math.floor(Math.random() * branches.length)].id, // สุ่มเลือกสาขา
+      requester: "รายการอัตโนมัติ",
+      supplier_name: "รายการอัตโนมัติ",
+      items: items.map(item => ({
+        name: item.name,
+        description: `สั่งซื้ออัตโนมัติ - ${item.name}`,
+        quantity: item.minThreshold - item.received_quantity,
+        unitPrice: item.unit_price,
+        total: (item.minThreshold - item.received_quantity) * item.unit_price
+      })),
+      total: items.reduce((sum, item) => 
+        sum + ((item.minThreshold - item.received_quantity) * item.unit_price), 0)
+    };
+  
+    try {
+      const response = await fetch('http://localhost:3000/purchase-orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(purchaseOrder)
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create purchase order');
+      }
+  
+      alert(`สร้างใบสั่งซื้ออัตโนมัติ ${poNumber} สำเร็จ`);
+    } catch (error) {
+      console.error('Error creating purchase order:', error);
+      alert('เกิดข้อผิดพลาดในการสร้างใบสั่งซื้อ');
+    }
   };
 
   return (
@@ -139,7 +180,7 @@ function AutoRequisition() {
                         <label className="switch">
                           <input
                             type="checkbox"
-                            checked={item.autoReorder || false}
+                            checked={autoReorderSettings[item.id] || false}
                             onChange={() => toggleAutoReorder(item.id)}
                           />
                           <span className="slider"></span>

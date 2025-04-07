@@ -78,28 +78,28 @@ function App() {
       />
       <main className="content">
         {activeTab === "purchase-order" && 
-          (user?.role === 'purchasing' || user?.role !== 'admin') && 
+          (user?.role === 'purchasing' || user?.role === 'admin') && 
           <PurchaseOrder />}
         {activeTab === "receiving" && 
-          (user?.role === 'purchasing') && 
+          (user?.role === 'purchasing' || user?.role === 'admin') && 
           <InventoryReceiving />}
         {activeTab === "unit-cost" && 
-          (user?.role !== 'purchasing' && user?.role !== 'admin') && 
+          (user?.role !== 'purchasing' || user?.role === 'admin') && 
           <UnitCostViewer />}
         {activeTab === "disbursement" && 
-          (user?.role === 'purchasing') && 
+          (user?.role === 'purchasing' || user?.role === 'admin') && 
           <InventoryDisbursement />}
         {activeTab === "auto-requisition" && 
-          (user?.role !== 'admin') && 
+          (user?.role === 'purchasing' || user?.role === 'admin') && 
           <AutoRequisition />}
         {activeTab === "approve" && 
-          ['management', 'finance', 'purchasing'].includes(user?.role) && 
+          (['management', 'finance', 'purchasing', 'admin'].includes(user?.role)) && 
           <Approve userRole={user?.role} />}
         {activeTab === "role-setting" && 
           user?.role === 'admin' && 
           <RoleSetting />}
         {activeTab === "status" && 
-          ['purchasing', 'management', 'finance'].includes(user?.role) && 
+          (['purchasing', 'management', 'finance', 'admin'].includes(user?.role)) && 
           <Status user={user} />}
       </main>
     </div>
