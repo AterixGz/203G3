@@ -447,100 +447,125 @@ app.put("/api/purchase-orders/:poNumber", (req, res) => {
   res.json({ message: "อัพเดตสถานะ PO สำเร็จ" });
 });
 
-// Create cost_items table if it doesn't exist
-const createCostItemsTable = `
-CREATE TABLE IF NOT EXISTS cost_items (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL,
-  unitPrice DECIMAL(10,2) NOT NULL,
-  supplier VARCHAR(255) NOT NULL,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)`;
+// Remove SQL related code and keep only JSON implementation
+const INVENTORY_FILE = path.join(__dirname, "data", "inventory.json");
 
-connection.query(createCostItemsTable, (err) => {
-  if (err) {
-    console.error("Error creating cost_items table:", err);
+// GET inventory items
+app.get("/inventory-items", (req, res) => {
+  try {
+    if (!fs.existsSync(INVENTORY_FILE)) {
+      fs.writeFileSync(INVENTORY_FILE, JSON.stringify([]));
+    }
+    const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
+    const items = JSON.parse(data);
+    // Sort by updatedAt in descending order
+    items.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    res.json(items);
+  } catch (error) {
+    console.error('Error reading inventory:', error);
+    res.status(500).json({ message: "Error fetching inventory items" });
   }
 });
 
-// GET endpoint to fetch all cost items
-app.get("/cost-items", (req, res) => {
-  const sql = "SELECT * FROM cost_items ORDER BY updatedAt DESC";
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error("Error fetching cost items:", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
-    }
-    res.json(results);
-  });
-});
-
-// POST endpoint to add new cost item
-app.post("/cost-items", (req, res) => {
-  const { name, unitPrice, supplier } = req.body;
-  const sql = "INSERT INTO cost_items (name, unitPrice, supplier) VALUES (?, ?, ?)";
-
-  connection.query(sql, [name, unitPrice, supplier], (err) => {
-    if (err) {
-      console.error("Error adding cost item:", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูล" });
-    }
-    res.json({ message: "เพิ่มข้อมูลสำเร็จ" });
-  });
-});
-
-// Update cost item
-app.put("/cost-items/:id", (req, res) => {
-  const { id } = req.params;
-  const { name, unitPrice, supplier } = req.body;
-  const sql = "UPDATE cost_items SET name = ?, unitPrice = ?, supplier = ? WHERE id = ?";
-  
-  connection.query(sql, [name, unitPrice, supplier, id], (err) => {
-    if (err) {
-      console.error("Error updating cost item:", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล" });
-    }
-    res.json({ message: "อัปเดตข้อมูลสำเร็จ" });
-  });
-});
-
-// Delete cost item
-app.delete("/cost-items/:id", (req, res) => {
-  const { id } = req.params;
-  const sql = "DELETE FROM cost_items WHERE id = ?";
-  
-  connection.query(sql, [id], (err) => {
-    if (err) {
-      console.error("Error deleting cost item:", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
-    }
-    res.json({ message: "ลบข้อมูลสำเร็จ" });
-  });
-});
-
-// Update endpoints
-app.get("/inventory-items", (req, res) => {
-  const sql = "SELECT * FROM inventory_items ORDER BY updatedAt DESC";
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error("Error fetching inventory items:", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
-    }
-    res.json(results);
-  });
-});
-
+// POST new inventory item
 app.post("/inventory-items", (req, res) => {
-  const { name, quantity, unitPrice, supplier } = req.body;
-  const sql = "INSERT INTO inventory_items (name, quantity, unitPrice, supplier) VALUES (?, ?, ?, ?)";
-  
-  connection.query(sql, [name, quantity, unitPrice, supplier], (err) => {
-    if (err) {
-      console.error("Error adding inventory item:", err);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูล" });
+  try {
+    const newItem = {
+      id: Date.now(),
+      ...req.body,
+      updatedAt: new Date().toISOString()
+    };
+
+    let items = [];
+    if (fs.existsSync(INVENTORY_FILE)) {
+      const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
+      items = JSON.parse(data);
     }
-    res.json({ message: "เพิ่มข้อมูลสำเร็จ" });
-  });
+
+    items.push(newItem);
+    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(items, null, 2));
+
+    res.status(201).json(newItem);
+  } catch (error) {
+    console.error('Error adding item:', error);
+    res.status(500).json({ message: "Error adding item" });
+  }
+});
+
+// PUT update inventory item
+app.put("/inventory-items/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedItem = {
+      ...req.body,
+      updatedAt: new Date().toISOString()
+    };
+
+    const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
+    let items = JSON.parse(data);
+
+    const index = items.findIndex(item => item.id === parseInt(id));
+    if (index === -1) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    items[index] = { ...items[index], ...updatedItem };
+    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(items, null, 2));
+
+    res.json({ message: "Item updated successfully" });
+  } catch (error) {
+    console.error('Error updating item:', error);
+    res.status(500).json({ message: "Error updating item" });
+  }
+});
+
+// DELETE inventory item
+app.delete("/inventory-items/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const data = fs.readFileSync(INVENTORY_FILE, 'utf8');
+    let items = JSON.parse(data);
+    
+    const filteredItems = items.filter(item => item.id !== parseInt(id));
+    
+    if (items.length === filteredItems.length) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+    
+    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(filteredItems, null, 2));
+    res.json({ message: "Item deleted successfully" });
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    res.status(500).json({ message: "Error deleting item" });
+  }
+});
+
+const AUTO_SETTINGS_FILE = path.join(__dirname, "data", "DataAuto.json");
+
+// GET auto order settings
+app.get("/auto-settings", (req, res) => {
+  try {
+    if (!fs.existsSync(AUTO_SETTINGS_FILE)) {
+      fs.writeFileSync(AUTO_SETTINGS_FILE, JSON.stringify({ settings: {} }));
+    }
+    const data = fs.readFileSync(AUTO_SETTINGS_FILE, 'utf8');
+    res.json(JSON.parse(data));
+  } catch (error) {
+    console.error('Error reading auto settings:', error);
+    res.status(500).json({ message: "Error fetching auto settings" });
+  }
+});
+
+// UPDATE auto order settings
+app.put("/auto-settings", (req, res) => {
+  try {
+    fs.writeFileSync(AUTO_SETTINGS_FILE, JSON.stringify(req.body, null, 2));
+    res.json({ message: "Settings updated successfully" });
+  } catch (error) {
+    console.error('Error updating auto settings:', error);
+    res.status(500).json({ message: "Error updating auto settings" });
+  }
 });
 
 app.listen(PORT, () => {

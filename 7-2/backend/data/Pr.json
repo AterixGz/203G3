@@ -74,5 +74,583 @@
     "approver": "",
     "approvalDate": "",
     "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-395016",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "5",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-731353",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "30",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-810205",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "40",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-814461",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-821040",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-821044",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-827096",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-828488",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-831346",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-850343",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-882222",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-900615",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "10",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-907676",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "10",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-956716",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "2",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-980182",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "2",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-981310",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "2",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-272516",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "10",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-273894",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "4",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-273898",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "4",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-316429",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "20",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-366088",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "20",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-367738",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "20",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-539987",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "27",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-609409",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-612472",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-656084",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "3",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-659759",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "3",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-665277",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "3",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-673793",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "3",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-711692",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "4",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-714986",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "4",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-783937",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "4",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-791671",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "4",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-814759",
+    "date": "2025-04-07",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "15",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
   }
 ]

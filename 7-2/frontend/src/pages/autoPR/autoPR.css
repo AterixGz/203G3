@@ -49,11 +49,24 @@
   font-weight: 500;
 }
 
+/* Update threshold input width for better fit */
 .threshold-input {
-  width: 80px;
+  width: 70px;
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  text-align: center;
+}
+
+/* Add hover effect for better UX */
+.threshold-input:hover {
+  border-color: #999;
+}
+
+.threshold-input:focus {
+  border-color: #000;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
 .status {
@@ -70,6 +83,12 @@
 .status.normal {
   background-color: #dcfce7;
   color: #16a34a;
+}
+
+/* Add style for above threshold status */
+.status.above {
+  background-color: #fef3c7;
+  color: #b45309;
 }
 
 .toggle {
