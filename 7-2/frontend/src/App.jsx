@@ -30,7 +30,7 @@ const SidebarNav = ({ role }) => {
     { path: "/dbpr", icon: "fas fa-tachometer-alt", label: "DashboardPR", roles: ["admin", "it", "itHead"] },
     { path: "/dbpo", icon: "fas fa-tachometer-alt", label: "DashboardPO", roles: ["admin", "purchasing"] },
     { path: "/pr", icon: "fas fa-file-alt", label: "ใบขอซื้อ", roles: ["admin", "it"] },
-    { path: "/ap_pr", icon: "fas fa-file-alt", label: "อนุมัติใบขอซื้อ", roles: ["admin", "management"] },
+    { path: "/ap_pr", icon: "fas fa-file-alt", label: "อนุมัติใบขอซื้อ", roles: ["admin", "management", "itHead"] },
     { path: "/ap_pr2", icon: "fas fa-file-alt", label: "อนุมัติใบขอซื้อ 2", roles: ["admin", "itHead"] },
     { path: "/po", icon: "fas fa-shopping-cart", label: "ใบสั่งซื้อ", roles: ["admin", "purchasing"] },
     { path: "/rfa", icon: "fas fa-check-circle", label: "ขึ้นทะเบียนสินทรัพย์ถาวร", roles: ["admin", "finance"] },
@@ -39,24 +39,9 @@ const SidebarNav = ({ role }) => {
     { path: "/member", icon: "fas fa-users", label: "จัดการสมาชิก", roles: ["admin"] },
     { path: "/cost", icon: "fas fa-dollar-sign", label: "คลังสินค้า", roles: ["admin", "finance", "management"] },
     { path: "/budget", icon: "fas fa-dollar-sign", label: "งบประมาณ", roles: ["admin", "management"] },
-    { 
-      path: "/auto-pr", 
-      icon: "fas fa-sync", 
-      label: "ขอซื้ออัตโนมัติ", 
-      roles: ["admin", "purchasing"] 
-    },
-    { 
-      path: "/withdraw", 
-      icon: "fas fa-box-open", 
-      label: "เบิกจ่ายพัสดุ", 
-      roles: ["admin", "it", "finance"] 
-    },
-    { 
-      path: "/approve-withdraw", 
-      icon: "fas fa-check-square", 
-      label: "อนุมัติการเบิกพัสดุ", 
-      roles: ["admin", "management"] 
-    },
+    { path: "/auto-pr", icon: "fas fa-sync", label: "ขอซื้ออัตโนมัติ", roles: ["admin", "purchasing"]  },
+    { path: "/withdraw", icon: "fas fa-box-open", label: "เบิกจ่ายพัสดุ", roles: ["admin", "it", "finance"] },
+    { path: "/approve-withdraw", icon: "fas fa-check-square", label: "อนุมัติการเบิกพัสดุ", roles: ["admin", "management", "itHead"] },
   ];
 
   // กรองเฉพาะเมนูที่ Role ปัจจุบันสามารถเข้าถึงได้
@@ -152,7 +137,14 @@ function App() {
                 <Route path="/dbpr" element={user.role === "it"|| user.role ==="itHead" || user.role === "admin" ? <DashboardPR /> : <Navigate to="/" />} />
                 <Route path="/po" element={user.role === "purchasing" || user.role === "admin" ? <PO /> : <Navigate to="/" />} />
                 <Route path="/dbpo" element={user.role === "purchasing" || user.role === "admin" ? <DashboardPO /> : <Navigate to="/" />} />
-                <Route path="/ap_pr" element={user.role === "management" || user.role === "admin" ? <AP_PR /> : <Navigate to="/" />} />
+                <Route 
+                  path="/ap_pr" 
+                  element={
+                    ['admin', 'management', 'itHead'].includes(user.role) 
+                      ? <AP_PR /> 
+                      : <Navigate to="/" />
+                  } 
+                />
                 <Route path="/ap_pr2" element={user.role === "management" || user.role === "admin" ? <AP_PR2 /> : <Navigate to="/" />} />
                 <Route path="/rfa" element={user.role === "finance" || user.role === "admin" ? <RFA /> : <Navigate to="/" />} />
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
@@ -196,7 +188,7 @@ function App() {
                 <Route 
                   path="/approve-withdraw" 
                   element={
-                    ['admin', 'management'].includes(user.role) 
+                    ['admin', 'management', 'itHead'].includes(user.role) 
                       ? <ApproveWithdraw /> 
                       : <Navigate to="/" />
                   } 
