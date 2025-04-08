@@ -214,7 +214,8 @@ const PurchaseRequestForm = () => {
           </select>
         </div>
       </div>
-
+      <div className="grid grid-cols-2 gap-4 mb-4">
+</div>
       <div className="mb-6">
         <label className="block text-sm mb-1">วัตถุประสงค์<span className="text-red-500">*</span></label>
         <textarea 
@@ -229,15 +230,16 @@ const PurchaseRequestForm = () => {
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-sm mb-1">วันที่ต้องการ<span className="text-red-500">*</span></label>
-          <input 
-            type="date" 
-            name="requiredDate"
-            value={formData.requiredDate}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
+        <label className="block text-sm mb-1">วันที่ต้องการ<span className="text-red-500">*</span></label>
+<input 
+  type="date" 
+  name="requiredDate"
+  value={formData.requiredDate}
+  onChange={handleInputChange}
+  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  min={new Date().toISOString().split('T')[0]} // กำหนดวันที่ขั้นต่ำเป็นวันนี้
+  required
+/>
         </div>
         <div>
           <label className="block text-sm mb-1">สถานะ</label>
@@ -262,84 +264,85 @@ const PurchaseRequestForm = () => {
       </div>
       
       <div className="border-t border-gray-200 pt-4">
-        {formData.items.map((item, index) => (
-          <div key={index} className="grid grid-cols-12 gap-2 mb-2">
-            <div className="col-span-3">
-              <input 
-                type="text" 
-                value={item.name}
-                onChange={(e) => handleItemChange(index, 'name', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="ชื่อสินค้า"
-                required
-              />
-            </div>
-            <div className="col-span-3">
-              <input 
-                type="text" 
-                value={item.description}
-                onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="คำอธิบายรายการ"
-              />
-            </div>
-            <div className="col-span-1">
-              <input 
-                type="number" 
-                value={item.quantity}
-                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="จำนวน"
-                min="1"
-                required
-              />
-            </div>
-            <div className="col-span-1">
-              <input 
-                type="text" 
-                value={item.unit}
-                onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="หน่วย"
-                required
-              />
-            </div>
-            <div className="col-span-2">
-              <input 
-                type="number" 
-                value={item.price}
-                onChange={(e) => handleItemChange(index, 'price', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="ราคาต่อหน่วย"
-                min="0"
-                required
-              />
-            </div>
-            <div className="col-span-2">
-              <input 
-                type="number" 
-                value={calculateAmount(item)}
-                className="w-full p-2 border border-gray-300 rounded bg-gray-50"
-                readOnly
-              />
-            </div>
-            <div className="col-span-1 flex items-center justify-center">
-              {formData.items.length > 1 && (
-                <button 
-                  type="button"
-                  onClick={() => removeItem(index)} 
-                  className="text-red-400 hover:text-red-600 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                    <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1v1z"/>
-                  </svg>
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+  {formData.items.map((item, index) => (
+    <div key={index} className="grid grid-cols-12 gap-2 mb-2">
+      <div className="col-span-3">
+        <input
+          type="text"
+          value={item.name}
+          onChange={(e) => handleItemChange(index, 'name', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="ชื่อสินค้า"
+          required
+        />
       </div>
+      <div className="col-span-3">
+        <input
+          type="text"
+          value={item.description}
+          onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="คำอธิบายรายการ"
+        />
+      </div>
+      <div className="col-span-1">
+        <input
+          type="number"
+          value={item.quantity}
+          onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="จำนวน"
+          min="1"
+          required
+        />
+      </div>
+      <div className="col-span-1">
+        <input
+          type="text"
+          value={item.unit}
+          onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="หน่วย"
+          required
+        />
+      </div>
+      <div className="col-span-2">
+        <input
+          type="number"
+          value={item.price}
+          onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="ราคาต่อหน่วย"
+          min="0"
+          required
+        />
+      </div>
+      <div className="col-span-2">
+        <select
+          value={item.itemType || ''}
+          onChange={(e) => handleItemChange(index, 'itemType', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          required
+        >
+          <option value="">เลือกประเภทสินค้า</option>
+          <option value="สินค้าทั่วไป">สินค้าทั่วไป</option>
+          <option value="สินค้าถาวร">สินค้าถาวร</option>
+        </select>
+      </div>
+      <div className="col-span-1 flex items-center justify-center">
+        {formData.items.length > 1 && (
+          <button
+            type="button"
+            onClick={() => removeItem(index)}
+            className="text-red-400 hover:text-red-600 transition-colors"
+          >
+            ลบ
+          </button>
+        )}
+      </div>
+    </div>
+  ))}
+</div>
 
       {/* แก้ไขส่วนแสดงจำนวนเงินรวม */}
       <div className="flex justify-end mt-4">
