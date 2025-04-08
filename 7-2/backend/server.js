@@ -704,6 +704,35 @@ app.post("/api/po-registration", (req, res) => {
     res.status(201).json({ message: "บันทึกข้อมูล PO สำเร็จ", po: newPO });
   } catch (error) {
     console.error('Error saving PO:', error);
+  }
+})
+// เพิ่ม endpoint สำหรับดึงข้อมูล budget
+app.get("/api/budget", (req, res) => {
+  const BUDGET_FILE = path.join(__dirname, "data", "budget.json");
+  
+  if (!fs.existsSync(BUDGET_FILE)) {
+    return res.status(404).json({ message: "ไม่พบไฟล์ budget.json" });
+  }
+
+  const data = fs.readFileSync(BUDGET_FILE, "utf-8");
+  const budget = JSON.parse(data);
+  res.json(budget);
+});
+
+// เพิ่ม endpoint สำหรับอัพเดทข้อมูล budget
+app.put("/api/budget", (req, res) => {
+  const BUDGET_FILE = path.join(__dirname, "data", "budget.json");
+  const updatedBudget = req.body;
+  
+  try {
+    // เพิ่ม timestamp การอัพเดทล่าสุด
+    updatedBudget.lastUpdated = new Date().toISOString();
+    
+    // บันทึกข้อมูลลงไฟล์
+    fs.writeFileSync(BUDGET_FILE, JSON.stringify(updatedBudget, null, 2));
+    
+    res.json({ message: "อัพเดทข้อมูลงบประมาณสำเร็จ" });
+  } catch (error) {
     res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
   }
 });
