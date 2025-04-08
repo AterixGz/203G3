@@ -20,6 +20,9 @@ export default function BudgetManagement() {
   const [isEditingTotal, setIsEditingTotal] = useState(false);
   const [newTotalBudget, setNewTotalBudget] = useState("");
 
+  // Add new state for tracking allocation percentages
+  const [allocPercentages, setAllocPercentages] = useState({});
+
   // ปรับปรุง useEffect
   useEffect(() => {
     const fetchBudgetData = async () => {
@@ -53,6 +56,17 @@ export default function BudgetManagement() {
       setAmount(budgetData.departments[selectedDepartment].amount.toString());
     }
   }, [selectedDepartment, budgetData]);
+
+  // Add useEffect to initialize allocation percentages
+  useEffect(() => {
+    if (allocations.length > 0) {
+      const initialPercentages = {};
+      allocations.forEach((item) => {
+        initialPercentages[item.id] = item.percentage;
+      });
+      setAllocPercentages(initialPercentages);
+    }
+  }, [allocations]);
 
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
@@ -119,6 +133,15 @@ export default function BudgetManagement() {
   // Handle save button click
   const handleSave = async () => {
     try {
+      const totalPercentage = Object.values(allocPercentages).reduce(
+        (sum, p) => sum + p,
+        0
+      );
+      if (totalPercentage !== 100) {
+        alert("กรุณาจัดสรรงบประมาณให้ครบ 100%");
+        return;
+      }
+
       const newAmount = Number(amount);
 
       // Validate amount before saving
@@ -240,6 +263,41 @@ export default function BudgetManagement() {
       console.error("Error saving total budget:", error);
       alert("เกิดข้อผิดพลาดในการบันทึกงบประมาณรวม");
     }
+  };
+
+  // Add function to handle slider changes
+  const handleSliderChange = (id, newPercentage) => {
+    // Validate total percentage doesn't exceed 100%
+    const currentTotal = Object.values(allocPercentages).reduce(
+      (sum, p) => sum + p,
+      0
+    );
+    const oldPercentage = allocPercentages[id] || 0;
+    if (currentTotal - oldPercentage + newPercentage > 100) {
+      alert("การจัดสรรรวมต้องไม่เกิน 100%");
+      return;
+    }
+
+    // Update percentages
+    setAllocPercentages((prev) => ({
+      ...prev,
+      [id]: newPercentage,
+    }));
+
+    // Update allocations
+    const newAllocations = allocations.map((item) => {
+      if (item.id === id) {
+        const newAmount = (newPercentage / 100) * Number(amount);
+        return {
+          ...item,
+          percentage: newPercentage,
+          amount: newAmount,
+        };
+      }
+      return item;
+    });
+
+    setAllocations(newAllocations);
   };
 
   const departmentOptions = Object.keys(budgetData.departments || {});
@@ -514,8 +572,6 @@ export default function BudgetManagement() {
 
             {/* Budget Allocation Panel */}
             <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm md:col-span-2">
-              
-
               <h2 className="text-lg font-semibold mb-1">
                 จัดสรรงบประมาณ - {selectedDepartment}
               </h2>
@@ -569,8 +625,22 @@ export default function BudgetManagement() {
               <div className="mb-4">
                 <div className="flex justify-between mb-2">
                   <h3 className="font-medium">การจัดสรรงบประมาณ</h3>
-                  <span className="text-green-500 text-sm">
-                    จัดสรรแล้ว 100%
+                  <span
+                    className={`text-sm ${
+                      Object.values(allocPercentages).reduce(
+                        (sum, p) => sum + p,
+                        0
+                      ) === 100
+                        ? "text-green-500"
+                        : "text-yellow-500"
+                    }`}
+                  >
+                    จัดสรรแล้ว{" "}
+                    {Object.values(allocPercentages).reduce(
+                      (sum, p) => sum + p,
+                      0
+                    )}
+                    %
                   </span>
                 </div>
 
@@ -583,11 +653,24 @@ export default function BudgetManagement() {
                         {item.percentage}% ({formatCurrency(item.amount)})
                       </span>
                     </div>
-                    <div className="relative h-2 bg-gray-200 rounded overflow-hidden">
+                    <div className="relative h-8 flex items-center">
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={item.percentage}
+                        onChange={(e) =>
+                          handleSliderChange(item.id, Number(e.target.value))
+                        }
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
                       <div
-                        className="absolute top-0 left-0 h-full bg-blue-600"
-                        style={{ width: `${item.percentage}%` }}
-                      ></div>
+                        className="absolute top-1/2 left-0 h-2 bg-blue-600 rounded-l"
+                        style={{
+                          width: `${item.percentage}%`,
+                          transform: "translateY(-50%)",
+                        }}
+                      />
                     </div>
                   </div>
                 ))}

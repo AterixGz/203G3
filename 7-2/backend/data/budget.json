@@ -1,6 +1,6 @@
 {
   "fiscalYear": "2567",
-  "totalBudget": 5100000,
+  "totalBudget": 10000000,
   "departments": {
     "การตลาด": {
       "amount": 100000,
@@ -148,20 +148,20 @@
         {
           "id": 1,
           "name": "เงินเดือนพนักงาน",
-          "percentage": 45,
-          "amount": 1305000
+          "percentage": 34,
+          "amount": 986000.0000000001
         },
         {
           "id": 2,
           "name": "การดำเนินงาน",
-          "percentage": 25,
-          "amount": 725000
+          "percentage": 13,
+          "amount": 377000
         },
         {
           "id": 3,
           "name": "การตลาดและโฆษณา",
-          "percentage": 15,
-          "amount": 435000
+          "percentage": 38,
+          "amount": 1102000
         },
         {
           "id": 4,
@@ -178,5 +178,5 @@
       ]
     }
   },
-  "lastUpdated": "2025-04-08T02:35:49.788Z"
+  "lastUpdated": "2025-04-08T04:10:50.382Z"
 }
