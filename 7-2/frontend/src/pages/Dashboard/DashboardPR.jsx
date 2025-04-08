@@ -11,27 +11,50 @@ const DashboardPR = () => {
     recentPRs: []
   });
 
+  // Add new state for IT budget
+  const [itBudget, setItBudget] = useState({
+    amount: 0,
+    used: 0
+  });
+
+  // Modify useEffect to fetch both PR and budget data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/pr');
-        const data = await response.json();
+        // Fetch PR data
+        const prResponse = await fetch('http://localhost:3000/api/pr');
+        const prData = await prResponse.json();
+        
+        // Fetch budget data
+        const budgetResponse = await fetch('http://localhost:3000/api/budget');
+        const budgetData = await budgetResponse.json();
+        
+        // Get IT department operational budget
+        const itDepartment = budgetData.departments["IT"];
+        const operationalBudget = itDepartment?.allocations.find(
+          a => a.name === "การดำเนินงาน"
+        );
         
         // Calculate dashboard metrics
-        const totalPRs = data.length;
-        const approvedPRs = data.filter(pr => pr.status === 'approved').length;
-        const rejectedPRs = data.filter(pr => pr.status === 'rejected').length;
-        const pendingPRs = data.filter(pr => !pr.status || pr.status === 'pending').length;
+        const totalPRs = prData.length;
+        const approvedPRs = prData.filter(pr => pr.status === 'approved').length;
+        const rejectedPRs = prData.filter(pr => pr.status === 'rejected').length;
+        const pendingPRs = prData.filter(pr => !pr.status || pr.status === 'pending').length;
         
-        const totalAmount = data.reduce((sum, pr) => {
+        const totalAmount = prData.reduce((sum, pr) => {
           return sum + (pr.items?.reduce((itemSum, item) => 
             itemSum + (Number(item.price) * Number(item.quantity)), 0) || 0)
         }, 0);
 
         // Get most recent PRs
-        const recentPRs = [...data]
+        const recentPRs = [...prData]
           .sort((a, b) => new Date(b.date) - new Date(a.date))
           .slice(0, 5);
+
+        setItBudget({
+          amount: operationalBudget?.amount || 0,
+          used: totalAmount
+        });
 
         setDashboardData({
           totalPRs,
@@ -187,6 +210,7 @@ const DashboardPR = () => {
     }
   };
 
+  // Modify the stats array to include budget comparison
   const stats = [
     { 
       title: 'จำนวน PR ทั้งหมด', 
@@ -214,9 +238,12 @@ const DashboardPR = () => {
     },
     { 
       title: 'มูลค่ารวมทั้งหมด', 
-      value: `฿${dashboardData.totalAmount.toLocaleString()}`, 
+      value: `฿${dashboardData.totalAmount.toLocaleString()}`,
+      subValue: itBudget.amount > 0 ? 
+        `${((dashboardData.totalAmount / itBudget.amount) * 100).toFixed(1)}% ของงบดำเนินการ IT` : '',
       icon: FaMoneyBillWave, 
-      color: 'bg-purple-600' 
+      color: dashboardData.totalAmount > itBudget.amount ? 'bg-red-600' : 'bg-green-600',
+      status: dashboardData.totalAmount > itBudget.amount ? 'เกินงบประมาณ' : 'อยู่ในงบประมาณ'
     }
   ];
 
@@ -235,6 +262,16 @@ const DashboardPR = () => {
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</h3>
             <p className="text-gray-500 text-sm">{stat.title}</p>
+            {stat.subValue && (
+              <div className="mt-2">
+                <p className={`text-xs ${stat.color === 'bg-red-600' ? 'text-red-600' : 'text-green-600'}`}>
+                  {stat.subValue}
+                </p>
+                <p className={`text-xs font-medium ${stat.color === 'bg-red-600' ? 'text-red-600' : 'text-green-600'}`}>
+                  {stat.status}
+                </p>
+              </div>
+            )}
           </div>
         ))}
       </div>

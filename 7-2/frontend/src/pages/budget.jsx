@@ -300,6 +300,18 @@ export default function BudgetManagement() {
     setAllocations(newAllocations);
   };
 
+  // Add new handler for amount input changes
+  const handleAllocationAmountChange = (id, newAmount) => {
+    const deptAmount = Number(amount);
+    if (newAmount > deptAmount) {
+      alert(`ไม่สามารถกำหนดจำนวนเงินเกิน ${formatCurrency(deptAmount)} ได้`);
+      return;
+    }
+
+    const newPercentage = (newAmount / deptAmount) * 100;
+    handleSliderChange(id, newPercentage);
+  };
+
   const departmentOptions = Object.keys(budgetData.departments || {});
 
   // ในส่วนของ return statement
@@ -649,9 +661,25 @@ export default function BudgetManagement() {
                   <div key={index} className="mb-4">
                     <div className="flex justify-between mb-1">
                       <span className="text-sm">{item.name}</span>
-                      <span className="text-sm">
-                        {item.percentage}% ({formatCurrency(item.amount)})
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm">{item.percentage}%</span>
+                        <span className="text-sm">(</span>
+                        <input
+                          type="number"
+                          value={Math.round(item.amount)}
+                          onChange={(e) => handleAllocationAmountChange(item.id, Number(e.target.value))}
+                          className="w-24 px-1 py-0.5 text-sm border border-gray-300 rounded"
+                          min="0"
+                          max={amount}
+                          onKeyDown={(e) => {
+                            if (!/^\d$/.test(e.key) && 
+                                !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)) {
+                              e.preventDefault();
+                            }
+                          }}
+                        />
+                        <span className="text-sm">)</span>
+                      </div>
                     </div>
                     <div className="relative h-8 flex items-center">
                       <input
@@ -659,9 +687,7 @@ export default function BudgetManagement() {
                         min="0"
                         max="100"
                         value={item.percentage}
-                        onChange={(e) =>
-                          handleSliderChange(item.id, Number(e.target.value))
-                        }
+                        onChange={(e) => handleSliderChange(item.id, Number(e.target.value))}
                         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       />
                       <div

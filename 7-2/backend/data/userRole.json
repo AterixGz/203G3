@@ -48,6 +48,20 @@
       "password": "warehouse",
       "role": "warehouse",
       "name": "Warehouse Staff"
+    },
+    {
+      "id": 8,
+      "username": "itAdmin",
+      "password": "itAdmin",
+      "role": "itAdmin",
+      "name": "IT Admin"
+    },
+    {
+      "name": "asdf",
+      "username": "asdf",
+      "password": "asdf",
+      "role": "it",
+      "id": 9
     }
   ]
 }

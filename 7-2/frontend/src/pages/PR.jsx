@@ -31,7 +31,8 @@ const PurchaseRequestForm = () => {
     'ฝ่ายการเงิน',
     'ฝ่ายบุคคล',
     'ฝ่ายการตลาด',
-    'ฝ่ายขาย'
+    'ฝ่ายขาย',
+    'ฝ่ายIT'
   ];
 
   // ปรับปรุง state เพื่อเก็บข้อมูลทั้งหมด
@@ -62,12 +63,30 @@ const PurchaseRequestForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Add new state for budget validation
+  const [budgetData, setBudgetData] = useState(null);
+
   // Add useEffect to generate new PR number on page load/refresh
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
       prNumber: generatePRNumber()
     }));
+  }, []);
+
+  // Add useEffect to fetch budget data
+  useEffect(() => {
+    const fetchBudgetData = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/budget');
+        const data = await response.json();
+        setBudgetData(data);
+      } catch (error) {
+        console.error('Error fetching budget data:', error);
+      }
+    };
+    
+    fetchBudgetData();
   }, []);
 
   // Handler functions
@@ -114,10 +133,49 @@ const PurchaseRequestForm = () => {
     }
   };
 
+  // Add budget validation function
+  const validateBudget = () => {
+    if (!budgetData || !formData.department) return true;
+    
+    const department = formData.department;
+    const departmentBudget = budgetData.departments[department];
+    
+    if (!departmentBudget) return true;
+    
+    // หางบประมาณการดำเนินงานของแผนก
+    const operationalBudget = departmentBudget.allocations.find(
+      a => a.name === "การดำเนินงาน"
+    );
+    
+    if (!operationalBudget) return true;
+    
+    // เช็คว่ามูลค่ารวมเกินงบดำเนินงานหรือไม่
+    return formData.totalAmount <= operationalBudget.amount;
+  };
+
+  // Modify handleSubmit to include budget validation
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+  
+    // ตรวจสอบงบประมาณก่อนส่ง PR
+    if (!validateBudget()) {
+      const department = formData.department;
+      const operationalBudget = budgetData.departments[department]?.allocations.find(
+        a => a.name === "การดำเนินงาน"
+      );
+      
+      setError(`ไม่สามารถสร้าง PR ได้ เนื่องจากมูลค่ารวม (${new Intl.NumberFormat('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+      }).format(formData.totalAmount)}) เกินงบดำเนินงานของแผนก ${department} (${new Intl.NumberFormat('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+      }).format(operationalBudget?.amount || 0)})`);
+      setLoading(false);
+      return;
+    }
   
     try {
       const response = await fetch("http://localhost:3000/api/pr", {
@@ -155,6 +213,28 @@ const PurchaseRequestForm = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Add budget information display
+  const getBudgetInfo = () => {
+    if (!budgetData || !formData.department) return null;
+    
+    const department = formData.department;
+    const departmentBudget = budgetData.departments[department];
+    
+    if (!departmentBudget) return null;
+    
+    const operationalBudget = departmentBudget.allocations.find(
+      a => a.name === "การดำเนินงาน"
+    );
+    
+    if (!operationalBudget) return null;
+    
+    return {
+      budget: operationalBudget.amount,
+      isOverBudget: formData.totalAmount > operationalBudget.amount,
+      remaining: operationalBudget.amount - formData.totalAmount
+    };
   };
 
   return (
@@ -346,16 +426,34 @@ const PurchaseRequestForm = () => {
 
       {/* แก้ไขส่วนแสดงจำนวนเงินรวม */}
       <div className="flex justify-end mt-4">
-        <div className="px-4 py-3">
-          <span className="text-sm">จำนวนเงินรวม: </span>
-          <span className="text-lg ml-2">
-            {new Intl.NumberFormat('th-TH', {
-              style: 'currency',
-              currency: 'THB'
-            }).format(formData.totalAmount)}
-          </span>
+  <div className="px-4 py-3">
+    <div className="flex flex-col items-end">
+      <span className="text-sm">จำนวนเงินรวม: </span>
+      <span className="text-lg ml-2">
+        {new Intl.NumberFormat('th-TH', {
+          style: 'currency',
+          currency: 'THB'
+        }).format(formData.totalAmount)}
+      </span>
+      
+      {getBudgetInfo() && (
+        <div className={`text-sm mt-1 ${
+          getBudgetInfo().isOverBudget ? 'text-red-600' : 'text-green-600'
+        }`}>
+          งบประมาณคงเหลือ: {new Intl.NumberFormat('th-TH', {
+            style: 'currency',
+            currency: 'THB'
+          }).format(getBudgetInfo().remaining)}
+          {getBudgetInfo().isOverBudget && (
+            <div className="text-red-600">
+              *เกินงบประมาณที่กำหนด
+            </div>
+          )}
         </div>
-      </div>
+      )}
+    </div>
+  </div>
+</div>
 
       <div className="my-6">
         <label className="block text-sm mb-1">หมายเหตุ</label>

@@ -9,7 +9,7 @@ const MemberForm = ({ isEdit, member, onClose, onSubmit }) => {
     role: member?.role || 'user',
   });
 
-  const roles = ['admin', 'purchasing', 'finance', 'management'];
+  const roles = ['admin', 'purchasing', 'finance', 'management', "itHead", "itAdmin", "it"];
 
   const handleSubmit = (e) => {
     e.preventDefault();

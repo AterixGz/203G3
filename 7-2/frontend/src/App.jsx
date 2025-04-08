@@ -36,7 +36,7 @@ const SidebarNav = ({ role }) => {
     { path: "/rfa", icon: "fas fa-check-circle", label: "ขึ้นทะเบียนสินทรัพย์ถาวร", roles: ["admin", "finance"] },
     { path: "/ap", icon: "fas fa-check-circle", label: "ดูยอดคงเหลือเจ้าหนี้", roles: ["admin", "finance"] },
     { path: "/pay", icon: "fas fa-check-circle", label: "จ่ายเงิน", roles: ["admin", "finance"] },
-    { path: "/member", icon: "fas fa-users", label: "จัดการสมาชิก", roles: ["admin"] },
+    { path: "/member", icon: "fas fa-users", label: "จัดการสมาชิก", roles: ["admin", "itAdmin"] },
     { path: "/cost", icon: "fas fa-dollar-sign", label: "คลังสินค้า", roles: ["admin", "finance", "management"] },
     { path: "/budget", icon: "fas fa-dollar-sign", label: "งบประมาณ", roles: ["admin", "management"] },
     { path: "/auto-pr", icon: "fas fa-sync", label: "ขอซื้ออัตโนมัติ", roles: ["admin", "purchasing"]  },
@@ -152,7 +152,7 @@ function App() {
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
                 <Route path="/pay" element={user.role === "finance" || user.role === "admin" ? <PAY /> : <Navigate to="/" />} />
                 <Route path="/budget" element={user.role === "management" || user.role === "admin" ? <BUDGET /> : <Navigate to="/" />} />
-                <Route path="/member" element={user.role === "admin" ? <MEMBER /> : <Navigate to="/" />} />
+                <Route path="/member" element={user.role === "itAdmin" || user.role === "admin" ? <MEMBER /> : <Navigate to="/" />} />
                 <Route 
                   path="/cost" 
                   element={
