@@ -1,0 +1,36 @@
+[
+  {
+    "withdrawNumber": "WD-250408-2517",
+    "date": "2025-04-08",
+    "requester": "123",
+    "department": "ฝ่ายจัดซื้อ",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "2",
+        "available": 20
+      }
+    ],
+    "reason": "aad",
+    "status": "approved",
+    "createdAt": "2025-04-08T04:23:07.488Z",
+    "updatedAt": "2025-04-08T04:23:13.731Z"
+  },
+  {
+    "withdrawNumber": "WD-250408-4939",
+    "date": "2025-04-08",
+    "requester": "2222",
+    "department": "ฝ่ายการเงิน",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "1",
+        "available": 77
+      }
+    ],
+    "reason": "123",
+    "status": "approved",
+    "createdAt": "2025-04-08T04:24:32.024Z",
+    "updatedAt": "2025-04-08T04:24:43.975Z"
+  }
+]

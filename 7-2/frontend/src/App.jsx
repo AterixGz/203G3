@@ -18,6 +18,8 @@ import Vendor from "./pages/store/registerVendor";
 import ViewVendor from "./pages/store/viewVendor";
 import AP_PR2 from "./pages/Approve_PR2/Approve_PR2";
 import BUDGET from "./pages/budget";
+import WithDraw from './pages/withDraw/withDraw';
+import ApproveWithdraw from './pages/Approve_WD/Approve_WD';
 
 const SidebarNav = ({ role }) => {
   const location = useLocation();
@@ -42,6 +44,18 @@ const SidebarNav = ({ role }) => {
       icon: "fas fa-sync", 
       label: "ขอซื้ออัตโนมัติ", 
       roles: ["admin", "purchasing"] 
+    },
+    { 
+      path: "/withdraw", 
+      icon: "fas fa-box-open", 
+      label: "เบิกจ่ายพัสดุ", 
+      roles: ["admin", "it", "finance"] 
+    },
+    { 
+      path: "/approve-withdraw", 
+      icon: "fas fa-check-square", 
+      label: "อนุมัติการเบิกพัสดุ", 
+      roles: ["admin", "management"] 
     },
   ];
 
@@ -171,6 +185,22 @@ function App() {
                 />
                 <Route path="/Vendor" element={user.role === "admin" ? <Vendor /> : <Navigate to="/" />} />
                 <Route path="/ViewVendor" element={user.role === "admin" ? <ViewVendor /> : <Navigate to="/" />} />
+                <Route 
+                  path="/withdraw" 
+                  element={
+                    ['admin', 'it', 'finance'].includes(user.role) 
+                      ? <WithDraw /> 
+                      : <Navigate to="/" />
+                  } 
+                />
+                <Route 
+                  path="/approve-withdraw" 
+                  element={
+                    ['admin', 'management'].includes(user.role) 
+                      ? <ApproveWithdraw /> 
+                      : <Navigate to="/" />
+                  } 
+                />
               </Routes>
             </div>
           </main>
