@@ -34,26 +34,25 @@ const PaymentRecord = () => {
           throw new Error("ไม่สามารถดึงข้อมูล PO ได้");
         }
         const data = await response.json();
-
+  
         // แปลงข้อมูล PO ให้เป็นรูปแบบที่เหมาะสมกับ invoices
         const formattedInvoices = data.map((po) => ({
           id: po.poNumber,
           date: po.poDate,
-          dueDate: po.terms.deliveryDate,
+          dueDate: po.deliveryDate || "-", // ใช้ deliveryDate จาก PoRegis.json
           poNumber: po.poNumber,
-          totalAmount: po.summary.total,
-          remainAmount: po.remainingBalance, // ใช้ remainingBalance ที่อัปเดตแล้ว
+          totalAmount: po.total,
+          remainAmount: po.remainingBalance ?? 0, // ใช้ remainingBalance ถ้ามี หรือ 0 ถ้าเป็น null/undefined
           status: po.status,
         }));
-        
-
+  
         setInvoices(formattedInvoices);
         setSelected(new Array(formattedInvoices.length).fill(false)); // ตั้งค่า default ของ selected
       } catch (error) {
         console.error(error.message);
       }
     };
-
+  
     fetchInvoices();
   }, []);
 
@@ -95,43 +94,16 @@ const PaymentRecord = () => {
     setIsSubmitting(true);
   
     try {
-      // สร้างข้อมูลการชำระเงิน
       const payments = invoices
-        .filter((_, index) => selected[index]) // เลือกเฉพาะรายการที่ถูกเลือก
-        .map((invoice) => {
-          const paymentAmount = Math.min(invoice.remainAmount, parseFloat(amount)); // ชำระไม่เกินยอดคงเหลือ
-          return {
-            invoiceId: invoice.id,
-            amount: paymentAmount,
-          };
-        });
+        .filter((_, index) => selected[index])
+        .map((invoice) => ({
+          invoiceId: invoice.id,
+          amount: Math.min(invoice.remainAmount, parseFloat(amount)),
+        }));
   
-      // ส่งข้อมูลการชำระเงินไปยัง Payments.json
-      const paymentResponse = await fetch("http://localhost:3000/api/payments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          date,
-          amount: calculateTotal(),
-          paymentMethod,
-          bankAccount,
-          referenceNo,
-          remarks,
-        }),
-      });
-  
-      if (!paymentResponse.ok) {
-        throw new Error("บันทึกข้อมูลการชำระเงินไม่สำเร็จ");
-      }
-  
-      // อัปเดตสถานะใน Po.json
       const updateResponse = await fetch("http://localhost:3000/api/update-po-status", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ payments }),
       });
   
@@ -141,22 +113,21 @@ const PaymentRecord = () => {
   
       const updatedData = await updateResponse.json();
   
-      // อัปเดตสถานะใน Frontend
-      const updatedInvoices = invoices.map((invoice) => {
-        const payment = payments.find((p) => p.invoiceId === invoice.id);
-        if (payment) {
-          const po = updatedData.poList.find((p) => p.poNumber === invoice.id);
-          return {
-            ...invoice,
-            remainAmount: po.remainingBalance, // ใช้ remainingBalance ที่อัปเดตแล้ว
-            status: po.status,
-          };
-        }
-        return invoice;
-      });
+      // ดึงข้อมูลใหม่จาก Backend
+      const response = await fetch("http://localhost:3000/api/purchase-orders");
+      const data = await response.json();
   
-      setInvoices(updatedInvoices);
-      setSelected(new Array(invoices.length).fill(false)); // ยกเลิกการเลือกทั้งหมด
+      // อัปเดตตารางใน Frontend
+      setInvoices(data.map((po) => ({
+        id: po.poNumber,
+        date: po.poDate,
+        dueDate: po.deliveryDate || "-",
+        poNumber: po.poNumber,
+        totalAmount: po.total,
+        remainAmount: po.remainingBalance,
+        status: po.status,
+      })));
+  
       alert("บันทึกข้อมูลสำเร็จและอัปเดตสถานะ PO เรียบร้อย");
     } catch (error) {
       alert(error.message);

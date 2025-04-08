@@ -22,15 +22,16 @@
       ],
       "subtotal": 5,
       "vat": 0.35000000000000003,
-      "total": 5.3500000000000005,
+      "total": 5.35,
       "paymentMethod": "โอนเงินธนาคาร",
       "deliveryDate": "1/12/2222",
       "deliveryLocation": "คลังสินค้า C",
       "notes": "",
       "approver": "ผู้บริหาร",
       "sellerName": "เจริญทรัพย์",
-      "status": "received",
-      "createdAt": "2025-04-07T22:00:42.198Z"
+      "status": "ยังไม่ชำระ",
+      "createdAt": "2025-04-07T22:00:42.198Z",
+      "remainingBalance": 5.35
     },
     {
       "poNumber": "PO-2504085898",
@@ -61,8 +62,9 @@
       "notes": "",
       "approver": "ผู้บริหาร",
       "sellerName": "เจริญทรัพย์",
-      "status": "received",
-      "createdAt": "2025-04-07T22:23:03.107Z"
+      "status": "ชำระแล้ว",
+      "createdAt": "2025-04-07T22:23:03.107Z",
+      "remainingBalance": 0
     },
     {
       "poNumber": "PO-2504082767",
@@ -93,8 +95,143 @@
       "notes": "",
       "approver": "ผู้บริหาร",
       "sellerName": "เจริญทรัพย์",
-      "status": "received",
-      "createdAt": "2025-04-08T00:07:46.479Z"
+      "status": "ชำระแล้ว",
+      "createdAt": "2025-04-08T00:07:46.479Z",
+      "remainingBalance": 0
+    },
+    {
+      "poNumber": "PO-2504087078",
+      "poDate": "2025-04-08",
+      "prReference": "PR-2504076389",
+      "prDate": "2025-04-07",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "mouse",
+          "quantity": "15",
+          "unit": "ชิ้น",
+          "price": "750"
+        }
+      ],
+      "subtotal": 11250,
+      "vat": 787.5000000000001,
+      "total": 12037.5,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "04/10/2025",
+      "deliveryLocation": "ttt",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "ชำระบางส่วน",
+      "createdAt": "2025-04-08T04:21:39.956Z",
+      "remainingBalance": 2037.5
+    },
+    {
+      "poNumber": "PO-2504082760",
+      "poDate": "2025-04-08",
+      "prReference": "PR-AUTO-539987",
+      "prDate": "2025-04-07",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "ปากกา",
+          "quantity": "27",
+          "unit": "ชิ้น",
+          "price": "5"
+        }
+      ],
+      "subtotal": 135,
+      "vat": 9.450000000000001,
+      "total": 144.45,
+      "remainingBalance": 0,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "04/10/2025",
+      "deliveryLocation": "test",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "ชำระแล้ว",
+      "createdAt": "2025-04-08T05:07:39.897Z"
+    },
+    {
+      "poNumber": "PO-2504089920",
+      "poDate": "2025-04-08",
+      "prReference": "PR-AUTO-296194",
+      "prDate": "2025-04-07",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "หมูกรอบ",
+          "quantity": "14",
+          "unit": "ชิ้น",
+          "price": "5"
+        }
+      ],
+      "subtotal": 70,
+      "vat": 4.9,
+      "total": 74.9,
+      "remainingBalance": 74.9,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "04/10/2025",
+      "deliveryLocation": "test",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "ยังไม่ชำระ",
+      "createdAt": "2025-04-08T05:11:44.178Z"
+    },
+    {
+      "poNumber": "PO-2504084368",
+      "poDate": "2025-04-08",
+      "prReference": "PR-2504086771",
+      "prDate": "2025-04-08",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "Test",
+          "description": "ggg",
+          "quantity": "15",
+          "unit": "unit",
+          "price": "30000",
+          "amount": 450000
+        }
+      ],
+      "subtotal": 450000,
+      "vat": 31500.000000000004,
+      "total": 481500,
+      "remainingBalance": 481500,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "04/10/2025",
+      "deliveryLocation": "test",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "ยังไม่ชำระ",
+      "createdAt": "2025-04-08T05:16:30.070Z"
     }
   ]
 }

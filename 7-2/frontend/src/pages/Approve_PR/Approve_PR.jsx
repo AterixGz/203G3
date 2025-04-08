@@ -45,8 +45,8 @@ const PurchaseApprovalInterface = () => {
 
   // ฟิลเตอร์ข้อมูล PR
 const filteredPRs = prList.filter((pr) => {
-  // ตรวจสอบว่ามี item ที่ quantity * price > 20000 หรือไม่
-  const hasLargeTotal = pr.items.some((item) => item.quantity * item.price < 20000);
+  // ตรวจสอบว่ามี item ที่เป็นสินค้าถาวร
+  const hasFixedAssets = pr.items.some((item) => item.itemType === "สินค้าทั่วไป");
 
   // ตรวจสอบการค้นหาและสถานะ
   const matchesSearch =
@@ -58,7 +58,7 @@ const filteredPRs = prList.filter((pr) => {
     statusFilter === "all" || pr.status === statusFilter;
 
   // รวมเงื่อนไขทั้งหมด
-  return hasLargeTotal && matchesSearch && matchesStatus;
+  return hasFixedAssets && matchesSearch && matchesStatus;
 });
 
   // ข้อมูล PR ที่เลือก

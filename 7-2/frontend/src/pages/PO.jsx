@@ -148,13 +148,14 @@ const PurchaseOrderForm = () => {
       subtotal: totalPrice,
       vat: totalPrice * 0.07,
       total: totalPrice * 1.07,
+      remainingBalance: totalPrice * 1.07, // เพิ่ม remainingBalance
       paymentMethod: "โอนเงินธนาคาร",
       deliveryDate: formData.deliveryDate,
       deliveryLocation: formData.deliveryLocation,
       notes: formData.notes,
       approver: "ผู้บริหาร",
       sellerName: formData.vendorName,
-      status: "pending"
+      status: "ยังไม่ชำระเงิน",
     };
 
     try {
