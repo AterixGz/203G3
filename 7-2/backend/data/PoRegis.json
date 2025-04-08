@@ -63,6 +63,38 @@
       "sellerName": "เจริญทรัพย์",
       "status": "received",
       "createdAt": "2025-04-07T22:23:03.107Z"
+    },
+    {
+      "poNumber": "PO-2504082767",
+      "poDate": "2025-04-08",
+      "prReference": "006",
+      "prDate": "2025-04-01",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "ยาคูล",
+          "quantity": "50",
+          "unit": "ขวด",
+          "price": "20"
+        }
+      ],
+      "subtotal": 1000,
+      "vat": 70,
+      "total": 1070,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "",
+      "deliveryLocation": "",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "received",
+      "createdAt": "2025-04-08T00:07:46.479Z"
     }
   ]
 }
