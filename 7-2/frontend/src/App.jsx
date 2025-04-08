@@ -147,7 +147,14 @@ function App() {
                       : <Navigate to="/" />
                   } 
                 />
-                <Route path="/ap_pr2" element={user.role === "management" || user.role === "admin" ? <AP_PR2 /> : <Navigate to="/" />} />
+                <Route 
+                  path="/ap_pr2" 
+                  element={
+                    ['admin', 'management', 'itHead'].includes(user.role) 
+                      ? <AP_PR2 /> 
+                      : <Navigate to="/" />
+                  } 
+                />
                 <Route path="/rfa" element={user.role === "finance" || user.role === "admin" ? <RFA /> : <Navigate to="/" />} />
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
                 <Route path="/pay" element={user.role === "finance" || user.role === "admin" ? <PAY /> : <Navigate to="/" />} />
