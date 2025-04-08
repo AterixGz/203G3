@@ -93,6 +93,70 @@ const ApproveWithdraw = () => {
     }
   };
 
+  const handlePrint = () => {
+    const printContent = document.createElement('div');
+    printContent.innerHTML = `
+      <div style="padding: 20px;">
+        <h1 style="text-align: center; margin-bottom: 20px;">ใบเบิกพัสดุ</h1>
+        <div style="margin-bottom: 20px;">
+          <p>เลขที่: ${selectedWithdrawal.withdrawNumber}</p>
+          <p>วันที่: ${new Date(selectedWithdrawal.date).toLocaleDateString('th-TH')}</p>
+          <p>ผู้ขอเบิก: ${selectedWithdrawal.requester}</p>
+          <p>แผนก: ${selectedWithdrawal.department}</p>
+          <p>เหตุผลการขอเบิก: ${selectedWithdrawal.reason}</p>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr>
+              <th style="border: 1px solid #000; padding: 8px; text-align: left;">รายการ</th>
+              <th style="border: 1px solid #000; padding: 8px; text-align: center;">จำนวนที่ขอเบิก</th>
+              <th style="border: 1px solid #000; padding: 8px; text-align: center;">จำนวนคงเหลือ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${selectedWithdrawal.items.map(item => `
+              <tr>
+                <td style="border: 1px solid #000; padding: 8px;">${item.name}</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.quantity}</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.available}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+          <div style="text-align: center; width: 200px;">
+            <div>______________________</div>
+            <p>ผู้ขอเบิก</p>
+            <p>${selectedWithdrawal.requester}</p>
+            <p>วันที่: ${new Date().toLocaleDateString('th-TH')}</p>
+          </div>
+          <div style="text-align: center; width: 200px;">
+            <div>______________________</div>
+            <p>ผู้อนุมัติ</p>
+            <p>${selectedWithdrawal.status === 'approved' ? 'อนุมัติแล้ว' : 'รออนุมัติ'}</p>
+            <p>วันที่: ${new Date().toLocaleDateString('th-TH')}</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>ใบเบิกพัสดุ - ${selectedWithdrawal.withdrawNumber}</title>
+        </head>
+        <body>
+          ${printContent.innerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   const filteredWithdrawals = withdrawals.filter(wd => {
     const matchesSearch = (
       wd.withdrawNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -192,9 +256,31 @@ const ApproveWithdraw = () => {
           <div className="lg:col-span-2">
             {selectedWithdrawal ? (
               <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h2 className="font-medium text-lg mb-4">
-                  รายละเอียดการเบิก: {selectedWithdrawal.withdrawNumber}
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="font-medium text-lg">
+                    รายละเอียดการเบิก: {selectedWithdrawal.withdrawNumber}
+                  </h2>
+                  <button
+                    onClick={handlePrint}
+                    className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                      />
+                    </svg>
+                    พิมพ์ใบเบิกพัสดุ
+                  </button>
+                </div>
                 <p className="text-gray-500 mb-4">
                   ผู้ขอเบิก: {selectedWithdrawal.requester}
                 </p>

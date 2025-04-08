@@ -970,5 +970,64 @@
     "creator": "บีส",
     "creatorPosition": "เด็กเดินยา",
     "creatorNote": ""
+  },
+  {
+    "prNumber": "PR-2504088695",
+    "date": "2025-04-08",
+    "requester": "ใครขอแว้",
+    "department": "ฝ่ายจัดซื้อ",
+    "purpose": "บ่ฮู้",
+    "requiredDate": "2025-04-08",
+    "items": [
+      {
+        "name": "หมีกรอบ",
+        "description": "ไม่ทราบ",
+        "quantity": "1",
+        "unit": "ชิ้น",
+        "price": "2",
+        "amount": 2
+      }
+    ],
+    "totalAmount": 2,
+    "note": "",
+    "status": "approved",
+    "headerDescription": "อนุมัติที",
+    "creator": "เอกกี้",
+    "creatorPosition": "โคโยตี้",
+    "creatorNote": ""
+  },
+  {
+    "prNumber": "PR-AUTO-812585",
+    "date": "2025-04-08",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "4",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "pending"
+  },
+  {
+    "prNumber": "PR-AUTO-831308",
+    "date": "2025-04-08",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "4",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "pending"
   }
 ]

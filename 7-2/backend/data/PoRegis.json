@@ -95,6 +95,72 @@
       "sellerName": "เจริญทรัพย์",
       "status": "received",
       "createdAt": "2025-04-08T00:07:46.479Z"
+    },
+    {
+      "poNumber": "PO-2504083501",
+      "poDate": "2025-04-08",
+      "prReference": "PR-2504088695",
+      "prDate": "2025-04-08",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "หมีกรอบ",
+          "description": "ไม่ทราบ",
+          "quantity": "1",
+          "unit": "ชิ้น",
+          "price": "2",
+          "amount": 2
+        }
+      ],
+      "subtotal": 2,
+      "vat": 0.14,
+      "total": 2.14,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "1/12/2222",
+      "deliveryLocation": "คลังไหน",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "pending",
+      "createdAt": "2025-04-08T05:06:02.445Z"
+    },
+    {
+      "poNumber": "PO-2504086940",
+      "poDate": "2025-04-08",
+      "prReference": "PR-AUTO-539987",
+      "prDate": "2025-04-07",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "ปากกา",
+          "quantity": "27",
+          "unit": "ชิ้น",
+          "price": "5"
+        }
+      ],
+      "subtotal": 135,
+      "vat": 9.450000000000001,
+      "total": 144.45000000000002,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "2/12/2222",
+      "deliveryLocation": "qwe",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "received",
+      "createdAt": "2025-04-08T05:09:16.077Z"
     }
   ]
 }

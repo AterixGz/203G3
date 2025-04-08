@@ -7,7 +7,9 @@
       "enabled": false
     },
     "1744044195042": {
-      "enabled": false
+      "enabled": false,
+      "minThreshold": 80,
+      "purchaseQuantity": 1
     }
   }
 }

@@ -32,5 +32,39 @@
     "status": "approved",
     "createdAt": "2025-04-08T04:24:32.024Z",
     "updatedAt": "2025-04-08T04:24:43.975Z"
+  },
+  {
+    "withdrawNumber": "WD-250408-9993",
+    "date": "2025-04-08",
+    "requester": "imo",
+    "department": "ฝ่ายบุคคล",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "2",
+        "available": 18
+      }
+    ],
+    "reason": "asd",
+    "status": "approved",
+    "createdAt": "2025-04-08T04:51:51.449Z",
+    "updatedAt": "2025-04-08T04:51:56.653Z"
+  },
+  {
+    "withdrawNumber": "WD-250408-4413",
+    "date": "2025-04-08",
+    "requester": "qwe",
+    "department": "ฝ่ายจัดซื้อ",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "2",
+        "available": 16
+      }
+    ],
+    "reason": "qwe",
+    "status": "approved",
+    "createdAt": "2025-04-08T05:00:44.282Z",
+    "updatedAt": "2025-04-08T05:00:50.138Z"
   }
 ]
