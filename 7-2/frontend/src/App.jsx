@@ -42,6 +42,8 @@ const SidebarNav = ({ role }) => {
     { path: "/auto-pr", icon: "fas fa-sync", label: "ขอซื้ออัตโนมัติ", roles: ["admin", "purchasing"]  },
     { path: "/withdraw", icon: "fas fa-box-open", label: "เบิกจ่ายพัสดุ", roles: ["admin", "it", "finance"] },
     { path: "/approve-withdraw", icon: "fas fa-check-square", label: "อนุมัติการเบิกพัสดุ", roles: ["admin", "management", "itHead"] },
+    { path: "/vendor", icon: "fas fa-store", label: "ลงทะเบียนผู้จําหน่าย", roles: ["admin", "purchasing"] },
+    { path: "/viewvendor", icon: "fas fa-store", label: "ดูข้อมูลผู้จําหน่าย", roles: ["admin", "purchasing"] },
   ];
 
   // กรองเฉพาะเมนูที่ Role ปัจจุบันสามารถเข้าถึงได้
@@ -175,8 +177,8 @@ function App() {
                       : <Navigate to="/" />
                   } 
                 />
-                <Route path="/Vendor" element={user.role === "admin" ? <Vendor /> : <Navigate to="/" />} />
-                <Route path="/ViewVendor" element={user.role === "admin" ? <ViewVendor /> : <Navigate to="/" />} />
+                <Route path="/Vendor" element={user.role === "purchasing" || user.role === "admin" ? <Vendor /> : <Navigate to="/" />} />
+                <Route path="/ViewVendor" element={user.role === "purchasing" || user.role === "admin" ? <ViewVendor /> : <Navigate to="/" />} />
                 <Route 
                   path="/withdraw" 
                   element={
