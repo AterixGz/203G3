@@ -16,6 +16,7 @@ import AutoPR from "./pages/autoPR/autoPR";
 import Inventory from "./pages/inventory/inventory";
 import Vendor from "./pages/store/registerVendor";
 import ViewVendor from "./pages/store/viewVendor";
+import BUDGET from "./pages/budget";
 
 const SidebarNav = ({ role }) => {
   const location = useLocation();
@@ -33,6 +34,7 @@ const SidebarNav = ({ role }) => {
     { path: "/pay", icon: "fas fa-check-circle", label: "จ่ายเงิน", roles: ["admin", "finance"] },
     { path: "/member", icon: "fas fa-users", label: "จัดการสมาชิก", roles: ["admin"] },
     { path: "/cost", icon: "fas fa-dollar-sign", label: "คลังสินค้า", roles: ["admin", "finance", "management"] },
+    { path: "/budget", icon: "fas fa-dollar-sign", label: "งบประมาณ", roles: ["admin", "management"] },
     { 
       path: "/auto-pr", 
       icon: "fas fa-sync", 
@@ -138,6 +140,7 @@ function App() {
                 <Route path="/rfa" element={user.role === "finance" || user.role === "admin" ? <RFA /> : <Navigate to="/" />} />
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
                 <Route path="/pay" element={user.role === "finance" || user.role === "admin" ? <PAY /> : <Navigate to="/" />} />
+                <Route path="/budget" element={user.role === "management" || user.role === "admin" ? <BUDGET /> : <Navigate to="/" />} />
                 <Route path="/member" element={user.role === "admin" ? <MEMBER /> : <Navigate to="/" />} />
                 <Route 
                   path="/cost" 
