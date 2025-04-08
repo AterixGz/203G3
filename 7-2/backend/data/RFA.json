@@ -1,26 +1,3 @@
 [
-  {
-    "id": "",
-    "name": "คอม",
-    "description": "ๅ/-ๅ/-ๅ/-",
-    "category": "asdasd",
-    "quantity": "123123123",
-    "unit": "123123123123",
-    "purchaseDate": "2025-04-09",
-    "poReference": "123123123",
-    "department": "123123123",
-    "status": "active"
-  },
-  {
-    "id": "",
-    "name": "กฟหกฟหก",
-    "description": "ฟหกฟหก",
-    "category": "ฟหกฟหก",
-    "quantity": "1231",
-    "unit": "23123123",
-    "purchaseDate": "2025-04-03",
-    "poReference": "123123",
-    "department": "123123",
-    "status": "active"
-  }
+  
 ]

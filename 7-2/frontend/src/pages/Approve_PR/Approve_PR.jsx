@@ -222,31 +222,38 @@ const PurchaseApprovalInterface = () => {
 
                 {/* Product List */}
                 <div className="overflow-hidden rounded-lg border border-gray-200 mt-6">
-                  <table className="w-full border-collapse bg-white text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">รายการ</th>
-                        <th className="px-6 py-4 text-center text-sm font-medium text-gray-900">จำนวน</th>
-                        <th className="px-6 py-4 text-center text-sm font-medium text-gray-900">หน่วย</th>
-                        <th className="px-6 py-4 text-right text-sm font-medium text-gray-900">ราคา</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {selectedPRData.items.map((item, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-left text-gray-900">{item.name}</td>
-                          <td className="px-6 py-4 text-center text-gray-600">{item.quantity}</td>
-                          <td className="px-6 py-4 text-center text-gray-600">{item.unit}</td>
-                          <td className="px-6 py-4 text-right text-gray-900">
-                            {Number(item.price).toLocaleString('th-TH', {
-                              style: 'currency',
-                              currency: 'THB'
-                            })}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <table className="w-full border-collapse bg-white text-sm">
+  <thead className="bg-gray-50">
+    <tr>
+      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">รายการ</th>
+      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">จำนวน</th>
+      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">หน่วย</th>
+      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">ราคา</th>
+      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">ราคารวม</th>
+    </tr>
+  </thead>
+  <tbody className="divide-y divide-gray-200">
+    {selectedPRData.items.map((item, index) => (
+      <tr key={index} className="hover:bg-gray-50">
+        <td className="px-6 py-4 text-left text-gray-900">{item.name}</td>
+        <td className="px-6 py-4 text-left text-gray-600">{item.quantity}</td>
+        <td className="px-6 py-4 text-left text-gray-600">{item.unit}</td>
+        <td className="px-6 py-4 text-left text-gray-900">
+          {Number(item.price).toLocaleString('th-TH', {
+            style: 'currency',
+            currency: 'THB'
+          })}
+        </td>
+        <td className="px-6 py-4 text-left text-gray-900">
+          {Number(item.quantity * item.price).toLocaleString('th-TH', {
+            style: 'currency',
+            currency: 'THB'
+          })}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
                 </div>
 
                 {/* Approve/Reject Buttons */}
