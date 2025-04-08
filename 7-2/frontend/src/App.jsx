@@ -16,7 +16,7 @@ import AutoPR from "./pages/autoPR/autoPR";
 import Inventory from "./pages/inventory/inventory";
 import Vendor from "./pages/store/registerVendor";
 import ViewVendor from "./pages/store/viewVendor";
-
+import AP_PR2 from "./pages/Approve_PR2/Approve_PR2";
 const SidebarNav = ({ role }) => {
   const location = useLocation();
 
@@ -27,6 +27,7 @@ const SidebarNav = ({ role }) => {
     { path: "/dbpo", icon: "fas fa-tachometer-alt", label: "DashboardPO", roles: ["admin", "purchasing"] },
     { path: "/pr", icon: "fas fa-file-alt", label: "ใบขอซื้อ", roles: ["admin", "it"] },
     { path: "/ap_pr", icon: "fas fa-file-alt", label: "อนุมัติใบขอซื้อ", roles: ["admin", "management"] },
+    { path: "/ap_pr2", icon: "fas fa-file-alt", label: "อนุมัติใบขอซื้อ 2", roles: ["admin", "itHead"] },
     { path: "/po", icon: "fas fa-shopping-cart", label: "ใบสั่งซื้อ", roles: ["admin", "purchasing"] },
     { path: "/rfa", icon: "fas fa-check-circle", label: "ขึ้นทะเบียนสินทรัพย์ถาวร", roles: ["admin", "finance"] },
     { path: "/ap", icon: "fas fa-check-circle", label: "ดูยอดคงเหลือเจ้าหนี้", roles: ["admin", "finance"] },
@@ -135,6 +136,7 @@ function App() {
                 <Route path="/po" element={user.role === "purchasing" || user.role === "admin" ? <PO /> : <Navigate to="/" />} />
                 <Route path="/dbpo" element={user.role === "purchasing" || user.role === "admin" ? <DashboardPO /> : <Navigate to="/" />} />
                 <Route path="/ap_pr" element={user.role === "management" || user.role === "admin" ? <AP_PR /> : <Navigate to="/" />} />
+                <Route path="/ap_pr2" element={user.role === "management" || user.role === "admin" ? <AP_PR2 /> : <Navigate to="/" />} />
                 <Route path="/rfa" element={user.role === "finance" || user.role === "admin" ? <RFA /> : <Navigate to="/" />} />
                 <Route path="/ap" element={user.role === "finance" || user.role === "admin" ? <AP /> : <Navigate to="/" />} />
                 <Route path="/pay" element={user.role === "finance" || user.role === "admin" ? <PAY /> : <Navigate to="/" />} />

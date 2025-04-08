@@ -945,5 +945,30 @@
     ],
     "note": "สร้างโดยระบบอัตโนมัติ",
     "status": "rejected"
+  },
+  {
+    "prNumber": "PR-2504089679",
+    "date": "2025-04-08",
+    "requester": "kamin",
+    "department": "ฝ่ายการเงิน",
+    "purpose": "ลอง",
+    "requiredDate": "2025-04-08",
+    "items": [
+      {
+        "name": "คอมลอง",
+        "description": "บายลอง",
+        "quantity": "5",
+        "unit": "เครื่อง",
+        "price": "10000",
+        "amount": 50000
+      }
+    ],
+    "totalAmount": 50000,
+    "note": "",
+    "status": "pending",
+    "headerDescription": "",
+    "creator": "บีส",
+    "creatorPosition": "เด็กเดินยา",
+    "creatorNote": ""
   }
 ]
