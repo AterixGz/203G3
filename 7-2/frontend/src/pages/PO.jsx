@@ -18,7 +18,7 @@ const PurchaseOrderForm = () => {
     contact: "",
     phone: "",
     paymentMethod: "โอนเงินธนาคาร", // default payment method
-    deliveryDate: "",
+    deliveryDate: "", // เริ่มต้นเป็นค่าว่าง
     deliveryLocation: "",
     notes: "",
     approver: "ผู้บริหาร", // default approver
@@ -96,6 +96,17 @@ const PurchaseOrderForm = () => {
       }
     }
 
+    // เพิ่ม validation สำหรับวันที่ส่งมอบ
+    if (!formData.deliveryDate) {
+      newErrors.deliveryDate = "กรุณาระบุวันที่ส่งมอบ";
+    } else {
+      const deliveryDate = new Date(formData.deliveryDate);
+      const today = new Date();
+      if (deliveryDate < today) {
+        newErrors.deliveryDate = "วันที่ส่งมอบต้องไม่เป็นวันในอดีต";
+      }
+    }
+
     // validate อื่นๆ ที่มีอยู่เดิม...
     if (!formData.vendorName) newErrors.vendorName = "กรุณาระบุชื่อผู้ขาย";
     if (!formData.taxId) newErrors.taxId = "กรุณาระบุเลขประจำตัวผู้เสียภาษี";
@@ -137,13 +148,14 @@ const PurchaseOrderForm = () => {
       subtotal: totalPrice,
       vat: totalPrice * 0.07,
       total: totalPrice * 1.07,
+      remainingBalance: totalPrice * 1.07, // เพิ่ม remainingBalance
       paymentMethod: "โอนเงินธนาคาร",
       deliveryDate: formData.deliveryDate,
       deliveryLocation: formData.deliveryLocation,
       notes: formData.notes,
       approver: "ผู้บริหาร",
       sellerName: formData.vendorName,
-      status: "pending"
+      status: "ยังไม่ชำระเงิน",
     };
 
     try {
@@ -581,29 +593,13 @@ const PurchaseOrderForm = () => {
               </label>
               <div className="relative">
                 <input
-                  type="text"
+                  type="date" // เปลี่ยนจาก type="text" เป็น type="date"
                   className="w-full p-2 border border-gray-300 rounded"
-                  placeholder="mm/dd/yyyy"
                   name="deliveryDate"
                   value={formData.deliveryDate}
                   onChange={handleInputChange}
+                  min={new Date().toISOString().split('T')[0]} // เพิ่ม min เพื่อไม่ให้เลือกวันที่ย้อนหลัง
                 />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400"
-                    fill="none"
-                    viewBox="0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
                 {errors.deliveryDate && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.deliveryDate}

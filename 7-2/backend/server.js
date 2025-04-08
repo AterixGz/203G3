@@ -418,13 +418,17 @@ app.post("/api/purchase-orders", (req, res) => {
 
 // Endpoint สำหรับดึงข้อมูล PO ทั้งหมด
 app.get("/api/purchase-orders", (req, res) => {
-  if (!fs.existsSync(PO_FILE)) {
-    return res.json([]);
+  try {
+    if (!fs.existsSync(PO_REGIS_FILE)) {
+      fs.writeFileSync(PO_REGIS_FILE, JSON.stringify({ purchaseOrders: [] }));
+    }
+    const data = fs.readFileSync(PO_REGIS_FILE, "utf-8");
+    const poList = JSON.parse(data).purchaseOrders;
+    res.json(poList);
+  } catch (error) {
+    console.error("Error reading PO data:", error);
+    res.status(500).json({ message: "Error fetching PO data" });
   }
-
-  const data = fs.readFileSync(PO_FILE, "utf-8");
-  const poList = JSON.parse(data);
-  res.json(poList);
 });
 
 // Endpoint สำหรับดึงข้อมูล PO ตาม poNumber
@@ -447,44 +451,77 @@ app.get("/api/purchase-orders/:poNumber", (req, res) => {
 });
 
 // Endpoint สำหรับอัพเดตสถานะ PO
-app.put("/api/purchase-orders/:poNumber", (req, res) => {
-  const { poNumber } = req.params;
-  const { status } = req.body;
-
-  if (!fs.existsSync(PO_FILE)) {
-    return res.status(404).json({ message: "ไม่พบข้อมูล PO" });
-  }
-
-  const data = fs.readFileSync(PO_FILE, "utf-8");
-  let poList = JSON.parse(data);
-  const poIndex = poList.findIndex(p => p.poNumber === poNumber);
-
-  if (poIndex === -1) {
-    return res.status(404).json({ message: "ไม่พบ PO ที่ระบุ" });
-  }
-
-  poList[poIndex].status = status;
-  fs.writeFileSync(PO_FILE, JSON.stringify(poList, null, 2));
-
-  res.json({ message: "อัพเดตสถานะ PO สำเร็จ" });
-});
-
 // Endpoint สำหรับอัปเดตสถานะ PO และยอดคงเหลือ
 app.post("/api/update-po-status", (req, res) => {
   const { payments } = req.body;
 
-  if (!fs.existsSync(PO_FILE)) {
-    return res.status(404).json({ message: "ไม่พบไฟล์ Po.json" });
-  }
-
   try {
-    const data = fs.readFileSync(PO_FILE, "utf-8");
-    let poList = JSON.parse(data);
+    const PO_REGIS_FILE = path.join(__dirname, "data", "PoRegis.json");
+
+    if (!fs.existsSync(PO_REGIS_FILE)) {
+      return res.status(404).json({ message: "ไม่พบไฟล์ PoRegis.json" });
+    }
+
+    const data = fs.readFileSync(PO_REGIS_FILE, "utf-8");
+    let poData = JSON.parse(data);
 
     payments.forEach((payment) => {
-      const po = poList.find((p) => p.poNumber === payment.invoiceId);
+      const po = poData.purchaseOrders.find((p) => p.poNumber === payment.invoiceId);
       if (po) {
-        po.remainingBalance -= payment.amount; // หักยอดที่ชำระออกจากยอดคงเหลือ
+        // ลบเงื่อนไขที่ตั้งค่า remainingBalance เป็น total
+        if (po.remainingBalance !== null && po.remainingBalance !== undefined) {
+          // คำนวณยอดคงเหลือ
+          po.remainingBalance -= payment.amount;
+    
+          // อัปเดตสถานะตามยอดคงเหลือ
+          if (po.remainingBalance <= 0) {
+            po.status = "ชำระแล้ว"; // หากยอดคงเหลือ <= 0 ให้เปลี่ยนสถานะเป็น "ชำระแล้ว"
+            po.remainingBalance = 0; // ป้องกันค่าติดลบ
+          } else {
+            po.status = "ชำระบางส่วน"; // หากยังมียอดคงเหลือ ให้เปลี่ยนสถานะเป็น "ชำระบางส่วน"
+          }
+        }
+      }
+    });
+
+    // เขียนข้อมูลกลับไปที่ PoRegis.json
+    fs.writeFileSync(PO_REGIS_FILE, JSON.stringify(poData, null, 2));
+
+    // ส่งข้อมูลที่อัปเดตกลับไปยัง Frontend
+    res.status(200).json({ message: "อัปเดตสถานะและยอดคงเหลือ PO สำเร็จ", poList: poData.purchaseOrders });
+  } catch (error) {
+    console.error("Error updating PO:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดต PO" });
+  }
+});
+
+// Endpoint สำหรับอัปเดตสถานะ PO และยอดคงเหลือ
+// Endpoint สำหรับอัปเดตสถานะ PO และยอดคงเหลือ
+app.post("/api/update-po-status", (req, res) => {
+  const { payments } = req.body;
+
+  try {
+    const PO_REGIS_FILE = path.join(__dirname, "data", "PoRegis.json");
+
+    if (!fs.existsSync(PO_REGIS_FILE)) {
+      return res.status(404).json({ message: "ไม่พบไฟล์ PoRegis.json" });
+    }
+
+    const data = fs.readFileSync(PO_REGIS_FILE, "utf-8");
+    let poData = JSON.parse(data);
+
+    payments.forEach((payment) => {
+      const po = poData.purchaseOrders.find((p) => p.poNumber === payment.invoiceId);
+      if (po) {
+        // หาก remainingBalance เป็น null ให้ตั้งค่าเริ่มต้นเป็น total
+        if (po.remainingBalance === null || po.remainingBalance === undefined) {
+          po.remainingBalance = po.total;
+        }
+
+        // คำนวณยอดคงเหลือ
+        po.remainingBalance -= payment.amount;
+
+        // อัปเดตสถานะตามยอดคงเหลือ
         if (po.remainingBalance <= 0) {
           po.status = "ชำระแล้ว"; // หากยอดคงเหลือ <= 0 ให้เปลี่ยนสถานะเป็น "ชำระแล้ว"
           po.remainingBalance = 0; // ป้องกันค่าติดลบ
@@ -494,8 +531,9 @@ app.post("/api/update-po-status", (req, res) => {
       }
     });
 
-    fs.writeFileSync(PO_FILE, JSON.stringify(poList, null, 2));
-    res.status(200).json({ message: "อัปเดตสถานะและยอดคงเหลือ PO สำเร็จ", poList });
+    // เขียนข้อมูลกลับไปที่ PoRegis.json
+    fs.writeFileSync(PO_REGIS_FILE, JSON.stringify(poData, null, 2));
+    res.status(200).json({ message: "อัปเดตสถานะและยอดคงเหลือ PO สำเร็จ", poList: poData.purchaseOrders });
   } catch (error) {
     console.error("Error updating PO:", error);
     res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดต PO" });
@@ -725,7 +763,7 @@ app.post("/api/po-registration", (req, res) => {
     const newPO = {
       ...req.body,
       createdAt: new Date().toISOString(),
-      status: "pending"
+      status: "ยังไม่ชำระ" // เปลี่ยนจาก "pending" เป็น "ยังไม่ชำระ"
     };
     
     poRegisData.purchaseOrders.push(newPO);

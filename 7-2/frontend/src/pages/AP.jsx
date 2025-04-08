@@ -19,14 +19,14 @@ const FinancialDashboard = () => {
 
   // ดึงข้อมูลจาก API
   useEffect(() => {
-    fetch("http://localhost:3000/api/purchase-orders")
+    fetch("http://localhost:3000/api/po-registration")
       .then((response) => response.json())
       .then((data) => {
         // แปลงข้อมูลให้ตรงกับโครงสร้างที่ใช้ในตาราง
-        const formattedData = data.map((po) => ({
+        const formattedData = data.purchaseOrders.map((po) => ({
           id: po.poNumber,
-          type: po.vendorInfo.name,
-          number: po.vendorInfo.taxId,
+          type: po.vendor.name,
+          number: po.vendor.taxId,
           amount: po.remainingBalance,
           date: po.poDate,
           status: po.status,
