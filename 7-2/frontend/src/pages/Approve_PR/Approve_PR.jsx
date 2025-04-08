@@ -29,6 +29,8 @@ const PurchaseApprovalInterface = () => {
         const updatedData = data.map((pr) => ({
           ...pr,
           status: pr.status || "pending",
+          // เพิ่ม flag สำหรับ PR อัตโนมัติ
+          isAutoPR: pr.requester === "ระบบอัตโนมัติ"
         }));
   
         setPrList(updatedData);
@@ -45,20 +47,17 @@ const PurchaseApprovalInterface = () => {
 
   // ฟิลเตอร์ข้อมูล PR
 const filteredPRs = prList.filter((pr) => {
-  // ตรวจสอบว่ามี item ที่เป็นสินค้าถาวร
-  const hasFixedAssets = pr.items.some((item) => item.itemType === "สินค้าทั่วไป");
-
   // ตรวจสอบการค้นหาและสถานะ
   const matchesSearch =
-    pr.prNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    pr.requester.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    pr.purpose.toLowerCase().includes(searchQuery.toLowerCase());
+    pr.prNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pr.requester?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pr.purpose?.toLowerCase().includes(searchQuery.toLowerCase());
 
   const matchesStatus =
     statusFilter === "all" || pr.status === statusFilter;
 
-  // รวมเงื่อนไขทั้งหมด
-  return hasFixedAssets && matchesSearch && matchesStatus;
+  // ลบเงื่อนไขการกรองสินค้าทั่วไปออก
+  return matchesSearch && matchesStatus;
 });
 
   // ข้อมูล PR ที่เลือก
@@ -193,12 +192,21 @@ const filteredPRs = prList.filter((pr) => {
                           : "text-gray-500"
                       }`}
                     >
-                      {pr.status || "pending"}
+                      {pr.status === "approved"
+                        ? "อนุมัติแล้ว"
+                        : pr.status === "rejected"
+                        ? "ไม่อนุมัติ"
+                        : "รออนุมัติ"}
                     </span>
                   </div>
                   <div className="text-gray-700">{pr.purpose}</div>
                   <div className="text-gray-500 text-sm">
                     ผู้ขอ: {pr.requester}
+                    {pr.requester === "ระบบอัตโนมัติ" && (
+                      <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                        AUTO PR
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

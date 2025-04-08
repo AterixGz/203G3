@@ -17,5 +17,150 @@
     "approver": "",
     "approvalDate": "",
     "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-922187",
+    "date": "2025-04-08",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "22",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-228929",
+    "date": "2025-04-08",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "22",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-252151",
+    "date": "2025-04-08",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "6",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-AUTO-704056",
+    "date": "2025-04-08",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "ปากกา",
+        "quantity": "6",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "rejected"
+  },
+  {
+    "prNumber": "PR-2504088295",
+    "date": "2025-04-08",
+    "requester": "2222",
+    "department": "ฝ่ายบัญชี",
+    "purpose": "123",
+    "requiredDate": "2025-04-08",
+    "items": [
+      {
+        "name": "123",
+        "description": "123",
+        "quantity": "2",
+        "unit": "123",
+        "price": "23",
+        "amount": 46,
+        "itemType": "สินค้าทั่วไป"
+      }
+    ],
+    "totalAmount": 46,
+    "note": "123",
+    "status": "rejected",
+    "headerDescription": "123",
+    "creator": "1231",
+    "creatorPosition": "บัญชี",
+    "creatorNote": ""
+  },
+  {
+    "prNumber": "PR-AUTO-151115",
+    "date": "2025-04-08",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "10",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "approved"
+  },
+  {
+    "prNumber": "PR-AUTO-905784",
+    "date": "2025-04-08",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "10",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "pending"
+  },
+  {
+    "prNumber": "PR-AUTO-905788",
+    "date": "2025-04-08",
+    "requester": "ระบบอัตโนมัติ",
+    "department": "ระบบ",
+    "purpose": "สั่งซื้ออัตโนมัติเนื่องจากสินค้าต่ำกว่าพิกัด",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "10",
+        "unit": "ชิ้น",
+        "price": "5"
+      }
+    ],
+    "note": "สร้างโดยระบบอัตโนมัติ",
+    "status": "pending"
   }
 ]

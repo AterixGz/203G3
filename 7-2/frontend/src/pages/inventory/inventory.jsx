@@ -50,7 +50,12 @@ const Inventory = () => {
       const response = await fetch('http://localhost:3000/api/po-registration');
       if (!response.ok) throw new Error('Failed to fetch POs');
       const data = await response.json();
-      setPendingPOs(data.purchaseOrders.filter(po => po.status === 'pending'));
+      // กรองเฉพาะ PO ที่มีสถานะการชำระเงินเป็น "ชำระแล้ว" และยังไม่ได้รับเข้าคลัง
+      const pendingPOs = data.purchaseOrders.filter(po => 
+        po.status === "ชำระแล้ว" && 
+        !po.isReceived // เพิ่มฟิลด์ isReceived เพื่อติดตามสถานะการรับเข้าคลัง
+      );
+      setPendingPOs(pendingPOs);
     } catch (error) {
       console.error('Error fetching POs:', error);
     }
@@ -76,7 +81,17 @@ const Inventory = () => {
   // Handle receiving items
   const handleReceiveItems = async () => {
     try {
-      // For each item in the PO
+      // ตรวจสอบข้อมูล PR
+      const prResponse = await fetch(`http://localhost:3000/api/pr/${selectedPO.prReference}`);
+      if (!prResponse.ok) throw new Error('Failed to fetch PR data');
+      const prData = await prResponse.json();
+
+      // เช็คว่า PR มีอยู่จริงและได้รับการอนุมัติ
+      if (!prData || prData.status !== 'approved') {
+        throw new Error('Invalid or unapproved PR reference');
+      }
+
+      // อัพเดทสินค้าในคลัง
       for (const item of selectedPO.items) {
         const existingItem = items.find(i => 
           i.name === item.name && 
@@ -84,48 +99,57 @@ const Inventory = () => {
         );
 
         if (existingItem) {
-          // Update existing item
-          await fetch(`http://localhost:3000/inventory-items/${existingItem.id}`, {
+          // อัพเดทสินค้าที่มีอยู่
+          await fetch(`http://localhost:3000/inventory-items/update-by-name/${encodeURIComponent(item.name)}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify({
-              ...existingItem,
-              quantity: (Number(existingItem.quantity) + Number(item.quantity)).toString()
+              quantity: (Number(existingItem.quantity) + Number(item.quantity)).toString(),
+              supplier: selectedPO.vendor.name,
+              updatedAt: new Date().toISOString()
             })
           });
         } else {
-          // Add new item
+          // เพิ่มสินค้าใหม่
           await fetch('http://localhost:3000/inventory-items', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify({
               name: item.name,
               quantity: item.quantity,
               unitPrice: item.price,
-              supplier: selectedPO.vendor.name
+              supplier: selectedPO.vendor.name,
+              updatedAt: new Date().toISOString()
             })
           });
         }
       }
 
-      // Update PO status
+      // อัพเดทสถานะ PO เป็นรับเข้าคลังแล้ว
       await fetch(`http://localhost:3000/api/po-registration/${selectedPO.poNumber}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'received' })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          isReceived: true,
+          receivedAt: new Date().toISOString()
+        })
       });
 
-      // Refresh data
+      // รีเฟรชข้อมูล
       fetchItems();
       fetchPendingPOs();
       setShowReceiveModal(false);
       setSelectedPO(null);
-      setPrData(null);
-      
       alert('รับสินค้าเข้าคลังเรียบร้อยแล้ว');
     } catch (error) {
       console.error('Error receiving items:', error);
-      alert('เกิดข้อผิดพลาดในการรับสินค้า');
+      alert('เกิดข้อผิดพลาดในการรับสินค้า: ' + error.message);
     }
   };
 

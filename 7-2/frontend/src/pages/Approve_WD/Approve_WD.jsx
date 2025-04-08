@@ -14,20 +14,23 @@ const ApproveWithdraw = () => {
     { value: "rejected", label: "ไม่อนุมัติ" },
   ];
 
-  useEffect(() => {
-    fetchWithdrawals();
-  }, []);
-
   const fetchWithdrawals = async () => {
     try {
+      console.log('Fetching withdrawals...'); // เพิ่ม log
       const response = await fetch('http://localhost:3000/api/withdraw');
       if (!response.ok) throw new Error('Failed to fetch withdrawals');
       const data = await response.json();
+      console.log('Fetched withdrawals:', data); // เพิ่ม log
       setWithdrawals(data);
     } catch (error) {
       console.error('Error fetching withdrawals:', error);
     }
   };
+
+  // เรียกใช้ฟังก์ชันเมื่อ component โหลด
+  useEffect(() => {
+    fetchWithdrawals();
+  }, []);
 
   const handleApprove = async () => {
     try {
@@ -157,11 +160,12 @@ const ApproveWithdraw = () => {
     printWindow.print();
   };
 
+  // แก้ไข filteredWithdrawals
   const filteredWithdrawals = withdrawals.filter(wd => {
     const matchesSearch = (
-      wd.withdrawNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      wd.requester.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      wd.department.toLowerCase().includes(searchQuery.toLowerCase())
+      wd.withdrawNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      wd.requester?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      wd.department?.toLowerCase().includes(searchQuery.toLowerCase())
     );
     const matchesStatus = statusFilter === 'all' || wd.status === statusFilter;
     return matchesSearch && matchesStatus;

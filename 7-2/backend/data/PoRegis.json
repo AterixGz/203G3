@@ -232,6 +232,39 @@
       "sellerName": "เจริญทรัพย์",
       "status": "ยังไม่ชำระ",
       "createdAt": "2025-04-08T05:16:30.070Z"
+    },
+    {
+      "poNumber": "PO-2504086388",
+      "poDate": "2025-04-08",
+      "prReference": "PR-AUTO-151115",
+      "prDate": "2025-04-08",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "หมูกรอบ",
+          "quantity": "10",
+          "unit": "ชิ้น",
+          "price": "5"
+        }
+      ],
+      "subtotal": 50,
+      "vat": 3.5000000000000004,
+      "total": 53.5,
+      "remainingBalance": 53.5,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "2025-04-09",
+      "deliveryLocation": "คลังสินค้า C",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "ยังไม่ชำระ",
+      "createdAt": "2025-04-08T06:53:59.058Z"
     }
   ]
 }

@@ -66,5 +66,27 @@
     "status": "approved",
     "createdAt": "2025-04-08T05:00:44.282Z",
     "updatedAt": "2025-04-08T05:00:50.138Z"
+  },
+  {
+    "withdrawNumber": "WD-250408-4531",
+    "date": "2025-04-08",
+    "requester": "ผมเอง",
+    "department": "ฝ่ายจัดซื้อ",
+    "items": [
+      {
+        "name": "หมูกรอบ",
+        "quantity": "2",
+        "available": 14
+      },
+      {
+        "name": "ปากกา",
+        "quantity": "2",
+        "available": 76
+      }
+    ],
+    "reason": "qweqwe",
+    "status": "approved",
+    "createdAt": "2025-04-08T06:26:13.888Z",
+    "updatedAt": "2025-04-08T06:27:16.923Z"
   }
 ]

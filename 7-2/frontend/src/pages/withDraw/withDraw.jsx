@@ -112,6 +112,8 @@ const WithDraw = () => {
     if (!validateForm()) return;
 
     try {
+      console.log('Submitting withdrawal data:', formData); // เพิ่ม log เพื่อตรวจสอบข้อมูล
+      
       const response = await fetch('http://localhost:3000/api/withdraw', {
         method: 'POST',
         headers: {
@@ -120,7 +122,12 @@ const WithDraw = () => {
         body: JSON.stringify(formData)
       });
 
-      if (!response.ok) throw new Error('Failed to submit withdrawal request');
+      if (!response.ok) {
+        throw new Error('Failed to submit withdrawal request');
+      }
+
+      const result = await response.json();
+      console.log('Withdrawal response:', result); // เพิ่ม log เพื่อตรวจสอบการตอบกลับ
 
       alert('ส่งคำขอเบิกเรียบร้อยแล้ว');
       // Reset form

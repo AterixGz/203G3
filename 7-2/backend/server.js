@@ -75,6 +75,23 @@ app.get("/api/pr", (req, res) => {
   res.json(prList);
 });
 
+// GET PR by number
+app.get("/api/pr/:prNumber", (req, res) => {
+  try {
+    const { prNumber } = req.params;
+    const prData = JSON.parse(fs.readFileSync(PR_FILE, 'utf8'));
+    const pr = prData.find(p => p.prNumber === prNumber);
+    
+    if (!pr) {
+      return res.status(404).json({ message: "PR not found" });
+    }
+    
+    res.json(pr);
+  } catch (error) {
+    console.error('Error fetching PR:', error);
+    res.status(500).json({ message: "Error fetching PR" });
+  }
+});
 
 //                                            Login
 
@@ -537,6 +554,30 @@ app.post("/api/update-po-status", (req, res) => {
   } catch (error) {
     console.error("Error updating PO:", error);
     res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดต PO" });
+  }
+});
+
+// Update PO received status
+app.put("/api/po-registration/:poNumber", (req, res) => {
+  try {
+    const { poNumber } = req.params;
+    const { isReceived, receivedAt } = req.body;
+    
+    const poData = JSON.parse(fs.readFileSync(PO_REGIS_FILE, 'utf8'));
+    const poIndex = poData.purchaseOrders.findIndex(po => po.poNumber === poNumber);
+    
+    if (poIndex === -1) {
+      return res.status(404).json({ message: "PO not found" });
+    }
+    
+    poData.purchaseOrders[poIndex].isReceived = isReceived;
+    poData.purchaseOrders[poIndex].receivedAt = receivedAt;
+    
+    fs.writeFileSync(PO_REGIS_FILE, JSON.stringify(poData, null, 2));
+    res.json({ message: "Updated successfully" });
+  } catch (error) {
+    console.error('Error updating PO:', error);
+    res.status(500).json({ message: "Error updating PO" });
   }
 });
 
