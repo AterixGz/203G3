@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./Approve_PR.css";
+import "./Approve_PR2.css";
 
 const PurchaseApprovalInterface = () => {
   const [activeTab, setActiveTab] = useState("details");
@@ -46,7 +46,7 @@ const PurchaseApprovalInterface = () => {
   // ฟิลเตอร์ข้อมูล PR
 const filteredPRs = prList.filter((pr) => {
   // ตรวจสอบว่ามี item ที่ quantity * price > 20000 หรือไม่
-  const hasLargeTotal = pr.items.some((item) => item.quantity * item.price < 20000);
+  const hasLargeTotal = pr.items.some((item) => item.quantity * item.price > 20000);
 
   // ตรวจสอบการค้นหาและสถานะ
   const matchesSearch =
@@ -231,25 +231,25 @@ const filteredPRs = prList.filter((pr) => {
   <thead className="bg-gray-50">
     <tr>
       <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">รายการ</th>
-      <th className="px-6 py-4 text-center text-sm font-medium text-gray-900">จำนวน</th>
-      <th className="px-6 py-4 text-center text-sm font-medium text-gray-900">หน่วย</th>
-      <th className="px-6 py-4 text-right text-sm font-medium text-gray-900">ราคา</th>
-      <th className="px-6 py-4 text-right text-sm font-medium text-gray-900">ราคารวม</th>
+      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">จำนวน</th>
+      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">หน่วย</th>
+      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">ราคา</th>
+      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">ราคารวม</th>
     </tr>
   </thead>
   <tbody className="divide-y divide-gray-200">
     {selectedPRData.items.map((item, index) => (
       <tr key={index} className="hover:bg-gray-50">
         <td className="px-6 py-4 text-left text-gray-900">{item.name}</td>
-        <td className="px-6 py-4 text-center text-gray-600">{item.quantity}</td>
-        <td className="px-6 py-4 text-center text-gray-600">{item.unit}</td>
-        <td className="px-6 py-4 text-right text-gray-900">
+        <td className="px-6 py-4 text-left text-gray-600">{item.quantity}</td>
+        <td className="px-6 py-4 text-left text-gray-600">{item.unit}</td>
+        <td className="px-6 py-4 text-left text-gray-900">
           {Number(item.price).toLocaleString('th-TH', {
             style: 'currency',
             currency: 'THB'
           })}
         </td>
-        <td className="px-6 py-4 text-right text-gray-900">
+        <td className="px-6 py-4 text-left text-gray-900">
           {Number(item.quantity * item.price).toLocaleString('th-TH', {
             style: 'currency',
             currency: 'THB'

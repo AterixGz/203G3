@@ -667,6 +667,36 @@ app.put("/inventory-items/:id", (req, res) => {
   }
 });
 
+// PUT update inventory item by name
+app.put("/inventory-items/update-by-name/:name", (req, res) => {
+  try {
+    const { name } = req.params;
+    const { quantity } = req.body;
+
+    // อ่านข้อมูลคลังสินค้า
+    const inventory = JSON.parse(fs.readFileSync(INVENTORY_FILE, 'utf8'));
+    
+    // หาสินค้าตามชื่อ
+    const itemIndex = inventory.findIndex(item => item.name === name);
+    
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: `ไม่พบสินค้า "${name}"` });
+    }
+
+    // อัพเดทจำนวนสินค้า
+    inventory[itemIndex].quantity = quantity.toString();
+    inventory[itemIndex].updatedAt = new Date().toISOString();
+
+    // บันทึกข้อมูล
+    fs.writeFileSync(INVENTORY_FILE, JSON.stringify(inventory, null, 2));
+
+    res.json(inventory[itemIndex]);
+  } catch (error) {
+    console.error('Error updating inventory:', error);
+    res.status(500).json({ message: "Error updating inventory" });
+  }
+});
+
 // DELETE inventory item
 app.delete("/inventory-items/:id", (req, res) => {
   try {
@@ -742,6 +772,35 @@ app.post("/api/po-registration", (req, res) => {
     res.status(201).json({ message: "บันทึกข้อมูล PO สำเร็จ", po: newPO });
   } catch (error) {
     console.error('Error saving PO:', error);
+  }
+})
+// เพิ่ม endpoint สำหรับดึงข้อมูล budget
+app.get("/api/budget", (req, res) => {
+  const BUDGET_FILE = path.join(__dirname, "data", "budget.json");
+  
+  if (!fs.existsSync(BUDGET_FILE)) {
+    return res.status(404).json({ message: "ไม่พบไฟล์ budget.json" });
+  }
+
+  const data = fs.readFileSync(BUDGET_FILE, "utf-8");
+  const budget = JSON.parse(data);
+  res.json(budget);
+});
+
+// เพิ่ม endpoint สำหรับอัพเดทข้อมูล budget
+app.put("/api/budget", (req, res) => {
+  const BUDGET_FILE = path.join(__dirname, "data", "budget.json");
+  const updatedBudget = req.body;
+  
+  try {
+    // เพิ่ม timestamp การอัพเดทล่าสุด
+    updatedBudget.lastUpdated = new Date().toISOString();
+    
+    // บันทึกข้อมูลลงไฟล์
+    fs.writeFileSync(BUDGET_FILE, JSON.stringify(updatedBudget, null, 2));
+    
+    res.json({ message: "อัพเดทข้อมูลงบประมาณสำเร็จ" });
+  } catch (error) {
     res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
   }
 });
@@ -780,6 +839,71 @@ app.get("/api/po-registration", (req, res) => {
   } catch (error) {
     console.error('Error reading PO registration data:', error);
     res.status(500).json({ message: "Error fetching PO data" });
+  }
+});
+
+// Add this with other constants
+const WITHDRAW_FILE = path.join(__dirname, "data", "Withdraw.json");
+
+// GET withdrawals
+app.get("/api/withdraw", (req, res) => {
+  try {
+    if (!fs.existsSync(WITHDRAW_FILE)) {
+      fs.writeFileSync(WITHDRAW_FILE, JSON.stringify([]));
+    }
+    const data = fs.readFileSync(WITHDRAW_FILE, 'utf8');
+    res.json(JSON.parse(data));
+  } catch (error) {
+    console.error('Error reading withdrawals:', error);
+    res.status(500).json({ message: "Error fetching withdrawals" });
+  }
+});
+
+// POST new withdrawal request
+app.post("/api/withdraw", (req, res) => {
+  try {
+    let withdrawals = [];
+    if (fs.existsSync(WITHDRAW_FILE)) {
+      withdrawals = JSON.parse(fs.readFileSync(WITHDRAW_FILE, 'utf8'));
+    }
+
+    const newWithdrawal = {
+      ...req.body,
+      createdAt: new Date().toISOString()
+    };
+
+    withdrawals.push(newWithdrawal);
+    fs.writeFileSync(WITHDRAW_FILE, JSON.stringify(withdrawals, null, 2));
+    
+    res.status(201).json(newWithdrawal);
+  } catch (error) {
+    console.error('Error saving withdrawal:', error);
+    res.status(500).json({ message: "Error saving withdrawal" });
+  }
+});
+
+// PUT update withdrawal status
+app.put("/api/withdraw/:withdrawNumber", (req, res) => {
+  try {
+    const { withdrawNumber } = req.params;
+    const { status } = req.body;
+    
+    const withdrawals = JSON.parse(fs.readFileSync(WITHDRAW_FILE, 'utf8'));
+    const index = withdrawals.findIndex(w => w.withdrawNumber === withdrawNumber);
+    
+    if (index === -1) {
+      return res.status(404).json({ message: "Withdrawal not found" });
+    }
+    
+    withdrawals[index].status = status;
+    withdrawals[index].updatedAt = new Date().toISOString();
+    
+    fs.writeFileSync(WITHDRAW_FILE, JSON.stringify(withdrawals, null, 2));
+    
+    res.json(withdrawals[index]);
+  } catch (error) {
+    console.error('Error updating withdrawal:', error);
+    res.status(500).json({ message: "Error updating withdrawal" });
   }
 });
 

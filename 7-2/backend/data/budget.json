@@ -1,0 +1,182 @@
+{
+  "fiscalYear": "2567",
+  "totalBudget": 10000000,
+  "departments": {
+    "การตลาด": {
+      "amount": 100000,
+      "allocations": [
+        {
+          "id": 1,
+          "name": "เงินเดือนพนักงาน",
+          "percentage": 45,
+          "amount": 45000
+        },
+        {
+          "id": 2,
+          "name": "การดำเนินงาน",
+          "percentage": 25,
+          "amount": 25000
+        },
+        {
+          "id": 3,
+          "name": "การตลาดและโฆษณา",
+          "percentage": 15,
+          "amount": 15000
+        },
+        {
+          "id": 4,
+          "name": "การวิจัยและพัฒนา",
+          "percentage": 10,
+          "amount": 10000
+        },
+        {
+          "id": 5,
+          "name": "อื่นๆ",
+          "percentage": 5,
+          "amount": 5000
+        }
+      ]
+    },
+    "IT": {
+      "amount": 100000,
+      "allocations": [
+        {
+          "id": 1,
+          "name": "เงินเดือนพนักงาน",
+          "percentage": 45,
+          "amount": 45000
+        },
+        {
+          "id": 2,
+          "name": "การดำเนินงาน",
+          "percentage": 25,
+          "amount": 25000
+        },
+        {
+          "id": 3,
+          "name": "การตลาดและโฆษณา",
+          "percentage": 15,
+          "amount": 15000
+        },
+        {
+          "id": 4,
+          "name": "การวิจัยและพัฒนา",
+          "percentage": 10,
+          "amount": 10000
+        },
+        {
+          "id": 5,
+          "name": "อื่นๆ",
+          "percentage": 5,
+          "amount": 5000
+        }
+      ]
+    },
+    "ฝ่ายทรัพยากรบุคคล": {
+      "amount": 800000,
+      "allocations": [
+        {
+          "id": 1,
+          "name": "เงินเดือนพนักงาน",
+          "percentage": 45,
+          "amount": 360000
+        },
+        {
+          "id": 2,
+          "name": "การดำเนินงาน",
+          "percentage": 25,
+          "amount": 200000
+        },
+        {
+          "id": 3,
+          "name": "การตลาดและโฆษณา",
+          "percentage": 15,
+          "amount": 120000
+        },
+        {
+          "id": 4,
+          "name": "การวิจัยและพัฒนา",
+          "percentage": 10,
+          "amount": 80000
+        },
+        {
+          "id": 5,
+          "name": "อื่นๆ",
+          "percentage": 5,
+          "amount": 40000
+        }
+      ]
+    },
+    "วิจัยและพัฒนา": {
+      "amount": 1200000,
+      "allocations": [
+        {
+          "id": 1,
+          "name": "เงินเดือนพนักงาน",
+          "percentage": 45,
+          "amount": 540000
+        },
+        {
+          "id": 2,
+          "name": "การดำเนินงาน",
+          "percentage": 25,
+          "amount": 300000
+        },
+        {
+          "id": 3,
+          "name": "การตลาดและโฆษณา",
+          "percentage": 15,
+          "amount": 180000
+        },
+        {
+          "id": 4,
+          "name": "การวิจัยและพัฒนา",
+          "percentage": 10,
+          "amount": 120000
+        },
+        {
+          "id": 5,
+          "name": "อื่นๆ",
+          "percentage": 5,
+          "amount": 60000
+        }
+      ]
+    },
+    "ปฏิบัติการ": {
+      "amount": 2900000,
+      "allocations": [
+        {
+          "id": 1,
+          "name": "เงินเดือนพนักงาน",
+          "percentage": 34,
+          "amount": 986000.0000000001
+        },
+        {
+          "id": 2,
+          "name": "การดำเนินงาน",
+          "percentage": 13,
+          "amount": 377000
+        },
+        {
+          "id": 3,
+          "name": "การตลาดและโฆษณา",
+          "percentage": 38,
+          "amount": 1102000
+        },
+        {
+          "id": 4,
+          "name": "การวิจัยและพัฒนา",
+          "percentage": 10,
+          "amount": 290000
+        },
+        {
+          "id": 5,
+          "name": "อื่นๆ",
+          "percentage": 5,
+          "amount": 145000
+        }
+      ]
+    }
+  },
+  "lastUpdated": "2025-04-08T04:10:50.382Z"
+}
