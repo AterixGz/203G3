@@ -945,5 +945,30 @@
     ],
     "note": "สร้างโดยระบบอัตโนมัติ",
     "status": "rejected"
+  },
+  {
+    "prNumber": "PR-2504086771",
+    "date": "2025-04-08",
+    "requester": "John Smith",
+    "department": "ฝ่ายบุคคล",
+    "purpose": "test",
+    "requiredDate": "2025-04-08",
+    "items": [
+      {
+        "name": "Test",
+        "description": "ggg",
+        "quantity": "15",
+        "unit": "unit",
+        "price": "30000",
+        "amount": 450000
+      }
+    ],
+    "totalAmount": 450000,
+    "note": "test",
+    "status": "approved",
+    "headerDescription": "",
+    "creator": "James",
+    "creatorPosition": "test",
+    "creatorNote": ""
   }
 ]

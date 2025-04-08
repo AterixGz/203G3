@@ -733,7 +733,7 @@ app.post("/api/po-registration", (req, res) => {
     const newPO = {
       ...req.body,
       createdAt: new Date().toISOString(),
-      status: "pending"
+      status: "ยังไม่ชำระ" // เปลี่ยนจาก "pending" เป็น "ยังไม่ชำระ"
     };
     
     poRegisData.purchaseOrders.push(newPO);

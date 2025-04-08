@@ -155,15 +155,83 @@
       "subtotal": 135,
       "vat": 9.450000000000001,
       "total": 144.45,
-      "remainingBalance": 144.45,
+      "remainingBalance": 0,
       "paymentMethod": "โอนเงินธนาคาร",
       "deliveryDate": "04/10/2025",
       "deliveryLocation": "test",
       "notes": "",
       "approver": "ผู้บริหาร",
       "sellerName": "เจริญทรัพย์",
-      "status": "pending",
+      "status": "ชำระแล้ว",
       "createdAt": "2025-04-08T05:07:39.897Z"
+    },
+    {
+      "poNumber": "PO-2504089920",
+      "poDate": "2025-04-08",
+      "prReference": "PR-AUTO-296194",
+      "prDate": "2025-04-07",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "หมูกรอบ",
+          "quantity": "14",
+          "unit": "ชิ้น",
+          "price": "5"
+        }
+      ],
+      "subtotal": 70,
+      "vat": 4.9,
+      "total": 74.9,
+      "remainingBalance": 74.9,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "04/10/2025",
+      "deliveryLocation": "test",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "ยังไม่ชำระ",
+      "createdAt": "2025-04-08T05:11:44.178Z"
+    },
+    {
+      "poNumber": "PO-2504084368",
+      "poDate": "2025-04-08",
+      "prReference": "PR-2504086771",
+      "prDate": "2025-04-08",
+      "vendor": {
+        "name": "เจริญทรัพย์",
+        "taxId": "1111111111111",
+        "address": "22222",
+        "contact": "Manee",
+        "phone": "1111111111"
+      },
+      "items": [
+        {
+          "name": "Test",
+          "description": "ggg",
+          "quantity": "15",
+          "unit": "unit",
+          "price": "30000",
+          "amount": 450000
+        }
+      ],
+      "subtotal": 450000,
+      "vat": 31500.000000000004,
+      "total": 481500,
+      "remainingBalance": 481500,
+      "paymentMethod": "โอนเงินธนาคาร",
+      "deliveryDate": "04/10/2025",
+      "deliveryLocation": "test",
+      "notes": "",
+      "approver": "ผู้บริหาร",
+      "sellerName": "เจริญทรัพย์",
+      "status": "ยังไม่ชำระ",
+      "createdAt": "2025-04-08T05:16:30.070Z"
     }
   ]
 }
